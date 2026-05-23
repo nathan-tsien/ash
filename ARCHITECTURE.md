@@ -8,7 +8,7 @@ Companion docs:
 - **`docs/adr/0002-ash-and-cogito-boundary.md`** — decision record tying responsibilities  
 - **`docs/components/agent-workbench-shell.md`** — three-pane UX map
 
-This file narrates positioning and repository layers; cogito internals remain authoritative inside the cogito repo.
+This file narrates positioning and repository layers; cogito internals remain authoritative in **[nathan-tsien/cogito](https://github.com/nathan-tsien/cogito)**.
 
 ## Positioning diagram
 
@@ -24,7 +24,8 @@ This file narrates positioning and repository layers; cogito internals remain au
 +--------------------------+----------------------------------+
                            | in-process Rust API
 +--------------------------v----------------------------------+
-| cogito (external Rust workspace checkout)                   |
+| cogito (upstream Rust Agent Runtime)                      |
+| https://github.com/nathan-tsien/cogito                      |
 | Brain Harness · ConversationStore · ModelGateway tooling    |
 +-------------------------------------------------------------+
 ```
@@ -80,6 +81,6 @@ Rust server crate(s) intentionally absent during Phase **1**. Introducing them m
 
 Treat **pnpm workspace + Turborepo** as analogous to cogito Cargo workspace — coordinate major bumps deliberately; annotate user-visible breakage in `CHANGELOG.md` once introduced.
 
-## Related reading inside cogito (external)
+## Related reading (cogito upstream)
 
-For runtime truth on harness states, resumes, MCP policies, consume **`~/x/projects/cogito/ARCHITECTURE.md`** and ADRs (`0006`, `0018`, …). Never duplicate cogito internals here verbatim — link instead.
+Canonical runtime documentation lives in **`[cogito/ARCHITECTURE.md](https://github.com/nathan-tsien/cogito/blob/main/ARCHITECTURE.md)`** and ADRs under **`[cogito/docs/adr](https://github.com/nathan-tsien/cogito/tree/main/docs/adr)`** (e.g. harness / MCP governance). Never duplicate cogito internals here verbatim — link instead.

@@ -6,6 +6,8 @@ Accepted
 
 ## Context
 
+Upstream **cogito** canonical repository: **`https://github.com/nathan-tsien/cogito`**.
+
 cogito declares itself an embeddable library; consumers own inbound networking, SSO, quotas, UX.
 
 Users expect ash to supervise agents similarly to Claude Code semantics but visually closer to newer **agent workbench** metaphors,

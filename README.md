@@ -6,7 +6,7 @@
 
 ash is where humans steer autonomous work: conversational control in the middle, audited **plans,
 tool traces, and artifacts** on the right, task inventory pinned left. Orchestration primitives live in
-pair project **cogito** (Rust Agent Runtime checkout, commonly `~/x/projects/cogito`). cogito stays transport-
+pair project **[cogito](https://github.com/nathan-tsien/cogito)** (Rust Agent Runtime). cogito stays transport-
 and UI-free; ash owns transports, quotas, SSO, frontend craft.
 
 ## Contents
@@ -16,6 +16,8 @@ and UI-free; ash owns transports, quotas, SSO, frontend craft.
 - **`packages/shared`** — TypeScript domain scaffolding, mocks, `featureRegistry`.
 - **`apps/web`** — Next.js：`/` 营销站、`/product`、`/showcase`、`/docs`、`/pricing`；工作台 `/c/[id]`，`/settings` 占位。
 - **Documentation** mirroring cogito ergonomics (`AGENTS.md`, `docs/components`, `docs/adr`, **`docs/visual-language-and-theme.md`**).
+
+**cogito** (upstream Agent Runtime repo): **`https://github.com/nathan-tsien/cogito`**.
 
 ## Status
 

@@ -10,7 +10,7 @@ Manus-inspired **three-pane** layout (conversation list · chat · workspace: pl
 tools, artifacts). Implementation uses **Next.js App Router**, **pnpm + Turborepo**,
 and a **shadcn/ui-style** component package.
 
-**cogito** (separate checkout, commonly `~/x/projects/cogito`) is an embeddable
+**[cogito](https://github.com/nathan-tsien/cogito)** is an embeddable
 **Agent Runtime** (Rust). It exposes no HTTP UI and owns no end-user authentication.
 Future **ash-server** consumes cogito **in-process** behind an HTTP/streaming API.
 

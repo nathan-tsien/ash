@@ -12,7 +12,7 @@ We adopt Michael Nygard’s ADR process: short-lived markdown artifacts capturin
 | Decorative glyphs | Forbidden as list gimmicks (`AGENTS.md` noise rule); ASCII enumerations OK |
 | Supersede | Prefer new ADR with `Superseded by` note instead of mutating Accepted history silently |
 
-Cross-link cogito runtime ADRs (**external repo**) whenever ash decisions depend on Harness contracts — do **not** fork their text.
+Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/nathan-tsien/cogito)**, esp. **`docs/adr/`** there) whenever ash decisions depend on Harness contracts — do **not** fork their text.
 
 ## Index
 

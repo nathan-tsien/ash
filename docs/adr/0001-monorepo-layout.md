@@ -29,7 +29,7 @@ Introduce **`crates/ash-*`** inside the **same mono git** once Phase 2 starts; T
 
 tasks later via explicit ADR (**do not prematurely wire** invisible scripts).
 
-Rust builds remain independent from cogito versioning — treat cogito checkout as Cargo path dependency when server crate ships.
+Rust builds remain independent from cogito versioning — depend on cogito via Cargo (**`git` dependency** on [`github.com/nathan-tsien/cogito`](https://github.com/nathan-tsien/cogito), or a local path clone when iterating; **canonical source is GitHub**.
 
 ## Consequences
 

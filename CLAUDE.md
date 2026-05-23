@@ -15,7 +15,7 @@ This repo copies **cogito documentation discipline**:
 6. **`docs/visual-language-and-theme.md`** + **ADR-0005** — Colors, typography rhythm, elevation, motion discipline, dark-mode gate.
 7. **`docs/adr/README.md` + numbered ADRs** — Record/supersede decisions like cogito’s ADR corpus.
 
-Upstream runtime lives outside this repo (**cogito** checkout usually `~/x/projects/cogito`).
+Upstream runtime lives in **[github.com/nathan-tsien/cogito](https://github.com/nathan-tsien/cogito)** outside this repo.
 
 Conflict resolution: **`AGENTS.md` beats `CLAUDE.md`**.
 

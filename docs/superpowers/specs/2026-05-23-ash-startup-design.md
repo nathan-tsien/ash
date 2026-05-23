@@ -129,7 +129,7 @@ Implementation depends on superseding ADRs, but directional expectations:
 
 | Milestone | Action |
 |-----------|--------|
-| `crates/ash-server` bootstrap | Cargo workspace membership + cogito `{ path = "../../cogito" }` linkage |
+| `crates/ash-server` bootstrap | Cargo workspace membership + cogito via **`git` dependency** targeting [`github.com/nathan-tsien/cogito`](https://github.com/nathan-tsien/cogito) (or a local checkout of same rev when developing server code) |
 | Transport | Likely SSE for transcript deltas (`SessionHandle::subscribe`) — finalize via dedicated ADR |
 | Catalog | Persisted session inventories replace mocks |
 | Contracts | Possibly generate TS types via OpenAPI or JSON schemas mirroring cogito exported event JSON |
