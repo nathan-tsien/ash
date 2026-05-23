@@ -1,0 +1,4 @@
+@import "@ash/ui/globals.css";
+
+@source "../**/*.{tsx,ts,mdx}";
+@source "../../../../packages/ui/src/**/*.{tsx,ts}";

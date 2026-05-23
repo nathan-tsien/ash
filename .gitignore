@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next.js
+.next
+out
+
+# turbo
+.turbo
+
+# env
+.env
+.env*.local
+
+# debug
+npm-debug.log*
+pnpm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# os
+.DS_Store
+
+# ide
+.idea
+.vscode

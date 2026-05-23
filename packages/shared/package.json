@@ -1,0 +1,19 @@
+{
+  "name": "@ash/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mocks": "./src/mocks/index.ts",
+    "./features": "./src/features/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: skip @ash/shared'"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
