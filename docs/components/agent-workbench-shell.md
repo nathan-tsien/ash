@@ -48,7 +48,17 @@ Collapsed rails must expose focus order + `aria-expanded` consistent with Sideba
 
 ## Data sourcing (Phase 1)
 
-Hydrate purely from **`@ash/shared` mocks**. Future API ingestion swaps adapters only beneath `apps/web` — payloads described here remain contract unless ADR adjusts.
+Hydrate via **`apps/web/src/server/conversations.ts`** (ADR-0006), which delegates to **`@ash/shared` mocks** in Phase 1. Future API ingestion swaps adapter internals only — payloads described here remain contract unless ADR adjusts.
+
+Implementation layout under **`apps/web/src/components/workbench/`**:
+
+| Module | Role |
+|--------|------|
+| `workbench-shell.tsx` | Server entry composing chrome + workspace panel |
+| `workbench-chrome.tsx` | Client orchestrator (workspace collapse + FAB) |
+| `sidebar/` | Left inventory rail |
+| `chat/` | Center conversation column |
+| `workspace/` | Right audit rail (Plan / Tools / Artifacts) |
 
 ### Accessibility mandates
 

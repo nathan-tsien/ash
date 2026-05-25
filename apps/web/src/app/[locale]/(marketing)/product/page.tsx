@@ -8,9 +8,11 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@ash/ui/button";
-import { getMockConversations, isAshLocale, type AshLocale } from "@ash/shared";
+import { isAshLocale, type AshLocale } from "@ash/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { firstWorkbenchHref } from "@/lib/workbench-href";
+import { listConversations } from "@/server/conversations";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -27,9 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { locale } = await params;
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
-  const conversations = getMockConversations(ashLocale);
-  const first = conversations[0];
-  const workbenchHref = first ? `/c/${first.id}` : "/c/conv-1";
+  const conversations = await listConversations(ashLocale);
+  const workbenchHref = firstWorkbenchHref(conversations);
 
   const t = await getTranslations({ locale: ashLocale, namespace: "Product" });
 

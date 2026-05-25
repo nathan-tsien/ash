@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
+import { isAshLocale, type AshLocale } from "@ash/shared";
+import { WorkbenchShell } from "@/components/workbench/workbench-shell";
 import {
-  getConversation,
-  getMockConversations,
-  isAshLocale,
-  type AshLocale,
-} from "@ash/shared";
-import { WorkbenchLayout } from "@/components/workbench/workbench-layout";
+  getActiveConversation,
+  listConversations,
+} from "@/server/conversations";
 
 type PageProps = {
   params: Promise<{ locale: string; conversationId: string }>;
@@ -14,11 +13,13 @@ type PageProps = {
 export default async function ConversationPage({ params }: PageProps) {
   const { locale, conversationId } = await params;
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
-  const conversations = getMockConversations(ashLocale);
-  const active = getConversation(conversationId, ashLocale);
+  const conversations = await listConversations(ashLocale);
+  const active = await getActiveConversation(conversationId, ashLocale);
   if (!active) {
     notFound();
   }
 
-  return <WorkbenchLayout locale={ashLocale} conversations={conversations} active={active} />;
+  return (
+    <WorkbenchShell locale={ashLocale} conversations={conversations} active={active} />
+  );
 }

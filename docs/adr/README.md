@@ -23,10 +23,11 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0003](./0003-frontend-stack-next-shadcn.md) | Phase 1 web stack (`Next.js` + Tailwind/shadcn) |
 | [0004](./0004-agent-workbench-three-pane-ux.md) | Three-pane workbench UX + extension slots |
 | [0005](./0005-design-tokens-and-visual-discipline-phase-1.md) | Phase 1 design tokens + visual discipline |
+| [0006](./0006-data-adapter-seam.md) | Data adapter seam in `apps/web` |
 
 ### Reserved band
 
-Next free IDs (**0006+**) cover transports, tenancy, streaming adapters, canonical dark palettes, etc. — claim sequentially here when filing.
+Next free IDs (**0007+**) cover transports, tenancy, streaming adapters, canonical dark palettes, etc. — claim sequentially here when filing.
 
 ## Template
 

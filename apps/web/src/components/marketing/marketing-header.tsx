@@ -1,9 +1,11 @@
 import { Menu, Sparkles } from "lucide-react";
 import { Button } from "@ash/ui/button";
-import { getMockConversations, isAshLocale } from "@ash/shared";
+import { isAshLocale } from "@ash/shared";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/marketing/locale-switcher";
+import { firstWorkbenchHref } from "@/lib/workbench-href";
+import { listConversations } from "@/server/conversations";
 
 const NAV_PATHS = [
   { href: "/product" as const, labelKey: "navProduct" as const },
@@ -18,9 +20,8 @@ export async function MarketingHeader() {
   const ashLocale = isAshLocale(localeRaw) ? localeRaw : "zh";
 
   const t = await getTranslations({ locale: ashLocale, namespace: "Header" });
-  const conversations = getMockConversations(ashLocale);
-  const first = conversations[0];
-  const workbenchHref = first ? `/c/${first.id}` : "/c/conv-1";
+  const conversations = await listConversations(ashLocale);
+  const workbenchHref = firstWorkbenchHref(conversations);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">

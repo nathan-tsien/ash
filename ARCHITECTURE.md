@@ -38,7 +38,8 @@ Phase **1**: only the top row ships user-visible artifacts; mocks substitute for
 
 - Next.js App Router entry.
 - Compose packages, wires **locale-prefixed** routes (`/zh`, `/en`, `/[locale]/c/[conversationId]`, `/[locale]/settings`) via `next-intl` + [`src/proxy.ts`](apps/web/src/proxy.ts).
-- Translation bundles live under [`messages/`](apps/web/messages); shared mock copy is split **zh/en** in `@ash/shared` (`getMockConversations`, `getConversation`, `formatRelativeTime(..., locale)`).
+- Translation bundles live under [`messages/`](apps/web/messages); shared mock copy is split **zh/en** in `@ash/shared`.
+- **Data adapter seam:** [`src/server/conversations.ts`](apps/web/src/server/conversations.ts) is the sole server entry for conversation inventory (`listConversations`, `getActiveConversation`). Phase 1 delegates to `@ash/shared` mocks; Phase 2 swaps internals to ash-server without changing route signatures (ADR-0006).
 - Holds client boundaries (`"use client"` islands) sparingly — treat like cogito minimizes surface-area exposure.
 
 Dependency direction: **`apps/web` → `packages/ui`, `packages/shared`**. Reverse edges forbidden.
