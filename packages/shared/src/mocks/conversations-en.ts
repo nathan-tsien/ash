@@ -144,4 +144,59 @@ export const mockConversationsEn: Conversation[] = [
     toolTraces: [],
     artifacts: [],
   },
+  {
+    id: "conv-4",
+    title: "Vendor compliance screening",
+    preview: "Compare new partner terms against the current compliance checklist…",
+    updatedAt: "2026-05-20T16:30:00+08:00",
+    status: "completed",
+    messages: [
+      {
+        id: "msg-7",
+        role: "user",
+        content:
+          "What gaps exist between Acme Cloud's contract terms and our compliance checklist? Provide risk levels and remediation advice.",
+        createdAt: "2026-05-20T16:05:00+08:00",
+      },
+      {
+        id: "msg-8",
+        role: "assistant",
+        content:
+          "Clause-by-clause comparison complete — three high-risk gaps found (data residency, audit rights, sub-processor disclosure). A diff summary document is ready.",
+        createdAt: "2026-05-20T16:28:00+08:00",
+      },
+    ],
+    plan: [
+      { id: "p1", label: "Extract key contract clauses", status: "done" },
+      { id: "p2", label: "Compare against compliance checklist", status: "done" },
+      { id: "p3", label: "Output risk levels and remediation", status: "done" },
+    ],
+    toolTraces: [
+      {
+        id: "t1",
+        toolName: "clause_diff",
+        summary: "Diff Acme Cloud sections 4–7 against internal compliance list",
+        status: "success",
+        startedAt: "2026-05-20T16:08:00+08:00",
+        durationMs: 5200,
+      },
+      {
+        id: "t2",
+        toolName: "policy_compare",
+        summary: "Match GDPR / data residency / sub-processor disclosure rules",
+        status: "success",
+        startedAt: "2026-05-20T16:15:00+08:00",
+        durationMs: 3800,
+      },
+    ],
+    artifacts: [
+      {
+        id: "a1",
+        kind: "document",
+        title: "Compliance diff summary",
+        preview: "High risk ×3: missing data residency · limited audit rights · undisclosed sub-processors…",
+        updatedAt: "2026-05-20T16:27:00+08:00",
+      },
+    ],
+  },
 ];

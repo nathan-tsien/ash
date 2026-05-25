@@ -111,6 +111,7 @@
     "title": "One chassis, multiple org functions",
     "subtitle": "Narratives only—no customer logos yet. Dive into mocked threads for Plan/trace/artifacts.",
     "cta": "Open sample workspace",
+    "openDemoCta": "Open demo workspace",
     "case1Industry": "Research",
     "case1Title": "Market sketches",
     "case1P1": "Summaries fed from sources",
@@ -131,6 +132,18 @@
     "case4P1": "Clause diff highlights (planned)",
     "case4P2": "Citation trail audits",
     "case4P3": "Human-in-loop approvals (planned)"
+  },
+  "ShowcaseReplay": {
+    "bannerLabel": "Demo",
+    "exitCta": "Exit demo",
+    "case1Title": "Research: market landscape demo",
+    "case1Body": "Structured output and citation chains for a 2026 AI Agent trends brief via Plan and tool calls.",
+    "case2Title": "Growth: content planning demo",
+    "case2Body": "Weekly topic pipeline and multi-platform script drafts showing how workspace artifacts get reused.",
+    "case3Title": "Product: requirements convergence demo",
+    "case3Body": "Turn fuzzy asks into acceptance checklists while the Plan state machine mirrors tool receipts.",
+    "case4Title": "Compliance: vendor terms comparison demo",
+    "case4Body": "Contrast new vendor clauses against your compliance checklist—tool trace and auditable artifacts front and center."
   },
   "Docs": {
     "metaTitle": "Docs",
@@ -158,11 +171,96 @@
     "inRepoBadge": "(in repo)"
   },
   "Settings": {
-    "metaTitle": "Settings",
-    "metaDescription": "Workbench preferences stubs until cogito auth lands.",
-    "backHome": "Back home",
     "title": "Settings",
-    "body": "Phase 1 placeholder—accounts, model routing, hotkeys arriving later."
+    "closeAria": "Close settings",
+    "groupAccountLabel": "Account",
+    "groupFeaturesLabel": "Features",
+    "navAccount": "Account",
+    "navGeneral": "General",
+    "navBilling": "Billing",
+    "navPersonalization": "Personalization",
+    "navScheduledTasks": "Scheduled tasks",
+    "navSkills": "Skills",
+    "navConnectors": "Connectors",
+    "phase2Badge": "Phase 2",
+    "comingSoon": "Coming soon",
+    "account": {
+      "heading": "Account",
+      "description": "Phase 1 demo account—sign-in, tenancy, and billing land in Phase 2.",
+      "displayNameLabel": "Display name",
+      "emailLabel": "Email",
+      "mockBanner": "Mock user profile (real auth deferred to Phase 2 per ADR-0009).",
+      "switchAccountAction": "Switch account",
+      "signOutAction": "Sign out"
+    },
+    "general": {
+      "heading": "General",
+      "description": "Language, timezone, and default behavior preferences.",
+      "languageLabel": "Interface language",
+      "timezoneLabel": "Timezone",
+      "timezonePlaceholder": "Follow system (Phase 2)",
+      "autoSummaryLabel": "Auto-summarize after sessions",
+      "autoSummaryDescription": "Available once the runtime is wired in Phase 2."
+    },
+    "billing": {
+      "heading": "Billing",
+      "description": "Seats, usage, and invoices activate in Phase 2.",
+      "currentPlan": "Current plan",
+      "explorerPlan": "Explorer · free during preview",
+      "usageHeading": "This month (mock)",
+      "usageMessages": "Messages",
+      "usageRuns": "Runs",
+      "upgradeCta": "Upgrade to Team (Phase 2)"
+    },
+    "personalization": {
+      "heading": "Personalization",
+      "description": "Appearance and typography; dark theme and accent variants unlock after ADR-0005 sign-off.",
+      "themeLabel": "Theme",
+      "themeLight": "Light",
+      "themeSystem": "System",
+      "themeDark": "Dark",
+      "densityLabel": "Density",
+      "densityComfortable": "Comfortable",
+      "densityCompact": "Compact",
+      "fontLabel": "Font",
+      "fontSans": "Sans (DM Sans)",
+      "fontSerif": "Serif (Phase 2)"
+    },
+    "scheduledTasks": {
+      "heading": "Scheduled tasks",
+      "description": "Recurring Agent workflows. Phase 1 shows mock lists and statuses; the scheduler ships in Phase 2.",
+      "statusEnabled": "Enabled",
+      "statusPaused": "Paused",
+      "statusErrored": "Errored",
+      "nextRunLabel": "Next run",
+      "addAction": "Add scheduled task (Phase 2)",
+      "empty": "No scheduled tasks yet."
+    },
+    "skills": {
+      "heading": "Skills",
+      "description": "Toggle capabilities the Agent can invoke. Items marked Phase 2 depend on runtime support.",
+      "categoryBrowse": "Browse",
+      "categoryWrite": "Write",
+      "categoryCode": "Code",
+      "categoryMedia": "Media",
+      "categoryData": "Data",
+      "enabledLabel": "Enabled",
+      "disabledLabel": "Disabled",
+      "phase2Hint": "Available once the runtime is connected in Phase 2."
+    },
+    "connectors": {
+      "heading": "Connectors",
+      "description": "External data sources and MCP servers. Phase 1 displays mock connection states only.",
+      "kindNotes": "Personal notes",
+      "kindMcp": "MCP servers",
+      "kindFile": "File storage",
+      "kindCalendar": "Calendar",
+      "statusConnected": "Connected",
+      "statusDisconnected": "Disconnected",
+      "statusError": "Connection error",
+      "addAction": "Add connector (Phase 2)",
+      "empty": "No connectors yet."
+    }
   },
   "NotFoundWorkbench": {
     "title": "Conversation not found",
@@ -232,6 +330,11 @@
     "expandSidebarRailAria": "Expand sidebar",
     "mockBadge": "mock",
     "chatMockAcknowledgement": "(Mock) Received. Phase 2 routes messages through cogito for real completions.",
-    "artifactPreviewAlert": "Stub: previews open in Phase 2."
+    "artifactPreviewAlert": "Stub: previews open in Phase 2.",
+    "accountMenuOpenAria": "Open account menu",
+    "accountSettings": "Settings…",
+    "accountSwitch": "Switch account",
+    "accountSignOut": "Sign out",
+    "accountPhase2Tooltip": "Available in Phase 2"
   }
 }

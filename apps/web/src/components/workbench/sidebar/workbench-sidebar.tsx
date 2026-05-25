@@ -20,6 +20,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSettingsModal } from "@/components/settings/settings-modal-provider";
 import { Link } from "@/i18n/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FooterAccount } from "./footer-account";
@@ -43,6 +44,7 @@ export function WorkbenchSidebar({
   // Tracks the most recent user-driven toggle so focus restoration ignores the initial mount.
   const lastToggleRef = useRef<"none" | "collapse" | "expand">("none");
   const t = useTranslations("Workbench");
+  const { openSettings } = useSettingsModal();
 
   const filtered = useMemo(() => {
     const q = sidebarQuery.trim().toLowerCase();
@@ -202,10 +204,14 @@ export function WorkbenchSidebar({
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-10 rounded-xl" asChild>
-                <Link href="/settings" aria-label={t("settingsAria")}>
-                  <Settings className="size-[18px]" />
-                </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10 rounded-xl"
+                onClick={() => openSettings("account")}
+                aria-label={t("settingsAria")}
+              >
+                <Settings className="size-[18px]" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">{t("settingsAria")}</TooltipContent>

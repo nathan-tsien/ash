@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@ash/ui/button";
-import type { AshLocale } from "@ash/shared";
+import { showcaseCaseMap, type AshLocale, type ShowcaseCaseId } from "@ash/shared";
 import { isAshLocale } from "@ash/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { firstWorkbenchHref } from "@/lib/workbench-href";
-import { listConversations } from "@/server/conversations";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -20,18 +18,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const caseIds: ShowcaseCaseId[] = ["case1", "case2", "case3", "case4"];
+
 export default async function ShowcasePage({ params }: Props) {
   const { locale } = await params;
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
-  const conversations = await listConversations(ashLocale);
-  const workbenchHref = firstWorkbenchHref(conversations);
 
   const t = await getTranslations({ locale: ashLocale, namespace: "Showcase" });
 
-  const cases = [1, 2, 3, 4].map((n) => ({
-    industry: t(`case${n}Industry` as const),
-    title: t(`case${n}Title` as const),
-    points: [1, 2, 3].map((i) => t(`case${n}P${i}` as const)),
+  const cases = caseIds.map((id, idx) => ({
+    id,
+    conversationId: showcaseCaseMap[id].conversationId,
+    industry: t(`case${idx + 1}Industry` as const),
+    title: t(`case${idx + 1}Title` as const),
+    points: [1, 2, 3].map((i) => t(`case${idx + 1}P${i}` as const)),
   }));
 
   return (
@@ -43,7 +43,7 @@ export default async function ShowcasePage({ params }: Props) {
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t("subtitle")}</p>
         <Button className="mt-8 shadow-sm" size="lg" variant="pill" asChild>
-          <Link href={workbenchHref}>
+          <Link href={`/c/${showcaseCaseMap.case1.conversationId}?demo=case1`}>
             {t("cta")}
             <ArrowRight className="size-4" aria-hidden />
           </Link>
@@ -52,7 +52,7 @@ export default async function ShowcasePage({ params }: Props) {
         <div className="mt-14 grid gap-8 md:grid-cols-2">
           {cases.map((c) => (
             <article
-              key={c.title}
+              key={c.id}
               className="flex flex-col rounded-2xl border border-border bg-card p-8 transition-shadow hover:shadow-md"
             >
               <span className="w-fit rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -67,6 +67,14 @@ export default async function ShowcasePage({ params }: Props) {
                   </li>
                 ))}
               </ul>
+              <div className="mt-6 border-t border-border pt-4">
+                <Button variant="pill" size="sm" className="gap-1.5" asChild>
+                  <Link href={`/c/${c.conversationId}?demo=${c.id}`}>
+                    {t("openDemoCta")}
+                    <ArrowRight className="size-3.5" aria-hidden />
+                  </Link>
+                </Button>
+              </div>
             </article>
           ))}
         </div>

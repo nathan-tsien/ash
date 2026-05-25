@@ -66,3 +66,39 @@ export interface FeatureDefinition {
   description: string;
   enabled: boolean;
 }
+
+export type ScheduledTaskStatus = "enabled" | "paused" | "errored";
+
+export interface ScheduledTask {
+  id: string;
+  label: string;
+  cron: string;
+  nextRunAt: string; // ISO 8601
+  status: ScheduledTaskStatus;
+  description: string;
+}
+
+export type SkillCategory = "browse" | "write" | "code" | "media" | "data";
+
+export interface AgentSkill {
+  id: string;
+  label: string;
+  category: SkillCategory;
+  description: string;
+  enabled: boolean;
+  /** Marks capabilities still gated behind Phase 2 server work. */
+  requiresPhase2?: boolean;
+}
+
+export type ConnectorKind = "notes" | "mcp" | "file" | "calendar";
+export type ConnectorStatus = "connected" | "disconnected" | "error";
+
+export interface Connector {
+  id: string;
+  label: string;
+  provider: string;
+  kind: ConnectorKind;
+  status: ConnectorStatus;
+  description: string;
+  updatedAt: string; // ISO 8601
+}
