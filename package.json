@@ -5,7 +5,9 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "i18n:check": "node scripts/check-i18n.mjs"
   },
   "devDependencies": {
     "turbo": "^2.5.4",

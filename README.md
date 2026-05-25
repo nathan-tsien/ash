@@ -73,4 +73,4 @@ pnpm build
 
 ## Licensing
 
-Unset — clarify before external distribution.
+[MIT License](./LICENSE).
