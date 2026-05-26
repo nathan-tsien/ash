@@ -10,7 +10,7 @@ import {
 } from "@ash/ui/tooltip";
 import { Loader2, MessageSquare, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import type { WorkspaceToggleProps } from "../workbench-types";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
@@ -19,9 +19,10 @@ export interface WorkbenchChatProps {
   locale: AshLocale;
   active: Conversation;
   workspace: WorkspaceToggleProps;
+  banner?: ReactNode;
 }
 
-export function WorkbenchChat({ locale, active, workspace }: WorkbenchChatProps) {
+export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchChatProps) {
   const [draft, setDraft] = useState("");
   const [extraMessages, setExtraMessages] = useState<Message[]>([]);
   const t = useTranslations("Workbench");
@@ -90,7 +91,7 @@ export function WorkbenchChat({ locale, active, workspace }: WorkbenchChatProps)
           </Tooltip>
         </div>
       </header>
-
+      {banner}
       <ScrollArea className="min-h-0 flex-1">
         <div
           className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6"

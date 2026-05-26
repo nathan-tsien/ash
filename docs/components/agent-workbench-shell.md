@@ -8,7 +8,9 @@ Purpose: unify cross-pane ergonomics mandated by ADR-0004 with routing expectati
 |------|----------------|
 | `/` | Marketing / onboarding / “new mission” empties · may tuck Workspace placeholders |
 | `/c/[conversationId]` | **Full triple-pane**: conversation id aligns with `Conversation.id` mock until API persists |
-| `/settings` | Detached minimalist surface (**no triple-pane**) — return affordance still reachable |
+| `/c/[conversationId]?demo=<caseId>` | Same triple-pane; renders top banner with showcase narrative; exit clears the query |
+
+**Settings** is a global modal triggered by `FooterAccount` in the Sidebar — no dedicated route (replaces former `/settings` stub).
 
 Reserve query-driven focus swaps (example `?focus=workspace`) for future charters — undocumented until specs adopt them.
 

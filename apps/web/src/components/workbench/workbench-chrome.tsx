@@ -9,6 +9,7 @@ import {
 import { PanelRightOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { SettingsModalProvider } from "@/components/settings/settings-modal-provider";
 import { WorkbenchChat } from "./chat/workbench-chat";
 import { WorkbenchSidebar } from "./sidebar/workbench-sidebar";
 import type {
@@ -25,6 +26,7 @@ export function WorkbenchChrome({
   locale,
   conversations,
   active,
+  chatBanner,
   workspacePanel,
 }: WorkbenchChromeProps) {
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
@@ -39,35 +41,42 @@ export function WorkbenchChrome({
   );
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
-      <WorkbenchSidebar
-        locale={locale}
-        conversations={conversations}
-        activeId={active.id}
-      />
+    <SettingsModalProvider>
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
+        <WorkbenchSidebar
+          locale={locale}
+          conversations={conversations}
+          activeId={active.id}
+        />
 
-      <WorkbenchChat locale={locale} active={active} workspace={workspaceToggle} />
+        <WorkbenchChat
+          locale={locale}
+          active={active}
+          workspace={workspaceToggle}
+          banner={chatBanner}
+        />
 
-      {!workspaceCollapsed && workspacePanel}
+        {!workspaceCollapsed && workspacePanel}
 
-      {workspaceCollapsed && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="pill"
-              size="sm"
-              className="fixed bottom-24 right-4 z-40 gap-2 shadow-md lg:bottom-8"
-              type="button"
-              aria-label={t("expandWorkbenchAria")}
-              onClick={onExpand}
-            >
-              <PanelRightOpen className="size-4" aria-hidden />
-              {t("workspaceTitle")}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">{t("workspaceFabTooltip")}</TooltipContent>
-        </Tooltip>
-      )}
-    </div>
+        {workspaceCollapsed && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="pill"
+                size="sm"
+                className="fixed bottom-24 right-4 z-40 gap-2 shadow-md lg:bottom-8"
+                type="button"
+                aria-label={t("expandWorkbenchAria")}
+                onClick={onExpand}
+              >
+                <PanelRightOpen className="size-4" aria-hidden />
+                {t("workspaceTitle")}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">{t("workspaceFabTooltip")}</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </SettingsModalProvider>
   );
 }

@@ -111,6 +111,7 @@
     "title": "用同一套工作台，接住不同职能部门",
     "subtitle": "以下案例叙事用于展示信息架构潜力；尚无真实客户标识与量化指标引用。你可以在示例会话里感受 Plan / Trace / Artifact 的组合方式。",
     "cta": "打开内置示例会话",
+    "openDemoCta": "打开示例会话",
     "case1Industry": "研究",
     "case1Title": "市场与竞品速写",
     "case1P1": "多来源摘要",
@@ -131,6 +132,18 @@
     "case4P1": "条款差异高亮占位",
     "case4P2": "引用链审计",
     "case4P3": "人在回路审批（规划）"
+  },
+  "ShowcaseReplay": {
+    "bannerLabel": "演示",
+    "exitCta": "退出演示",
+    "case1Title": "研究：市场调研演示",
+    "case1Body": "通过 Plan 和工具调用展示 2026 AI Agent 趋势调研的结构化输出与引用链。",
+    "case2Title": "增长：内容策划演示",
+    "case2Body": "周更选题流水线与多平台脚本草稿，呈现 Workspace artifact 的复用方式。",
+    "case3Title": "产研：需求收敛演示",
+    "case3Body": "把模糊需求拆为验收清单，并展示 Plan 状态机如何同步反映工具回执。",
+    "case4Title": "合规：供应商条款比对演示",
+    "case4Body": "对比新供方条款与现行合规清单，凸显工具链路与可审计 artifact。"
   },
   "Docs": {
     "metaTitle": "文档",
@@ -158,11 +171,96 @@
     "inRepoBadge": "（仓库内）"
   },
   "Settings": {
-    "metaTitle": "设置",
-    "metaDescription": "账户、模型与工作台偏好占位；后续接通 cogito 与本地配置。",
-    "backHome": "返回首页",
     "title": "设置",
-    "body": "Phase 1 占位页面。账号、模型、快捷键等后续接入。"
+    "closeAria": "关闭设置",
+    "groupAccountLabel": "账户",
+    "groupFeaturesLabel": "功能",
+    "navAccount": "账户",
+    "navGeneral": "通用",
+    "navBilling": "账单",
+    "navPersonalization": "个性化",
+    "navScheduledTasks": "定时任务",
+    "navSkills": "Skill",
+    "navConnectors": "Connectors",
+    "phase2Badge": "Phase 2",
+    "comingSoon": "即将上线",
+    "account": {
+      "heading": "账户",
+      "description": "Phase 1 演示账号，登录、租户与计费在 Phase 2 接通。",
+      "displayNameLabel": "显示名",
+      "emailLabel": "邮箱",
+      "mockBanner": "当前为 mock 用户信息（按 ADR-0009 推迟真 auth 至 Phase 2）。",
+      "switchAccountAction": "切换账号",
+      "signOutAction": "退出登录"
+    },
+    "general": {
+      "heading": "通用",
+      "description": "语言、时区与默认行为偏好。",
+      "languageLabel": "界面语言",
+      "timezoneLabel": "时区",
+      "timezonePlaceholder": "跟随系统（Phase 2）",
+      "autoSummaryLabel": "会话结束后自动汇总",
+      "autoSummaryDescription": "Phase 2 接入运行时后启用此选项。"
+    },
+    "billing": {
+      "heading": "账单",
+      "description": "席位、用量与发票在 Phase 2 启用。",
+      "currentPlan": "当前套餐",
+      "explorerPlan": "Explorer · 限时免费",
+      "usageHeading": "本月用量（mock）",
+      "usageMessages": "消息",
+      "usageRuns": "运行次数",
+      "upgradeCta": "升级至 Team（Phase 2）"
+    },
+    "personalization": {
+      "heading": "个性化",
+      "description": "外观与排版偏好；暗色与重音色在 ADR-0005 验收后开启。",
+      "themeLabel": "主题",
+      "themeLight": "亮色",
+      "themeSystem": "跟随系统",
+      "themeDark": "暗色",
+      "densityLabel": "密度",
+      "densityComfortable": "舒适",
+      "densityCompact": "紧凑",
+      "fontLabel": "字体",
+      "fontSans": "无衬线（DM Sans）",
+      "fontSerif": "衬线（Phase 2）"
+    },
+    "scheduledTasks": {
+      "heading": "定时任务",
+      "description": "周期性触发的 Agent 工作流。Phase 1 展示 mock 列表与状态，调度引擎在 Phase 2 接通。",
+      "statusEnabled": "已启用",
+      "statusPaused": "已暂停",
+      "statusErrored": "出错",
+      "nextRunLabel": "下一次运行",
+      "addAction": "添加定时任务（Phase 2）",
+      "empty": "暂无定时任务。"
+    },
+    "skills": {
+      "heading": "Skill",
+      "description": "Agent 可调用的能力开关。带 Phase 2 标记的项依赖运行时落地。",
+      "categoryBrowse": "浏览",
+      "categoryWrite": "写作",
+      "categoryCode": "代码",
+      "categoryMedia": "多媒体",
+      "categoryData": "数据",
+      "enabledLabel": "已启用",
+      "disabledLabel": "已关闭",
+      "phase2Hint": "Phase 2 接通运行时后可用。"
+    },
+    "connectors": {
+      "heading": "Connectors",
+      "description": "外部数据源与 MCP server。Phase 1 仅展示 mock 状态。",
+      "kindNotes": "个人笔记",
+      "kindMcp": "MCP servers",
+      "kindFile": "文件存储",
+      "kindCalendar": "日历",
+      "statusConnected": "已连接",
+      "statusDisconnected": "未连接",
+      "statusError": "连接异常",
+      "addAction": "添加 Connector（Phase 2）",
+      "empty": "暂无连接器。"
+    }
   },
   "NotFoundWorkbench": {
     "title": "未找到该会话",
@@ -232,6 +330,11 @@
     "expandSidebarRailAria": "展开侧边栏",
     "mockBadge": "mock",
     "chatMockAcknowledgement": "（Mock）已收到消息。Phase 2 接通 API 后将由 cogito 驱动真实回复。",
-    "artifactPreviewAlert": "占位：预览将在 Phase 2 打开。"
+    "artifactPreviewAlert": "占位：预览将在 Phase 2 打开。",
+    "accountMenuOpenAria": "打开账户菜单",
+    "accountSettings": "设置…",
+    "accountSwitch": "切换账号",
+    "accountSignOut": "退出登录",
+    "accountPhase2Tooltip": "Phase 2 上线"
   }
 }

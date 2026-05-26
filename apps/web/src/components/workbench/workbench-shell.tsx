@@ -10,6 +10,7 @@ export function WorkbenchShell(props: WorkbenchShellProps) {
       locale={props.locale}
       conversations={props.conversations}
       active={props.active}
+      chatBanner={props.chatBanner}
       workspacePanel={
         <WorkbenchWorkspace locale={props.locale} active={props.active} />
       }

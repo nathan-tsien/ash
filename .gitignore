@@ -27,3 +27,6 @@ next-env.d.ts
 # ide
 .idea
 .vscode
+
+# worktrees
+.worktrees

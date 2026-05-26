@@ -149,4 +149,59 @@ export const mockConversationsZh: Conversation[] = [
     toolTraces: [],
     artifacts: [],
   },
+  {
+    id: "conv-4",
+    title: "供应商合规初筛",
+    preview: "对比新签合作方条款与现行合规清单…",
+    updatedAt: "2026-05-20T16:30:00+08:00",
+    status: "completed",
+    messages: [
+      {
+        id: "msg-7",
+        role: "user",
+        content:
+          "新签供应商 Acme Cloud 的合同条款与我们的合规清单有哪些差异？请给出风险等级与整改建议。",
+        createdAt: "2026-05-20T16:05:00+08:00",
+      },
+      {
+        id: "msg-8",
+        role: "assistant",
+        content:
+          "已完成条款逐条比对，发现 3 处高风险差异（数据驻留、审计权、子处理器披露），已生成差异速览文档。",
+        createdAt: "2026-05-20T16:28:00+08:00",
+      },
+    ],
+    plan: [
+      { id: "p1", label: "提取合同关键条款", status: "done" },
+      { id: "p2", label: "对照合规清单逐条比对", status: "done" },
+      { id: "p3", label: "输出风险等级与整改建议", status: "done" },
+    ],
+    toolTraces: [
+      {
+        id: "t1",
+        toolName: "clause_diff",
+        summary: "对比 Acme Cloud 合同第 4–7 节与内部合规清单",
+        status: "success",
+        startedAt: "2026-05-20T16:08:00+08:00",
+        durationMs: 5200,
+      },
+      {
+        id: "t2",
+        toolName: "policy_compare",
+        summary: "匹配 GDPR / 数据驻留 / 子处理器披露要求",
+        status: "success",
+        startedAt: "2026-05-20T16:15:00+08:00",
+        durationMs: 3800,
+      },
+    ],
+    artifacts: [
+      {
+        id: "a1",
+        kind: "document",
+        title: "合规差异速览",
+        preview: "高风险 ×3：数据驻留缺失 · 审计权受限 · 子处理器未披露…",
+        updatedAt: "2026-05-20T16:27:00+08:00",
+      },
+    ],
+  },
 ];
