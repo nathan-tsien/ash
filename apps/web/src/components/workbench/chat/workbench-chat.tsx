@@ -10,7 +10,11 @@ import {
 } from "@ash/ui/tooltip";
 import { Loader2, MessageSquare, PanelRightClose, PanelRightOpen, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import "@/lib/animations/gsap-setup";
+import { messageEntrance, messageStagger } from "@/lib/animations/presets";
 import type { WorkspaceToggleProps } from "../workbench-types";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
@@ -26,6 +30,10 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
   const [draft, setDraft] = useState("");
   const [extraMessages, setExtraMessages] = useState<Message[]>([]);
   const t = useTranslations("Workbench");
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(0);
 
   const messages = useMemo(
     () => [...active.messages, ...extraMessages],
@@ -51,6 +59,43 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
     setExtraMessages((prev) => [...prev, userMsg, ack]);
     setDraft("");
   }, [draft, t]);
+
+  /* Staggered entrance when conversation changes. */
+  useGSAP(
+    () => {
+      const bubbles = gsap.utils.toArray<HTMLElement>(".message-bubble");
+      if (bubbles.length === 0) return;
+
+      gsap.from(bubbles, messageStagger());
+
+      prevMessageCountRef.current = messages.length;
+    },
+    { scope: containerRef, dependencies: [active.id] },
+  );
+
+  /* Entrance animation for newly added messages. */
+  useGSAP(
+    () => {
+      if (messages.length <= prevMessageCountRef.current) {
+        prevMessageCountRef.current = messages.length;
+        return;
+      }
+
+      const bubbles = gsap.utils.toArray<HTMLElement>(".message-bubble");
+      const newBubbles = bubbles.slice(prevMessageCountRef.current);
+
+      if (newBubbles.length > 0) {
+        const tl = gsap.timeline();
+        tl.from(newBubbles, messageEntrance());
+        tl.call(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, undefined, "<0.1");
+      }
+
+      prevMessageCountRef.current = messages.length;
+    },
+    { scope: containerRef, dependencies: [messages.length] },
+  );
 
   return (
     <main className="flex min-w-0 flex-1 flex-col bg-background">
@@ -94,6 +139,7 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
       {banner}
       <ScrollArea className="min-h-0 flex-1">
         <div
+          ref={containerRef}
           className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6"
           role="log"
           aria-live="polite"
@@ -109,15 +155,32 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
             </div>
           ) : (
             messages.map((m) => (
-              <MessageBubble key={m.id} locale={locale} message={m} />
+              <div key={m.id} className="message-bubble">
+                <MessageBubble locale={locale} message={m} />
+              </div>
             ))
           )}
           {active.status === "running" && (
             <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" aria-hidden />
+              <Loader2
+                ref={(el) => {
+                  if (el) {
+                    gsap.to(el, {
+                      scale: 1.05,
+                      repeat: -1,
+                      yoyo: true,
+                      duration: 0.6,
+                      ease: "power1.inOut",
+                    });
+                  }
+                }}
+                className="size-4"
+                aria-hidden
+              />
               {t("thinkingPlaceholder")}
             </div>
           )}
+          <div ref={messagesEndRef} aria-hidden />
         </div>
       </ScrollArea>
 

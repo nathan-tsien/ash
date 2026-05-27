@@ -8,7 +8,11 @@ import {
 } from "@ash/ui/tooltip";
 import { PanelRightOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import "@/lib/animations/gsap-setup";
+import { fadeOut, fadeIn } from "@/lib/animations/presets";
 import { SettingsModalProvider } from "@/components/settings/settings-modal-provider";
 import { WorkbenchChat } from "./chat/workbench-chat";
 import { WorkbenchSidebar } from "./sidebar/workbench-sidebar";
@@ -30,6 +34,8 @@ export function WorkbenchChrome({
   workspacePanel,
 }: WorkbenchChromeProps) {
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const fabRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations("Workbench");
 
   const onToggle = useCallback(() => setWorkspaceCollapsed((v) => !v), []);
@@ -38,6 +44,25 @@ export function WorkbenchChrome({
   const workspaceToggle = useMemo<WorkspaceToggleProps>(
     () => ({ collapsed: workspaceCollapsed, onToggle }),
     [workspaceCollapsed, onToggle],
+  );
+
+  useGSAP(
+    () => {
+      const ws = workspaceRef.current;
+      const fab = fabRef.current;
+      if (!ws || !fab) return;
+
+      if (workspaceCollapsed) {
+        const tl = gsap.timeline();
+        tl.to(ws, { xPercent: 100, ...fadeOut() })
+          .from(fab, { scale: 0.8, autoAlpha: 0, duration: 0.2, ease: "power2.out" }, "<0.1");
+      } else {
+        const tl = gsap.timeline();
+        tl.to(fab, fadeOut(0.1))
+          .to(ws, { xPercent: 0, ...fadeIn(0.35) }, "<0.05");
+      }
+    },
+    { dependencies: [workspaceCollapsed] },
   );
 
   return (
@@ -56,26 +81,32 @@ export function WorkbenchChrome({
           banner={chatBanner}
         />
 
-        {!workspaceCollapsed && workspacePanel}
+        <div
+          ref={workspaceRef}
+          className="flex shrink-0 flex-col"
+          style={{ width: 380 }}
+        >
+          {workspacePanel}
+        </div>
 
-        {workspaceCollapsed && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="pill"
-                size="sm"
-                className="fixed bottom-24 right-4 z-40 gap-2 shadow-md lg:bottom-8"
-                type="button"
-                aria-label={t("expandWorkbenchAria")}
-                onClick={onExpand}
-              >
-                <PanelRightOpen className="size-4" aria-hidden />
-                {t("workspaceTitle")}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">{t("workspaceFabTooltip")}</TooltipContent>
-          </Tooltip>
-        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              ref={fabRef}
+              variant="pill"
+              size="sm"
+              className="fixed bottom-24 right-4 z-40 gap-2 shadow-md lg:bottom-8"
+              type="button"
+              aria-label={t("expandWorkbenchAria")}
+              onClick={onExpand}
+              style={{ visibility: workspaceCollapsed ? "visible" : "hidden" }}
+            >
+              <PanelRightOpen className="size-4" aria-hidden />
+              {t("workspaceTitle")}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">{t("workspaceFabTooltip")}</TooltipContent>
+        </Tooltip>
       </div>
     </SettingsModalProvider>
   );
