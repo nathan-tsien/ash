@@ -5,20 +5,12 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import Script from "next/script";
 import { TooltipProvider } from "@ash/ui/tooltip";
 import { ThemeProvider } from "@ash/ui/lib/theme-provider";
 import { routing } from "@/i18n/routing";
 
 import "../globals.css";
-
-const themeScript = `
-(function(){
-  try{
-    var t=localStorage.getItem("ash-theme");
-    var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches);
-    if(d)document.documentElement.classList.add("dark");
-  }catch(e){}
-})();`;
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -78,7 +70,13 @@ export default async function LocaleLayout({ children, params }: Props) {
       className={`${dmSans.variable} ${notoSansSc.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script
+          id="ash-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("ash-theme");var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches);if(d)document.documentElement.classList.add("dark")}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className="min-h-full font-sans">
         <ThemeProvider>
