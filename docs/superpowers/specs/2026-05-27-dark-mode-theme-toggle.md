@@ -1,7 +1,7 @@
 # Dark Mode — Theme Toggle Design
 
 **Date:** 2026-05-27
-**Status:** Proposed
+**Status:** Accepted
 **Phase:** 1 — Visual shell + mocks
 
 Companion governance:
