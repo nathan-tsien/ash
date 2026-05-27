@@ -40,3 +40,7 @@ Historical reading must not jitter when remote streaming updates arrive without 
 
 Ensure composer remains keyboard navigable (`aria-multiline`, proper label association).
 
+## Animations (GSAP)
+
+Message entrance, thinking-state pulse, and composer micro-interactions are powered by GSAP (not CSS transitions). All animations respect `prefers-reduced-motion` via `gsap.matchMedia()` — when the user has reduced motion enabled, elements appear in their final state without animation. Animation foundation lives in `apps/web/src/lib/animations/`.
+

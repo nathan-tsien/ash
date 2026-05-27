@@ -66,6 +66,10 @@ Implementation layout under **`apps/web/src/components/workbench/`**:
 
 Semantic landmarks (`nav`, `main`, `aside` equivalents acceptable). Maintain visible focus outlines via shared `ring` tokens.
 
+## GSAP animation layer
+
+Sidebar collapse/expand and Workspace collapse/expand use GSAP timelines instead of CSS transitions. Sidebar slides between the full width and rail width; Workspace slides via `xPercent`. Composer focus and send-button press also use GSAP micro-interactions. All animations honor `prefers-reduced-motion` through `gsap.matchMedia()`. Shared animation utilities live in `apps/web/src/lib/animations/`.
+
 ## See also
 
 - [workbench-sidebar.md](./workbench-sidebar.md)
