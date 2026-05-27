@@ -322,6 +322,8 @@
     "planHeading": "Plan",
     "toolsHeading": "Tool trace",
     "artifactsHeading": "Artifacts",
+    "emptyChatTitle": "Start a conversation",
+    "emptyChatBody": "Describe a task in the composer below — the Agent will plan, execute, and deliver artifacts.",
     "emptyTools": "No tool calls yet.",
     "emptyArtifacts": "No artifacts yet.",
     "accountLabel": "Account",

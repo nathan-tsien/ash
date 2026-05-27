@@ -15,7 +15,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   return (
     <div className="shrink-0 border-t border-border bg-background px-4 py-3">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
-        <div className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-xs">
+        <div className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
           <textarea
             className="max-h-[168px] min-h-[72px] w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none"
             placeholder={t("textareaPlaceholder")}

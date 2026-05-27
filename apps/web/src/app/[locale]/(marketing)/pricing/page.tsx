@@ -55,10 +55,10 @@ export default async function PricingPage({ params }: Props) {
             return (
               <div
                 key={tier.slug}
-                className={`flex flex-col rounded-2xl border p-8 ${
+                className={`flex flex-col rounded-2xl border p-8 transition-all duration-200 ${
                   tier.emphasized
-                    ? "border-foreground/20 bg-foreground text-primary-foreground shadow-lg"
-                    : "border-border bg-card text-foreground"
+                    ? "border-foreground/20 bg-foreground text-primary-foreground shadow-lg hover:scale-[1.02] hover:shadow-xl"
+                    : "border-border bg-card text-foreground hover:-translate-y-0.5 hover:shadow-sm"
                 }`}
               >
                 <h2 className="text-[13px] font-semibold uppercase tracking-wider opacity-90">{name}</h2>

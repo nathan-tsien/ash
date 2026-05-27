@@ -11,9 +11,15 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
       <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
         {t("planHeading")}
       </h2>
-      <ol className="space-y-2">
-        {steps.map((step) => (
-          <li key={step.id} className="flex gap-2 text-sm leading-snug">
+      <ol className="space-y-1 rounded-lg bg-muted/30 p-2">
+        {steps.map((step, i) => (
+          <li
+            key={step.id}
+            className={cn(
+              "flex gap-2 rounded-md px-2 py-1.5 text-sm leading-snug",
+              i % 2 === 0 && "bg-muted/40",
+            )}
+          >
             <PlanStatusIcon status={step.status} />
             <span
               className={cn(

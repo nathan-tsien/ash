@@ -194,7 +194,7 @@ export function WorkbenchSidebar({
         <div className="mt-auto flex flex-col items-center gap-2 pb-3">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-10 rounded-xl" asChild>
+              <Button variant="ghost" size="icon" className="size-10 rounded-xl active:bg-sidebar-accent" asChild>
                 <Link href="/" aria-label={t("newTask")}>
                   <Plus className="size-[18px]" />
                 </Link>
@@ -207,7 +207,7 @@ export function WorkbenchSidebar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-xl"
+                className="size-10 rounded-xl active:bg-sidebar-accent"
                 onClick={() => openSettings("account")}
                 aria-label={t("settingsAria")}
               >
@@ -220,7 +220,7 @@ export function WorkbenchSidebar({
             <TooltipTrigger asChild>
               <Button
                 ref={expandRailRef}
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 className="size-10 rounded-xl"
                 aria-label={t("expandSidebarRailAria")}

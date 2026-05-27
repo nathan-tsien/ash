@@ -11,7 +11,9 @@ export function MessageBubble({
 }) {
   const isUser = message.role === "user";
   return (
-    <div className={cn("flex flex-col gap-2", isUser ? "items-end" : "items-start")}>
+    <div
+      className={cn("flex animate-[message-in_0.3s_ease-out_both] flex-col gap-2", isUser ? "items-end" : "items-start")}
+    >
       <div
         className={cn(
           isUser ? "max-w-[90%]" : "max-w-[90%]",
