@@ -322,6 +322,8 @@
     "planHeading": "Plan",
     "toolsHeading": "工具链路",
     "artifactsHeading": "Artifacts",
+    "emptyChatTitle": "开始一段对话",
+    "emptyChatBody": "在下方输入框描述任务 — Agent 会自动规划、执行并交付工件。",
     "emptyTools": "暂无工具调用。",
     "emptyArtifacts": "暂无工件。",
     "accountLabel": "账户",

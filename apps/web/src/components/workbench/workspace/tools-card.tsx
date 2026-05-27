@@ -1,5 +1,6 @@
 import type { ToolTrace } from "@ash/shared";
 import { Badge } from "@ash/ui/badge";
+import { cn } from "@ash/ui/lib/utils";
 import { Loader2, Wrench } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
@@ -14,9 +15,9 @@ export async function ToolsCard({ traces }: { traces: ToolTrace[] }) {
       {traces.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t("emptyTools")}</p>
       ) : (
-        <ul className="space-y-3">
-          {traces.map((trace) => (
-            <li key={trace.id} className="flex gap-2 text-sm">
+        <ul className="space-y-1 rounded-lg bg-muted/30 p-2">
+          {traces.map((trace, i) => (
+            <li key={trace.id} className={cn("flex gap-2 rounded-md px-2 py-1.5 text-sm", i % 2 === 0 && "bg-muted/40")}>
               <Wrench className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">

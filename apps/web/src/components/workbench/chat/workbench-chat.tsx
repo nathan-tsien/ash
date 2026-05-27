@@ -8,7 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@ash/ui/tooltip";
-import { Loader2, MessageSquare, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Loader2, MessageSquare, PanelRightClose, PanelRightOpen, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import type { WorkspaceToggleProps } from "../workbench-types";
@@ -99,9 +99,19 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
           aria-live="polite"
           aria-relevant="additions"
         >
-          {messages.map((m) => (
-            <MessageBubble key={m.id} locale={locale} message={m} />
-          ))}
+          {messages.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
+              <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card">
+                <Sparkles className="size-6 text-muted-foreground" aria-hidden />
+              </div>
+              <h2 className="text-[15px] font-semibold text-foreground">{t("emptyChatTitle")}</h2>
+              <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
+            </div>
+          ) : (
+            messages.map((m) => (
+              <MessageBubble key={m.id} locale={locale} message={m} />
+            ))
+          )}
           {active.status === "running" && (
             <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden />
