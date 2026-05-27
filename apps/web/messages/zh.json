@@ -214,7 +214,7 @@
     },
     "personalization": {
       "heading": "个性化",
-      "description": "外观与排版偏好；暗色与重音色在 ADR-0005 验收后开启。",
+      "description": "外观与排版偏好。",
       "themeLabel": "主题",
       "themeLight": "亮色",
       "themeSystem": "跟随系统",

@@ -93,6 +93,44 @@
   --workspace: #fafafa;
 }
 
+/*
+ * Dark palette — inverted Manus neutrals.
+ * Applied via .dark class on <html>, toggled by ThemeProvider.
+ * See: docs/adr/0010-dark-mode-theme-toggle.md
+ */
+:root.dark {
+  --background: #1a1918;
+  --foreground: #f0efed;
+  --card: #252423;
+  --card-foreground: #f0efed;
+  --popover: #252423;
+  --popover-foreground: #f0efed;
+
+  --primary: #f0efed;
+  --primary-foreground: #1a1918;
+
+  --secondary: #2a2928;
+  --secondary-foreground: #f0efed;
+
+  --muted: #252423;
+  --muted-foreground: #a09e9a;
+
+  --accent: #2a2928;
+  --accent-foreground: #f0efed;
+
+  --destructive: #e55050;
+  --border: #333230;
+  --input: #333230;
+  --ring: rgba(240, 239, 237, 0.28);
+
+  --sidebar: #1e1d1c;
+  --sidebar-foreground: #f0efed;
+  --sidebar-border: #2a2928;
+  --sidebar-accent: #2a2928;
+
+  --workspace: #201f1e;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
