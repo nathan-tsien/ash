@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Button } from "@ash/ui/button";
-import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useTranslations } from "next-intl";
 import "@/lib/animations/gsap-setup";
@@ -19,25 +18,17 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   const sendButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus animation on textarea
-  useGSAP(
-    () => {
-      const textarea = containerRef.current?.querySelector("textarea");
-      if (!textarea) return;
+  useEffect(() => {
+    const container = containerRef.current;
+    const textarea = container?.querySelector("textarea");
+    if (!container || !textarea) return;
 
+    const ctx = gsap.context(() => {
       const onFocus = () => {
-        gsap.to(containerRef.current, {
-          scale: 1.01,
-          duration: 0.2,
-          ease: "power2.out",
-        });
+        gsap.to(container, { scale: 1.01, duration: 0.2, ease: "power2.out" });
       };
-
       const onBlur = () => {
-        gsap.to(containerRef.current, {
-          scale: 1,
-          duration: 0.2,
-          ease: "power2.out",
-        });
+        gsap.to(container, { scale: 1, duration: 0.2, ease: "power2.out" });
       };
 
       textarea.addEventListener("focus", onFocus);
@@ -47,14 +38,13 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
         textarea.removeEventListener("focus", onFocus);
         textarea.removeEventListener("blur", onBlur);
       };
-    },
-    { scope: containerRef },
-  );
+    }, container);
+
+    return () => ctx.revert();
+  }, []);
 
   // Send button press animation
-  const { contextSafe } = useGSAP({ scope: containerRef });
-
-  const handleSendPress = contextSafe(() => {
+  const handleSendPress = useCallback(() => {
     if (!sendButtonRef.current) return;
     gsap.to(sendButtonRef.current, {
       scale: 0.95,
@@ -68,7 +58,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
         });
       },
     });
-  });
+  }, []);
 
   return (
     <div className="shrink-0 border-t border-border bg-background px-4 py-3">
