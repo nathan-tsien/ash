@@ -73,7 +73,7 @@ Per the approved Phase 1 spec:
 
 - Palette + radii authored **only** in **`packages/ui/src/globals.css`**; consumers use semantic utilities (`bg-sidebar`, `text-muted-foreground`, …).
 - **No unsanctioned hex / rgb** in `apps/web` for branded surfaces — deviations require English `TODO(ash-visual)` + review.
-- **Dark theme literals** (`:root.dark` or equivalent) do **not** ship until a dedicated ADR + doc update (**`@custom-variant dark` stays inert outside experiments**).
+- **Dark theme** ships per **ADR-0010** (`:root.dark` inverted Manus neutrals in `globals.css`, ThemeProvider in `@ash/ui`). Future theme variants (high-contrast, accent colors) remain deferred.
 
 Details: **`docs/visual-language-and-theme.md`**.
 
