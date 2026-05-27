@@ -3,6 +3,7 @@
 import { Badge } from "@ash/ui/badge";
 import { Button } from "@ash/ui/button";
 import { cn } from "@ash/ui/lib/utils";
+import { useTheme } from "@ash/ui/lib/theme-provider";
 import { useTranslations } from "next-intl";
 import { SectionHeader } from "../section-header";
 
@@ -10,16 +11,14 @@ interface OptionButtonProps {
   label: string;
   selected: boolean;
   disabled?: boolean;
-  showPhase2?: boolean;
-  phase2Label?: string;
+  onClick?: () => void;
 }
 
 function OptionButton({
   label,
   selected,
   disabled,
-  showPhase2,
-  phase2Label,
+  onClick,
 }: OptionButtonProps) {
   return (
     <Button
@@ -28,21 +27,20 @@ function OptionButton({
       size="sm"
       disabled={disabled}
       aria-pressed={selected}
+      onClick={onClick}
       className={cn(
         "gap-2",
         selected && "border-primary bg-accent text-foreground",
       )}
     >
       {label}
-      {showPhase2 && phase2Label && (
-        <Badge variant="muted">{phase2Label}</Badge>
-      )}
     </Button>
   );
 }
 
 export function PersonalizationSection() {
   const t = useTranslations("Settings");
+  const { theme, setTheme } = useTheme();
 
   return (
     <div>
@@ -57,52 +55,52 @@ export function PersonalizationSection() {
           <div className="flex flex-wrap gap-2">
             <OptionButton
               label={t("personalization.themeLight")}
-              selected
+              selected={theme === "light"}
+              onClick={() => setTheme("light")}
             />
             <OptionButton
               label={t("personalization.themeSystem")}
-              selected={false}
-              disabled
-              showPhase2
-              phase2Label={t("phase2Badge")}
+              selected={theme === "system"}
+              onClick={() => setTheme("system")}
             />
             <OptionButton
               label={t("personalization.themeDark")}
-              selected={false}
-              disabled
-              showPhase2
-              phase2Label={t("phase2Badge")}
+              selected={theme === "dark"}
+              onClick={() => setTheme("dark")}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">{t("personalization.densityLabel")}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">{t("personalization.densityLabel")}</p>
+            <Badge variant="muted">{t("phase2Badge")}</Badge>
+          </div>
           <div className="flex flex-wrap gap-2">
             <OptionButton
               label={t("personalization.densityComfortable")}
               selected
+              disabled
             />
             <OptionButton
               label={t("personalization.densityCompact")}
               selected={false}
               disabled
-              showPhase2
-              phase2Label={t("phase2Badge")}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">{t("personalization.fontLabel")}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">{t("personalization.fontLabel")}</p>
+            <Badge variant="muted">{t("phase2Badge")}</Badge>
+          </div>
           <div className="flex flex-wrap gap-2">
-            <OptionButton label={t("personalization.fontSans")} selected />
+            <OptionButton label={t("personalization.fontSans")} selected disabled />
             <OptionButton
               label={t("personalization.fontSerif")}
               selected={false}
               disabled
-              showPhase2
-              phase2Label={t("phase2Badge")}
             />
           </div>
         </div>

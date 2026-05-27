@@ -21,7 +21,7 @@ Mandatory rules:
 | ID | Rule |
 |----|------|
 | DT-1 | `apps/web` **must rely on semantic utility tokens** derived from `:root`; raw brand hex absent except documented escapes |
-| DT-2 | **`.dark`** CSS surface exists only as tooling hook (**`@custom-variant dark`**); **no canonical dark palette** ships until QA + superseding ADR |
+| DT-2 | **`.dark`** CSS surface exists only as tooling hook (**`@custom-variant dark`**); **no canonical dark palette** ships until QA + superseding ADR. **Superseded for dark mode scope by ADR-0010.** |
 | DT-3 | Workbench geography requires dedicated tokens **`sidebar*`** family + **`workspace`** separate from **`background`** parity |
 | DT-4 | **`--primary` / `--primary-foreground`** follow **Manus Black on White** inversion for solid CTAs (no unrelated saturated hues) |
 | DT-5 | Status semantics (success / warning / destructive) may deviate chromatically only through **named badge / status utilities** already aligned in UI package |
@@ -32,4 +32,5 @@ Authoritative narrative spec: **`docs/visual-language-and-theme.md`**.
 
 - **Easier:** uniform Manus-like discipline without hiring a brand agency first.
 - **Harder:** adding marketing accent color now demands doc + ADR churn (intentional friction).
-- **Deferred:** dark palette parity, high-contrast theme, user-selectable themes (each future ADR).
+- **Deferred:** high-contrast theme, accent color customization (each future ADR).
+- **Unlocked (ADR-0010):** dark palette parity, user-selectable theme (Light / Dark / System).

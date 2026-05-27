@@ -6,6 +6,7 @@
   "exports": {
     "./globals.css": "./src/globals.css",
     "./lib/utils": "./src/lib/utils.ts",
+    "./lib/theme-provider": "./src/lib/theme-provider.tsx",
     "./*": "./src/components/*.tsx"
   },
   "scripts": {

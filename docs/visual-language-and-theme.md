@@ -118,13 +118,40 @@ Reserve **warning amber** sparingly (**`Badge` variant `warning`** already exist
 
 ### 5.5 Raw values location
 
-Authoritative palette literals (**HEX / RGBA today**) exist only in **`packages/ui/src/globals.css`** inside **`:root`**. Do not fork shadow theme files.
+Authoritative palette literals (**HEX / RGBA today**) exist only in **`packages/ui/src/globals.css`** inside **`:root`** (light) and **`:root.dark`** (dark). Do not fork shadow theme files.
 
-### 5.6 Dark mode placeholder
+### 5.6 Dark mode palette
 
-Until dual palettes are finalized, **no `:root.dark { ... }` token block ships in Phase 1**.
+Dark mode uses **inverted Manus neutrals** — same tonal relationships, dark canvas. See **ADR-0010** for decision rationale.
 
-Do not rely on `prefers-color-scheme` alone in production paths without an ADR — keep experiments on branches.
+| Token | Light | Dark |
+|-------|-------|------|
+| `--background` | `#f8f8f8` | `#1a1918` |
+| `--foreground` | `#34322d` | `#f0efed` |
+| `--card` | `#ffffff` | `#252423` |
+| `--card-foreground` | `#34322d` | `#f0efed` |
+| `--popover` | `#ffffff` | `#252423` |
+| `--popover-foreground` | `#34322d` | `#f0efed` |
+| `--primary` | `#34322d` | `#f0efed` |
+| `--primary-foreground` | `#ffffff` | `#1a1918` |
+| `--secondary` | `#ebeae8` | `#2a2928` |
+| `--secondary-foreground` | `#34322d` | `#f0efed` |
+| `--muted` | `#f0efed` | `#252423` |
+| `--muted-foreground` | `#706e69` | `#a09e9a` |
+| `--accent` | `#eae9e7` | `#2a2928` |
+| `--accent-foreground` | `#34322d` | `#f0efed` |
+| `--destructive` | `#c53030` | `#e55050` |
+| `--border` | `#e4e4e1` | `#333230` |
+| `--input` | `#e4e4e1` | `#333230` |
+| `--ring` | `rgba(52,50,45,0.28)` | `rgba(240,239,237,0.28)` |
+| `--sidebar` | `#ffffff` | `#1e1d1c` |
+| `--sidebar-foreground` | `#34322d` | `#f0efed` |
+| `--sidebar-border` | `#ecebe9` | `#2a2928` |
+| `--sidebar-accent` | `#f4f3f2` | `#2a2928` |
+| `--workspace` | `#fafafa` | `#201f1e` |
+
+Theme is toggled via `.dark` class on `<html>`, managed by **ThemeProvider** (`@ash/ui`).
+User preference persists in `localStorage("ash-theme")` with `"light" | "dark" | "system"` options.
 
 ## 6. Imagery / illustration
 
@@ -148,6 +175,7 @@ Reviewer / author confirms:
 |------|----------------|
 | `packages/ui/src/globals.css` | Authoritative literals + `@theme` exports |
 | `docs/adr/0005-*` | Decision record tying discipline + neutrality posture |
+| `docs/adr/0010-*` | Dark mode decision — inverted Manus neutrals |
 | `docs/components/agent-workbench-shell.md` | Motion + breakpoints interplay |
 
 ## Revision protocol

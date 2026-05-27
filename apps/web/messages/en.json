@@ -214,7 +214,7 @@
     },
     "personalization": {
       "heading": "Personalization",
-      "description": "Appearance and typography; dark theme and accent variants unlock after ADR-0005 sign-off.",
+      "description": "Appearance and typography preferences.",
       "themeLabel": "Theme",
       "themeLight": "Light",
       "themeSystem": "System",
