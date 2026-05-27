@@ -23,7 +23,7 @@ Replace CSS-only keyframe animations with GSAP-powered motion for chat messages 
 
 ### Reduced motion
 
-`gsap.matchMedia()` with `(prefers-reduced-motion: reduce)` query. All animations use `duration: 0` when active. Per GSAP best practice: matchMedia auto-reverts when conditions change, no manual cleanup.
+`gsap.matchMedia()` with `(prefers-reduced-motion: reduce)` query, configured in `gsap-setup.ts`. All animations use `duration: 0` when active. Per GSAP best practice: matchMedia auto-reverts when conditions change, no manual cleanup.
 
 ### Interruptible animations
 
@@ -57,10 +57,6 @@ gsap.defaults({
   overwrite: "auto",
 });
 ```
-
-### `apps/web/src/lib/animations/use-animation.ts`
-
-Wrapper around `useGSAP` with `gsap.matchMedia()` for reduced motion. Exposes scope ref and reduceMotion flag to consumers.
 
 ### `apps/web/src/lib/animations/presets.ts`
 
@@ -142,7 +138,7 @@ Switching conversations is a Next.js route change (`/c/[id]`), which remounts th
 | `message-bubble.tsx` | Add `ref` prop for GSAP targeting | Layout, timestamps |
 | `composer.tsx` | Focus/send micro-interactions | Textarea, Cmd+Enter |
 
-New files: `gsap-setup.ts`, `use-animation.ts`, `presets.ts`, `index.ts` in `apps/web/src/lib/animations/`.
+New files: `gsap-setup.ts`, `presets.ts`, `index.ts` in `apps/web/src/lib/animations/`.
 
 ## Accessibility
 
