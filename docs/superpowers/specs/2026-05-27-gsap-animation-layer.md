@@ -1,7 +1,7 @@
 # GSAP Animation Layer — Chat + Pane Transitions
 
 Date: 2026-05-27
-Status: Proposed
+Status: Accepted
 Scope: Phase 1 visual polish (no server work)
 
 ## Goal
