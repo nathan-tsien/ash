@@ -2,6 +2,10 @@ import type { Message, AshLocale } from "@ash/shared";
 import { formatRelativeTime } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { forwardRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 
 export interface MessageBubbleProps {
   message: Message;
@@ -33,7 +37,35 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
                 : "border border-border bg-card",
             )}
           >
-            <p className="whitespace-pre-wrap text-left">{message.content}</p>
+            {isUser ? (
+              <p className="whitespace-pre-wrap text-left">{message.content}</p>
+            ) : (
+              <div className="prose-chat text-left">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight]}
+                  components={{
+                    a: ({ href, children, ...props }) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        {...props}
+                      >
+                        {children}
+                      </a>
+                    ),
+                    pre: ({ children, ...props }) => (
+                      <pre className="relative" {...props}>
+                        {children}
+                      </pre>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+            )}
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
             {formatRelativeTime(message.createdAt, locale)}
