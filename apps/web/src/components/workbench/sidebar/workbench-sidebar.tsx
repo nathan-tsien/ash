@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSettingsModal } from "@/components/settings/settings-modal-provider";
+import { useCommandPalette } from "@/components/command-palette/command-palette-provider";
 import { Link } from "@/i18n/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FooterAccount } from "./footer-account";
@@ -51,6 +52,7 @@ export function WorkbenchSidebar({
   const lastToggleRef = useRef<"none" | "collapse" | "expand">("none");
   const t = useTranslations("Workbench");
   const { openSettings } = useSettingsModal();
+  const { openPalette } = useCommandPalette();
 
   const filtered = useMemo(() => {
     const q = sidebarQuery.trim().toLowerCase();
@@ -168,6 +170,7 @@ export function WorkbenchSidebar({
                 type="button"
                 className="w-full gap-2 text-muted-foreground"
                 aria-label={t("commandPaletteAria")}
+                onClick={openPalette}
               >
                 <span className="text-xs">{t("cmdK")}</span>
                 <Search className="size-4" aria-hidden />

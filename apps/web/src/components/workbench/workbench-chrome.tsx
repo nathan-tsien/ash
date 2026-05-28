@@ -10,10 +10,12 @@ import { PanelRightOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import "@/lib/animations/gsap-setup";
 import { fadeOut, fadeIn } from "@/lib/animations/presets";
 import { SettingsModalProvider } from "@/components/settings/settings-modal-provider";
+import { CommandPaletteProvider, useCommandPalette } from "@/components/command-palette/command-palette-provider";
+import { CommandPalette } from "@/components/command-palette/command-palette";
 import { WorkbenchChat } from "./chat/workbench-chat";
 import { WorkbenchSidebar } from "./sidebar/workbench-sidebar";
 import type {
@@ -25,8 +27,7 @@ export interface WorkbenchChromeProps extends WorkbenchShellProps {
   workspacePanel: ReactNode;
 }
 
-/** Smallest "use client" boundary; owns workspace collapse state only. */
-export function WorkbenchChrome({
+function WorkbenchChromeInner({
   locale,
   conversations,
   active,
@@ -37,6 +38,7 @@ export function WorkbenchChrome({
   const workspaceRef = useRef<HTMLDivElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations("Workbench");
+  const { togglePalette } = useCommandPalette();
 
   const onToggle = useCallback(() => setWorkspaceCollapsed((v) => !v), []);
   const onExpand = useCallback(() => setWorkspaceCollapsed(false), []);
@@ -45,6 +47,18 @@ export function WorkbenchChrome({
     () => ({ collapsed: workspaceCollapsed, onToggle }),
     [workspaceCollapsed, onToggle],
   );
+
+  // Global Cmd+K shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        togglePalette();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [togglePalette]);
 
   useGSAP(
     () => {
@@ -66,48 +80,58 @@ export function WorkbenchChrome({
   );
 
   return (
-    <SettingsModalProvider>
-      <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
-        <WorkbenchSidebar
-          locale={locale}
-          conversations={conversations}
-          activeId={active.id}
-        />
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
+      <WorkbenchSidebar
+        locale={locale}
+        conversations={conversations}
+        activeId={active.id}
+      />
 
-        <WorkbenchChat
-          locale={locale}
-          active={active}
-          workspace={workspaceToggle}
-          banner={chatBanner}
-        />
+      <WorkbenchChat
+        locale={locale}
+        active={active}
+        workspace={workspaceToggle}
+        banner={chatBanner}
+      />
 
-        <div
-          ref={workspaceRef}
-          className="flex shrink-0 flex-col"
-          style={{ width: 380 }}
-        >
-          {workspacePanel}
-        </div>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              ref={fabRef}
-              variant="pill"
-              size="sm"
-              className="fixed bottom-24 right-4 z-40 gap-2 shadow-md lg:bottom-8"
-              type="button"
-              aria-label={t("expandWorkbenchAria")}
-              onClick={onExpand}
-              style={{ visibility: workspaceCollapsed ? "visible" : "hidden" }}
-            >
-              <PanelRightOpen className="size-4" aria-hidden />
-              {t("workspaceTitle")}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">{t("workspaceFabTooltip")}</TooltipContent>
-        </Tooltip>
+      <div
+        ref={workspaceRef}
+        className="flex shrink-0 flex-col"
+        style={{ width: 380 }}
+      >
+        {workspacePanel}
       </div>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            ref={fabRef}
+            variant="pill"
+            size="sm"
+            className="fixed bottom-24 right-4 z-40 gap-2 shadow-md lg:bottom-8"
+            type="button"
+            aria-label={t("expandWorkbenchAria")}
+            onClick={onExpand}
+            style={{ visibility: workspaceCollapsed ? "visible" : "hidden" }}
+          >
+            <PanelRightOpen className="size-4" aria-hidden />
+            {t("workspaceTitle")}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left">{t("workspaceFabTooltip")}</TooltipContent>
+      </Tooltip>
+
+      <CommandPalette onToggleWorkspace={onToggle} />
+    </div>
+  );
+}
+
+export function WorkbenchChrome(props: WorkbenchChromeProps) {
+  return (
+    <SettingsModalProvider>
+      <CommandPaletteProvider>
+        <WorkbenchChromeInner {...props} />
+      </CommandPaletteProvider>
     </SettingsModalProvider>
   );
 }
