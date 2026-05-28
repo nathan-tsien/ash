@@ -302,8 +302,8 @@
     "expandSidebarTooltip": "Expand sidebar",
     "collapseSidebarTooltip": "Collapse sidebar",
     "newTask": "New task",
-    "commandPaletteAria": "Command palette placeholder",
-    "commandPaletteTooltip": "Command palette (Phase 2)",
+    "commandPaletteAria": "Open command palette",
+    "commandPaletteTooltip": "Command palette",
     "cmdK": "⌘K",
     "searchPlaceholder": "Search tasks…",
     "searchAria": "Search conversations",
@@ -315,7 +315,7 @@
     "thinkingPlaceholder": "Agent thinking… (mock)",
     "textareaPlaceholder": "Tell the Agent what to do…",
     "textareaAria": "Message composer",
-    "shortcutHint": "⌘Enter send · Shift+Enter newline",
+    "shortcutHint": "Enter send · Shift+Enter newline",
     "send": "Send",
     "workspaceTitle": "Workspace",
     "workspaceFabTooltip": "Reveal Plan/tools/artifacts",
@@ -337,6 +337,20 @@
     "accountSettings": "Settings…",
     "accountSwitch": "Switch account",
     "accountSignOut": "Sign out",
-    "accountPhase2Tooltip": "Available in Phase 2"
+    "accountPhase2Tooltip": "Available in Phase 2",
+    "copyMessage": "Copy message",
+    "copiedMessage": "Copied!",
+    "scrollToBottom": "Scroll to bottom"
+  },
+  "CommandPalette": {
+    "placeholder": "Type a command…",
+    "noResults": "No results found",
+    "groupNavigation": "Navigation",
+    "groupActions": "Actions",
+    "switchConversation": "Switch conversation",
+    "newConversation": "New conversation",
+    "openSettings": "Open settings",
+    "toggleWorkspace": "Toggle workspace",
+    "goHome": "Go home"
   }
 }
