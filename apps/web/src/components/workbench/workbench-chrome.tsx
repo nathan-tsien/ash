@@ -83,8 +83,9 @@ function WorkbenchChromeInner({
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
       <WorkbenchSidebar
         locale={locale}
-        conversations={conversations}
-        activeId={active.id}
+        tasks={[]}
+        projects={[]}
+        viewMode="home"
       />
 
       <WorkbenchChat
