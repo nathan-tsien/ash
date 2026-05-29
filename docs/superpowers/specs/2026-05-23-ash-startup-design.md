@@ -142,3 +142,11 @@ Phase 1 done when:
 2. Triple-pane aligns with **`docs/components/*`** textual contracts.
 3. No accidental cogito crates inside browser-facing dependency graphs (**lint guard future optional**).
 
+### Post-acceptance note
+
+**Auth pulled forward to Phase 2 (P2.1)** — PR #10 landed IAM auth integration (registration, login,
+logout, password reset) against an external IAM service (`localhost:8090`). This does not violate Phase 1
+exit criteria: no cogito crates were introduced, auth is a pure web-layer BFF pattern. The "Auth / tenancy"
+deferral in the table above was about posture/readiness, not a hard gate. Auth is now a prerequisite for
+all user-facing feature work. See `ROADMAP.md` Phase 2 sub-slices.
+

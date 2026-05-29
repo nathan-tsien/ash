@@ -42,6 +42,19 @@ Themes:
 
 Blocked until roadmap owners accept **streaming ADR trio** (transport, session pinning, tenancy model).
 
+### Phase 2 sub-slices (landed ahead of full Phase 2)
+
+| ID | Deliverable | PR | Status |
+|----|--------------|-----|--------|
+| P2.1 | Auth IAM integration — `@ash/iam-client` package, BFF API routes, AuthContext, auth pages, middleware guard | #10 | **Committed + merged** |
+
+> P2.1 delivers auth posture (registration, login, logout, password reset) against an external IAM service
+> (`localhost:8090`) without touching cogito or `ash-server`. It was pulled forward because the web layer
+> was ready and auth is a prerequisite for any user-facing feature work.
+>
+> Remaining Phase 2 themes (streaming, `crates/ash-server`, persisted session inventories) stay deferred
+> until the streaming ADR trio is accepted.
+
 ## Phase 3 — Vertical packs (Deferred)
 
 Office suite · self-media tooling · etc.; each requires **`featureRegistry`**

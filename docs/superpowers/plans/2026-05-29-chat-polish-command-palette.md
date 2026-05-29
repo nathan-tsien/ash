@@ -1,6 +1,6 @@
 # Chat Polish + Command Palette Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Upgrade the workbench Chat pane from plain-text to markdown-rendered messages with copy buttons, auto-resizing composer, scroll-to-bottom, and a functional Cmd+K command palette.
 
@@ -33,7 +33,7 @@
 **Files:**
 - Modify: `apps/web/package.json`
 
-- [ ] **Step 1: Add dependencies**
+- [x] **Step 1: Add dependencies**
 
 Add to `apps/web/package.json` `dependencies`:
 
@@ -45,19 +45,19 @@ Add to `apps/web/package.json` `dependencies`:
 "highlight.js": "^11.10.0"
 ```
 
-- [ ] **Step 2: Install**
+- [x] **Step 2: Install**
 
 Run: `pnpm install`
 
 Expected: Lockfile updated, no peer dependency warnings.
 
-- [ ] **Step 3: Verify build still passes**
+- [x] **Step 3: Verify build still passes**
 
 Run: `pnpm build`
 
 Expected: Build succeeds with no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/package.json pnpm-lock.yaml
@@ -74,7 +74,7 @@ git commit -m "deps: add cmdk, react-markdown, rehype-highlight, remark-gfm, hig
 
 Do this first so all subsequent tasks can reference i18n keys immediately.
 
-- [ ] **Step 1: Add keys to en.json**
+- [x] **Step 1: Add keys to en.json**
 
 In `apps/web/messages/en.json`, update the `Workbench` section — change these keys:
 
@@ -108,7 +108,7 @@ Add a new top-level `CommandPalette` section after `Workbench`:
 }
 ```
 
-- [ ] **Step 2: Add keys to zh.json**
+- [x] **Step 2: Add keys to zh.json**
 
 In `apps/web/messages/zh.json`, update the `Workbench` section — change these keys:
 
@@ -142,13 +142,13 @@ Add a new top-level `CommandPalette` section after `Workbench`:
 }
 ```
 
-- [ ] **Step 3: Verify i18n check passes**
+- [x] **Step 3: Verify i18n check passes**
 
 Run: `pnpm lint`
 
 Expected: No errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/messages/en.json apps/web/messages/zh.json
@@ -162,7 +162,7 @@ git commit -m "i18n: add command palette and chat polish translation keys"
 **Files:**
 - Modify: `apps/web/src/components/workbench/chat/message-bubble.tsx`
 
-- [ ] **Step 1: Update MessageBubble with markdown rendering**
+- [x] **Step 1: Update MessageBubble with markdown rendering**
 
 Replace the entire contents of `apps/web/src/components/workbench/chat/message-bubble.tsx`:
 
@@ -245,7 +245,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
 );
 ```
 
-- [ ] **Step 2: Add prose styles to globals.css**
+- [x] **Step 2: Add prose styles to globals.css**
 
 In `packages/ui/src/globals.css`, add these styles after the existing keyframes (before the closing of the file):
 
@@ -326,7 +326,7 @@ In `packages/ui/src/globals.css`, add these styles after the existing keyframes 
 }
 ```
 
-- [ ] **Step 3: Import highlight.js theme**
+- [x] **Step 3: Import highlight.js theme**
 
 In `apps/web/src/components/workbench/chat/message-bubble.tsx`, add at the top of the file (after the existing imports):
 
@@ -334,13 +334,13 @@ In `apps/web/src/components/workbench/chat/message-bubble.tsx`, add at the top o
 import "highlight.js/styles/github-dark.css";
 ```
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run: `pnpm typecheck && pnpm build`
 
 Expected: No errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/message-bubble.tsx packages/ui/src/globals.css
@@ -354,7 +354,7 @@ git commit -m "feat(chat): render assistant messages as markdown with syntax hig
 **Files:**
 - Modify: `apps/web/src/components/workbench/chat/message-bubble.tsx`
 
-- [ ] **Step 1: Add copy button to MessageBubble**
+- [x] **Step 1: Add copy button to MessageBubble**
 
 Replace the entire contents of `apps/web/src/components/workbench/chat/message-bubble.tsx`:
 
@@ -495,13 +495,13 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
 );
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `pnpm typecheck && pnpm build`
 
 Expected: No errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/message-bubble.tsx
@@ -515,7 +515,7 @@ git commit -m "feat(chat): add hover-reveal copy button on message bubbles"
 **Files:**
 - Modify: `apps/web/src/components/workbench/chat/composer.tsx`
 
-- [ ] **Step 1: Update Composer**
+- [x] **Step 1: Update Composer**
 
 Replace the entire contents of `apps/web/src/components/workbench/chat/composer.tsx`:
 
@@ -640,13 +640,13 @@ Key changes:
 2. Added auto-resize `useEffect` that resets height to `auto` then caps at `168px`
 3. Changed `onKeyDown` from `Cmd+Enter` to `Enter` (without shift)
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `pnpm typecheck && pnpm build`
 
 Expected: No errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/composer.tsx
@@ -661,7 +661,7 @@ git commit -m "feat(chat): auto-resize composer textarea, Enter to send"
 - Create: `apps/web/src/components/workbench/chat/scroll-to-bottom.tsx`
 - Modify: `apps/web/src/components/workbench/chat/workbench-chat.tsx`
 
-- [ ] **Step 1: Create ScrollToBottom component**
+- [x] **Step 1: Create ScrollToBottom component**
 
 Create `apps/web/src/components/workbench/chat/scroll-to-bottom.tsx`:
 
@@ -750,7 +750,7 @@ export function ScrollToBottom({ scrollAreaRef, targetRef }: ScrollToBottomProps
 }
 ```
 
-- [ ] **Step 2: Add ScrollToBottom to WorkbenchChat**
+- [x] **Step 2: Add ScrollToBottom to WorkbenchChat**
 
 In `apps/web/src/components/workbench/chat/workbench-chat.tsx`, make these changes:
 
@@ -785,13 +785,13 @@ const scrollAreaRef = useRef<HTMLDivElement>(null);
 </ScrollArea>
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `pnpm typecheck && pnpm build`
 
 Expected: No errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/scroll-to-bottom.tsx apps/web/src/components/workbench/chat/workbench-chat.tsx
@@ -805,7 +805,7 @@ git commit -m "feat(chat): add floating scroll-to-bottom button"
 **Files:**
 - Create: `apps/web/src/components/command-palette/command-palette-provider.tsx`
 
-- [ ] **Step 1: Create the provider**
+- [x] **Step 1: Create the provider**
 
 Create directory and file `apps/web/src/components/command-palette/command-palette-provider.tsx`:
 
@@ -865,13 +865,13 @@ export function useCommandPalette(): CommandPaletteContextValue {
 }
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `pnpm typecheck`
 
 Expected: No errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/components/command-palette/
@@ -885,7 +885,7 @@ git commit -m "feat: add CommandPaletteProvider context"
 **Files:**
 - Create: `apps/web/src/components/command-palette/command-palette.tsx`
 
-- [ ] **Step 1: Create the command palette component**
+- [x] **Step 1: Create the command palette component**
 
 Create `apps/web/src/components/command-palette/command-palette.tsx`:
 
@@ -1047,13 +1047,13 @@ export function CommandPalette({ onToggleWorkspace }: CommandPaletteProps) {
 }
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `pnpm typecheck`
 
 Expected: No errors (will have unused import warnings until Task 9 wires it up).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/components/command-palette/command-palette.tsx
@@ -1068,7 +1068,7 @@ git commit -m "feat: add CommandPalette component with cmdk"
 - Modify: `apps/web/src/components/workbench/workbench-chrome.tsx`
 - Modify: `apps/web/src/components/workbench/sidebar/workbench-sidebar.tsx`
 
-- [ ] **Step 1: Update WorkbenchChrome**
+- [x] **Step 1: Update WorkbenchChrome**
 
 In `apps/web/src/components/workbench/workbench-chrome.tsx`, make these changes:
 
@@ -1197,7 +1197,7 @@ export function WorkbenchChrome(props: WorkbenchChromeProps) {
 
 4. Add `useEffect` to the imports from React.
 
-- [ ] **Step 2: Wire sidebar Cmd+K button**
+- [x] **Step 2: Wire sidebar Cmd+K button**
 
 In `apps/web/src/components/workbench/sidebar/workbench-sidebar.tsx`:
 
@@ -1223,13 +1223,13 @@ const { openPalette } = useCommandPalette();
 >
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `pnpm typecheck && pnpm build`
 
 Expected: No errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/workbench-chrome.tsx apps/web/src/components/workbench/sidebar/workbench-sidebar.tsx
@@ -1240,13 +1240,13 @@ git commit -m "feat: wire command palette with Cmd+K global shortcut and sidebar
 
 ### Task 10: Final Verification
 
-- [ ] **Step 1: Run full lint + typecheck + build**
+- [x] **Step 1: Run full lint + typecheck + build**
 
 Run: `pnpm lint && pnpm typecheck && pnpm build`
 
 Expected: All pass with no errors.
 
-- [ ] **Step 2: Manual smoke test**
+- [x] **Step 2: Manual smoke test**
 
 Run: `pnpm --filter web dev`
 
@@ -1265,7 +1265,7 @@ Test checklist:
 12. Press Escape — verify palette closes
 13. Switch locale to zh — verify all new strings are translated
 
-- [ ] **Step 3: Final commit (if any fixes needed)**
+- [x] **Step 3: Final commit (if any fixes needed)**
 
 ```bash
 git add -A && git commit -m "fix: address verification findings"

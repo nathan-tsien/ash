@@ -1,6 +1,6 @@
 # GSAP Animation Layer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add GSAP-powered animations to chat messages and pane transitions in the ash workbench.
 
@@ -17,13 +17,13 @@
 **Files:**
 - Modify: `apps/web/package.json`
 
-- [ ] **Step 1: Install gsap and @gsap/react**
+- [x] **Step 1: Install gsap and @gsap/react**
 
 ```bash
 pnpm --filter web add gsap @gsap/react
 ```
 
-- [ ] **Step 2: Verify installation**
+- [x] **Step 2: Verify installation**
 
 ```bash
 pnpm --filter web exec node -e "const gsap = require('gsap'); console.log(gsap.version)"
@@ -31,7 +31,7 @@ pnpm --filter web exec node -e "const gsap = require('gsap'); console.log(gsap.v
 
 Expected: prints a version string like `3.12.5`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/package.json pnpm-lock.yaml
@@ -47,7 +47,7 @@ git commit -m "deps: add gsap and @gsap/react to apps/web"
 - Create: `apps/web/src/lib/animations/presets.ts`
 - Create: `apps/web/src/lib/animations/index.ts`
 
-- [ ] **Step 1: Create gsap-setup.ts**
+- [x] **Step 1: Create gsap-setup.ts**
 
 Register the `useGSAP` plugin and set project-wide defaults. This file runs once at import time.
 
@@ -77,7 +77,7 @@ gsap.matchMedia().add(
 );
 ```
 
-- [ ] **Step 2: Create presets.ts**
+- [x] **Step 2: Create presets.ts**
 
 Named animation presets returning GSAP vars objects. Per GSAP best practice: use `autoAlpha` (not raw `opacity`), transform aliases only.
 
@@ -125,7 +125,7 @@ export function fadeIn(duration = 0.2): TweenVars {
 }
 ```
 
-- [ ] **Step 4: Create index.ts barrel export**
+- [x] **Step 4: Create index.ts barrel export**
 
 ```ts
 // apps/web/src/lib/animations/index.ts
@@ -137,7 +137,7 @@ export {
 } from "./presets";
 ```
 
-- [ ] **Step 5: Verify typecheck**
+- [x] **Step 5: Verify typecheck**
 
 ```bash
 pnpm typecheck
@@ -145,7 +145,7 @@ pnpm typecheck
 
 Expected: passes with no errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/lib/animations/
@@ -161,7 +161,7 @@ git commit -m "feat(animations): add GSAP foundation with presets and reduced-mo
 
 The `MessageBubble` is currently a plain server-compatible component. GSAP needs a ref to target it. Add an optional `ref` prop and remove the CSS `animate-[message-in_0.3s_ease-out_both]` class (GSAP replaces this).
 
-- [ ] **Step 1: Update MessageBubble to accept a ref**
+- [x] **Step 1: Update MessageBubble to accept a ref**
 
 Replace the entire file content:
 
@@ -218,7 +218,7 @@ Key changes:
 - Wrapped in `forwardRef` to accept a ref
 - Removed `animate-[message-in_0.3s_ease-out_both]` class (GSAP handles this now)
 
-- [ ] **Step 2: Verify typecheck**
+- [x] **Step 2: Verify typecheck**
 
 ```bash
 pnpm typecheck
@@ -226,7 +226,7 @@ pnpm typecheck
 
 Expected: passes. The `MessageBubble` is used in `workbench-chat.tsx` without a ref — that's fine, `forwardRef` makes the ref optional.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/message-bubble.tsx
@@ -242,7 +242,7 @@ git commit -m "refactor(chat): add forwardRef to MessageBubble, remove CSS anima
 
 Add GSAP animations for: (a) staggered message load on mount, (b) new message entrance on send, (c) thinking state pulse.
 
-- [ ] **Step 1: Add GSAP imports and refs**
+- [x] **Step 1: Add GSAP imports and refs**
 
 At the top of `workbench-chat.tsx`, add imports:
 
@@ -262,7 +262,7 @@ const messagesEndRef = useRef<HTMLDivElement>(null);
 const prevMessageCountRef = useRef(0);
 ```
 
-- [ ] **Step 2: Add staggered load animation**
+- [x] **Step 2: Add staggered load animation**
 
 After the `sendDraft` callback, add a `useGSAP` block for staggered entrance on mount:
 
@@ -282,7 +282,7 @@ useGSAP(
 
 This runs when the conversation changes (`active.id` dependency). It staggers all `.message-bubble` elements into view.
 
-- [ ] **Step 3: Add new message entrance animation**
+- [x] **Step 3: Add new message entrance animation**
 
 Add a second `useGSAP` block that detects when `messages.length` increases (new message added):
 
@@ -312,7 +312,7 @@ useGSAP(
 );
 ```
 
-- [ ] **Step 4: Add data attribute for bubble targeting**
+- [x] **Step 4: Add data attribute for bubble targeting**
 
 In the `messages.map` JSX, add `className="message-bubble"` to the wrapper div (the `MessageBubble` already has its own wrapper, so we add the class on the outer map element):
 
@@ -332,7 +332,7 @@ messages.map((m) => (
 ))
 ```
 
-- [ ] **Step 5: Add thinking state pulse animation**
+- [x] **Step 5: Add thinking state pulse animation**
 
 Refactor the thinking indicator to use GSAP instead of CSS `animate-spin`:
 
@@ -361,7 +361,7 @@ Refactor the thinking indicator to use GSAP instead of CSS `animate-spin`:
 
 Note: Remove the `animate-spin` class from `Loader2` — GSAP pulse replaces it.
 
-- [ ] **Step 6: Add scroll target and container ref**
+- [x] **Step 6: Add scroll target and container ref**
 
 Wrap the scrollable area with the `containerRef`. Add a `messagesEndRef` div at the bottom:
 
@@ -381,7 +381,7 @@ Change the `ScrollArea` content div to:
 </ScrollArea>
 ```
 
-- [ ] **Step 7: Verify typecheck and lint**
+- [x] **Step 7: Verify typecheck and lint**
 
 ```bash
 pnpm typecheck && pnpm lint
@@ -389,7 +389,7 @@ pnpm typecheck && pnpm lint
 
 Expected: passes.
 
-- [ ] **Step 8: Visual verification**
+- [x] **Step 8: Visual verification**
 
 ```bash
 pnpm --filter web dev
@@ -401,7 +401,7 @@ Open browser. Verify:
 3. Thinking indicator pulses instead of spinning
 4. Auto-scroll to bottom works after new messages
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/workbench-chat.tsx
@@ -417,7 +417,7 @@ git commit -m "feat(chat): add GSAP message animations — stagger, entrance, th
 
 Add subtle scale animations on focus and send button press.
 
-- [ ] **Step 1: Add GSAP imports and ref**
+- [x] **Step 1: Add GSAP imports and ref**
 
 ```ts
 import { useGSAP } from "@gsap/react";
@@ -433,7 +433,7 @@ const containerRef = useRef<HTMLDivElement>(null);
 const sendButtonRef = useRef<HTMLButtonElement>(null);
 ```
 
-- [ ] **Step 2: Add focus animation to composer container**
+- [x] **Step 2: Add focus animation to composer container**
 
 After the existing return statement opening, add a `useGSAP` block. Actually, let me restructure — the `useGSAP` call goes inside the component body before the return:
 
@@ -471,7 +471,7 @@ useGSAP(
 );
 ```
 
-- [ ] **Step 3: Add send button press animation**
+- [x] **Step 3: Add send button press animation**
 
 Use `contextSafe` from `useGSAP` for event handlers (per GSAP React skill):
 
@@ -497,7 +497,7 @@ const handleSendPress = contextSafe(() => {
 
 Note: `back.out(1.7)` gives a subtle overshoot on the spring-back, matching the "subtle & professional" feel — just barely perceptible.
 
-- [ ] **Step 4: Wire up refs in JSX**
+- [x] **Step 4: Wire up refs in JSX**
 
 Update the composer container to use `containerRef`:
 
@@ -520,17 +520,17 @@ Update the send button to use `sendButtonRef` and `handleSendPress`:
 >
 ```
 
-- [ ] **Step 5: Verify typecheck**
+- [x] **Step 5: Verify typecheck**
 
 ```bash
 pnpm typecheck
 ```
 
-- [ ] **Step 6: Visual verification**
+- [x] **Step 6: Visual verification**
 
 In browser: click the textarea — container scales up slightly. Click send — button squishes and springs back.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/chat/composer.tsx
@@ -546,7 +546,7 @@ git commit -m "feat(chat): add GSAP micro-interactions to composer — focus sca
 
 Replace the CSS `transition-[width]` with GSAP timeline for sidebar collapse/expand. The sidebar uses conditional rendering (`sidebarCollapsed ? null : <content>`) — GSAP needs the content to exist in DOM during animation, so we'll use visibility/opacity instead of conditional removal.
 
-- [ ] **Step 1: Add GSAP imports**
+- [x] **Step 1: Add GSAP imports**
 
 ```ts
 import { useGSAP } from "@gsap/react";
@@ -555,7 +555,7 @@ import "@/lib/animations/gsap-setup";
 import { fadeOut, fadeIn } from "@/lib/animations/presets";
 ```
 
-- [ ] **Step 2: Add refs for animation targets**
+- [x] **Step 2: Add refs for animation targets**
 
 Add refs inside the component:
 
@@ -565,7 +565,7 @@ const expandedContentRef = useRef<HTMLDivElement>(null);
 const collapsedRailRef = useRef<HTMLDivElement>(null);
 ```
 
-- [ ] **Step 3: Replace CSS transition with GSAP timeline**
+- [x] **Step 3: Replace CSS transition with GSAP timeline**
 
 Remove the `transition-[width] duration-200 ease-out` class from the `<aside>`. Add a `useGSAP` block that reacts to `sidebarCollapsed`:
 
@@ -595,7 +595,7 @@ useGSAP(
 );
 ```
 
-- [ ] **Step 4: Restructure JSX to always render both states**
+- [x] **Step 4: Restructure JSX to always render both states**
 
 Currently the expanded content and collapsed rail are conditionally rendered. Both need to exist in DOM for GSAP to animate between them. Replace the conditional rendering with visibility toggling.
 
@@ -628,19 +628,19 @@ Wrap the collapsed rail in a div with `ref={collapsedRailRef}` and initial hidde
 </div>
 ```
 
-- [ ] **Step 5: Simplify the header for collapsed/expanded states**
+- [x] **Step 5: Simplify the header for collapsed/expanded states**
 
 The header currently has conditional content (`sidebarCollapsed ? null : <brand+collapse-button>`). Wrap the conditional parts in the expanded/collapsed containers so they animate together.
 
 The home link (Sparkles icon) appears in both states — keep it outside both containers in the header.
 
-- [ ] **Step 6: Verify typecheck and lint**
+- [x] **Step 6: Verify typecheck and lint**
 
 ```bash
 pnpm typecheck && pnpm lint
 ```
 
-- [ ] **Step 7: Visual verification**
+- [x] **Step 7: Visual verification**
 
 In browser:
 1. Click collapse — content fades, sidebar shrinks, rail icons appear
@@ -648,7 +648,7 @@ In browser:
 3. Toggle rapidly mid-animation — no tween pile-up (overwrite: "auto")
 4. Tab through sidebar — focus management still works
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/sidebar/workbench-sidebar.tsx
@@ -664,7 +664,7 @@ git commit -m "feat(sidebar): replace CSS transition with GSAP collapse/expand t
 
 The workspace panel is currently conditionally rendered (`!workspaceCollapsed && workspacePanel`). GSAP needs it in DOM to animate. Also animate the FAB entrance.
 
-- [ ] **Step 1: Add GSAP imports**
+- [x] **Step 1: Add GSAP imports**
 
 ```ts
 import { useGSAP } from "@gsap/react";
@@ -674,14 +674,14 @@ import { fadeOut, fadeIn } from "@/lib/animations/presets";
 import { useRef } from "react";
 ```
 
-- [ ] **Step 2: Add refs**
+- [x] **Step 2: Add refs**
 
 ```ts
 const workspaceRef = useRef<HTMLDivElement>(null);
 const fabRef = useRef<HTMLButtonElement>(null);
 ```
 
-- [ ] **Step 3: Replace conditional rendering with GSAP toggle**
+- [x] **Step 3: Replace conditional rendering with GSAP toggle**
 
 Change from:
 ```tsx
@@ -711,7 +711,7 @@ To: always render the workspace, animate with GSAP:
       ...
 ```
 
-- [ ] **Step 4: Add GSAP timeline for workspace toggle**
+- [x] **Step 4: Add GSAP timeline for workspace toggle**
 
 ```ts
 useGSAP(
@@ -734,7 +734,7 @@ useGSAP(
 );
 ```
 
-- [ ] **Step 5: Handle FAB visibility**
+- [x] **Step 5: Handle FAB visibility**
 
 The FAB should be hidden when workspace is expanded. Use `autoAlpha` controlled by GSAP, not conditional rendering:
 
@@ -749,20 +749,20 @@ The FAB should be hidden when workspace is expanded. Use `autoAlpha` controlled 
 >
 ```
 
-- [ ] **Step 6: Verify typecheck and lint**
+- [x] **Step 6: Verify typecheck and lint**
 
 ```bash
 pnpm typecheck && pnpm lint
 ```
 
-- [ ] **Step 7: Visual verification**
+- [x] **Step 7: Visual verification**
 
 In browser:
 1. Click workspace toggle — panel slides right, FAB appears
 2. Click FAB — FAB disappears, panel slides in from right
 3. Toggle rapidly — no visual glitches
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/web/src/components/workbench/workbench-chrome.tsx
@@ -776,7 +776,7 @@ git commit -m "feat(workspace): add GSAP slide animation for workspace collapse/
 **Files:**
 - Verify all animation components
 
-- [ ] **Step 1: Test reduced-motion**
+- [x] **Step 1: Test reduced-motion**
 
 Open Chrome DevTools > Rendering > Emulate CSS media feature `prefers-reduced-motion: reduce`. Verify:
 1. Messages appear instantly (no stagger)
@@ -785,7 +785,7 @@ Open Chrome DevTools > Rendering > Emulate CSS media feature `prefers-reduced-mo
 4. Composer focus/send have no scale animation
 5. Thinking indicator is static
 
-- [ ] **Step 2: Test keyboard navigation**
+- [x] **Step 2: Test keyboard navigation**
 
 Tab through the entire workbench:
 1. Sidebar: home link, new task, cmd+k, search, conversation rows, footer
@@ -794,7 +794,7 @@ Tab through the entire workbench:
 
 Verify no focus traps, all interactive elements reachable.
 
-- [ ] **Step 3: Run full verification**
+- [x] **Step 3: Run full verification**
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm build
@@ -802,7 +802,7 @@ pnpm typecheck && pnpm lint && pnpm build
 
 Expected: all pass.
 
-- [ ] **Step 4: Commit any fixes**
+- [x] **Step 4: Commit any fixes**
 
 If any issues found and fixed during verification, commit them.
 
@@ -819,13 +819,13 @@ git commit -m "fix(animations): address reduced-motion and keyboard navigation i
 - Modify: `docs/components/workbench-chat.md` (update animation behavior)
 - Modify: `docs/components/agent-workbench-shell.md` (note GSAP layer)
 
-- [ ] **Step 1: Update component docs**
+- [x] **Step 1: Update component docs**
 
 In `docs/components/workbench-chat.md`, note that message animations are now GSAP-powered with reduced-motion support.
 
 In `docs/components/agent-workbench-shell.md`, add a brief note about the GSAP animation layer under the "Layering" or "Keyboard affordances" section.
 
-- [ ] **Step 2: Final commit**
+- [x] **Step 2: Final commit**
 
 ```bash
 git add docs/components/
