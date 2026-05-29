@@ -73,26 +73,38 @@ vi.mock("lucide-react", () => ({
   ArrowDown: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="arrow-down" {...props} />
   ),
-  Search: (props: React.SVGProps<SVGSVGElement>) => (
-    <svg data-testid="search" {...props} />
-  ),
-  Home: (props: React.SVGProps<SVGSVGElement>) => (
-    <svg data-testid="home" {...props} />
-  ),
-  MessageSquarePlus: (props: React.SVGProps<SVGSVGElement>) => (
-    <svg data-testid="msg-plus" {...props} />
-  ),
-  Settings: (props: React.SVGProps<SVGSVGElement>) => (
-    <svg data-testid="settings" {...props} />
-  ),
   ArrowLeftRight: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="arrow-lr" {...props} />
+  ),
+  Check: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="check" {...props} />
   ),
   Copy: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="copy" {...props} />
   ),
-  Check: (props: React.SVGProps<SVGSVGElement>) => (
-    <svg data-testid="check" {...props} />
+  FolderPlus: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="folder-plus" {...props} />
+  ),
+  Home: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="home" {...props} />
+  ),
+  ListTodo: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="list-todo" {...props} />
+  ),
+  LogOut: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="log-out" {...props} />
+  ),
+  MessageSquarePlus: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="msg-plus" {...props} />
+  ),
+  Search: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="search" {...props} />
+  ),
+  Settings: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="settings" {...props} />
+  ),
+  SquarePlus: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="square-plus" {...props} />
   ),
 }));
 
