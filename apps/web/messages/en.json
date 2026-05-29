@@ -363,7 +363,8 @@
     "projectName": "Name",
     "projectDescription": "Description",
     "connectors": "Connectors",
-    "projectSpaceTitle": "Project Space"
+    "projectSpaceTitle": "Project Space",
+    "sidebarItemsAria": "Task and project list"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

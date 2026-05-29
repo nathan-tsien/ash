@@ -11,5 +11,15 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
+    onError(error) {
+      if (error.code === "MISSING_MESSAGE") {
+        // Log missing keys in development instead of crashing
+        if (process.env.NODE_ENV === "development") {
+          console.warn(`[i18n] ${error.message}`);
+        }
+      } else {
+        throw error;
+      }
+    },
   };
 });

@@ -363,7 +363,8 @@
     "projectName": "名称",
     "projectDescription": "描述",
     "connectors": "连接器",
-    "projectSpaceTitle": "项目空间"
+    "projectSpaceTitle": "项目空间",
+    "sidebarItemsAria": "任务与项目列表"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
