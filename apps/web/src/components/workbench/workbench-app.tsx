@@ -147,7 +147,11 @@ export function WorkbenchApp({
         </Tooltip>
       )}
 
-      <CommandPalette onToggleWorkspace={viewMode !== "home" ? onToggle : undefined} />
+      <CommandPalette
+        onToggleWorkspace={viewMode !== "home" ? onToggle : undefined}
+        tasks={tasks}
+        projects={projects}
+      />
     </div>
   );
 }

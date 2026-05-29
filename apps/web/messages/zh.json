@@ -370,10 +370,14 @@
     "noResults": "未找到结果",
     "groupNavigation": "导航",
     "groupActions": "操作",
+    "groupTasks": "任务",
+    "groupProjects": "项目",
     "switchConversation": "切换会话",
     "newConversation": "新建会话",
     "openSettings": "打开设置",
     "toggleWorkspace": "切换工作台",
-    "goHome": "回到首页"
+    "goHome": "回到首页",
+    "newTask": "新建任务",
+    "newProject": "新建项目"
   }
 }

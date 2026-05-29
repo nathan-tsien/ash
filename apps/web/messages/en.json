@@ -370,10 +370,14 @@
     "noResults": "No results found",
     "groupNavigation": "Navigation",
     "groupActions": "Actions",
+    "groupTasks": "Tasks",
+    "groupProjects": "Projects",
     "switchConversation": "Switch conversation",
     "newConversation": "New conversation",
     "openSettings": "Open settings",
     "toggleWorkspace": "Toggle workspace",
-    "goHome": "Go home"
+    "goHome": "Go home",
+    "newTask": "New task",
+    "newProject": "New project"
   }
 }
