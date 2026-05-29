@@ -37,8 +37,9 @@ Collapse animation target `200–260ms ease-out`; honor `prefers-reduced-motion`
 
 | Shortcut | Intent |
 |---------|--------|
-| `Meta+K` / `Ctrl+K` | Invoke command palette (**Phase 1 may stub**) |
-| `Meta+Enter` / `Ctrl+Enter` inside composer | Send message |
+| `Meta+K` / `Ctrl+K` | Invoke command palette (cmdk-based, with search + keyboard nav) |
+| `Enter` inside composer | Send message |
+| `Shift+Enter` inside composer | Insert newline |
 
 Document additional chords inside each pane-specific file when localized.
 
@@ -57,7 +58,8 @@ Implementation layout under **`apps/web/src/components/workbench/`**:
 | Module | Role |
 |--------|------|
 | `workbench-shell.tsx` | Server entry composing chrome + workspace panel |
-| `workbench-chrome.tsx` | Client orchestrator (workspace collapse + FAB) |
+| `workbench-chrome.tsx` | Client orchestrator (workspace collapse + FAB + command palette wiring) |
+| `command-palette/` | cmdk-based command palette (provider + component) |
 | `sidebar/` | Left inventory rail |
 | `chat/` | Center conversation column |
 | `workspace/` | Right audit rail (Plan / Tools / Artifacts) |
@@ -68,7 +70,7 @@ Semantic landmarks (`nav`, `main`, `aside` equivalents acceptable). Maintain vis
 
 ## GSAP animation layer
 
-Sidebar collapse/expand and Workspace collapse/expand use GSAP timelines instead of CSS transitions. Sidebar slides between the full width and rail width; Workspace slides via `xPercent`. Composer focus and send-button press also use GSAP micro-interactions. All animations honor `prefers-reduced-motion` through `gsap.matchMedia()`. Shared animation utilities live in `apps/web/src/lib/animations/`.
+Sidebar collapse/expand and Workspace collapse/expand use GSAP timelines instead of CSS transitions. Sidebar slides between the full width and rail width; Workspace slides via `xPercent`. Composer focus and send-button press also use GSAP micro-interactions. Message copy button uses GSAP scale bounce. Scroll-to-bottom button uses GSAP fade animation. Command palette entrance uses GSAP fromTo animation. All animations honor `prefers-reduced-motion` through `gsap.matchMedia()`. Shared animation utilities live in `apps/web/src/lib/animations/`.
 
 ## See also
 

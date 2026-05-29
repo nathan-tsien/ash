@@ -1,6 +1,6 @@
 # Chat Polish + Command Palette
 
-Status: Proposed
+Status: Accepted
 Date: 2026-05-29
 
 ## Problem

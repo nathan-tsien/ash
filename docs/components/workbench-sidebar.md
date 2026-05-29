@@ -29,6 +29,8 @@ Debounced filter `~200ms`, case-insensitive substring across `title` + `preview`
 
 New task button (pill / outlined) uses Manus-esque emphasis (soft shadow on hover).
 
+Command palette button (`⌘K`) opens the cmdk-based command palette via `useCommandPalette().openPalette()`. Global `Cmd+K` / `Ctrl+K` shortcut also triggers the palette from anywhere in the workbench.
+
 CTA semantics Phase 1: choose either deterministic seeded id (`conv-new-demo`) **or** random ULID-equivalent —
 record whichever approach lands in Git history + reflect here deterministically (**do not silently toggle**).
 
