@@ -1,0 +1,22 @@
+{
+  "name": "@ash/iam-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript /Users/nathantsien/x/projects/iam/api/openapi.yaml -o src/types.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "openapi-typescript": "^7.8.0",
+    "typescript": "^5.8.3"
+  }
+}
