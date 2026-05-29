@@ -43,9 +43,8 @@ export function proxy(request: NextRequest) {
   // Check auth for protected routes
   if (!isPublicPath(pathname)) {
     const accessToken = request.cookies.get("ash_access_token")?.value;
-    const user = request.cookies.get("ash_user")?.value;
 
-    if (!accessToken || !user) {
+    if (!accessToken) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);

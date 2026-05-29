@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -25,19 +26,17 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readUserFromCookie(): AuthUser | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(/(?:^|;\s*)ash_user=([^;]*)/);
-  if (!match) return null;
-  try {
-    return JSON.parse(decodeURIComponent(match[1])) as AuthUser;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => readUserFromCookie());
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user) setUser(data.user);
+      })
+      .catch(() => {});
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch("/api/auth/login", {
@@ -61,7 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(() => {
-    setUser(readUserFromCookie());
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user) setUser(data.user);
+      })
+      .catch(() => {});
   }, []);
 
   const value = useMemo(

@@ -40,7 +40,7 @@ export async function setAuthCookies(params: {
   });
 
   jar.set(COOKIE_NAMES.user, JSON.stringify(params.user), {
-    httpOnly: false,
+    httpOnly: true,
     secure: isProd,
     sameSite: "lax",
     path: "/",
