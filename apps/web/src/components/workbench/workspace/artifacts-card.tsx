@@ -1,16 +1,18 @@
+"use client";
+
 import type { Artifact, AshLocale } from "@ash/shared";
 import { formatRelativeTime } from "@ash/shared";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { ArtifactButton } from "./artifact-button";
 
-export async function ArtifactsCard({
+export function ArtifactsCard({
   locale,
   artifacts,
 }: {
   locale: AshLocale;
   artifacts: Artifact[];
 }) {
-  const t = await getTranslations("Workbench");
+  const t = useTranslations("Workbench");
 
   return (
     <div className="space-y-2 pb-8">

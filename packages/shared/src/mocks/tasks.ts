@@ -1,0 +1,128 @@
+import type { Task } from "../types";
+
+export const mockTasks: Task[] = [
+  {
+    id: "task-1",
+    title: "Remove watermark from image",
+    description: "Remove the watermark from the uploaded product photo",
+    status: "completed",
+    createdAt: "2026-05-30T08:00:00Z",
+    updatedAt: "2026-05-30T08:00:12Z",
+    completedAt: "2026-05-30T08:00:12Z",
+    messages: [
+      {
+        id: "msg-task-1-1",
+        role: "user",
+        content: "Help me remove the watermark from this image",
+        createdAt: "2026-05-30T08:00:00Z",
+      },
+      {
+        id: "msg-task-1-2",
+        role: "assistant",
+        content: "I've processed the image and removed the watermark. The result is ready for download.",
+        createdAt: "2026-05-30T08:00:12Z",
+      },
+    ],
+    artifacts: [
+      {
+        id: "art-task-1-1",
+        kind: "image",
+        title: "Processed image (no watermark)",
+        preview: "product-clean.png",
+        updatedAt: "2026-05-30T08:00:12Z",
+      },
+    ],
+    toolTraces: [
+      {
+        id: "trace-task-1-1",
+        toolName: "Image Processing",
+        summary: "Watermark removal completed",
+        status: "success",
+        startedAt: "2026-05-30T08:00:01Z",
+        durationMs: 11000,
+      },
+    ],
+  },
+  {
+    id: "task-2",
+    title: "Generate PPT from report",
+    description: "Create a presentation from the Q2 sales report",
+    status: "running",
+    createdAt: "2026-05-30T09:30:00Z",
+    updatedAt: "2026-05-30T09:30:05Z",
+    messages: [
+      {
+        id: "msg-task-2-1",
+        role: "user",
+        content: "Generate a PPT from the attached Q2 sales report",
+        createdAt: "2026-05-30T09:30:00Z",
+      },
+      {
+        id: "msg-task-2-2",
+        role: "assistant",
+        content: "Working on it. I'm analyzing the report structure and creating slides...",
+        createdAt: "2026-05-30T09:30:05Z",
+      },
+    ],
+    artifacts: [],
+    toolTraces: [
+      {
+        id: "trace-task-2-1",
+        toolName: "Document Analysis",
+        summary: "Parsing Q2 report structure",
+        status: "running",
+        startedAt: "2026-05-30T09:30:02Z",
+      },
+    ],
+  },
+  {
+    id: "task-3",
+    title: "Translate document to English",
+    description: "Translate the product manual from Chinese to English",
+    status: "completed",
+    createdAt: "2026-05-29T14:00:00Z",
+    updatedAt: "2026-05-29T14:02:30Z",
+    completedAt: "2026-05-29T14:02:30Z",
+    messages: [
+      {
+        id: "msg-task-3-1",
+        role: "user",
+        content: "Translate this product manual to English",
+        createdAt: "2026-05-29T14:00:00Z",
+      },
+      {
+        id: "msg-task-3-2",
+        role: "assistant",
+        content: "Translation complete. The document has been translated with technical terminology preserved.",
+        createdAt: "2026-05-29T14:02:30Z",
+      },
+    ],
+    artifacts: [
+      {
+        id: "art-task-3-1",
+        kind: "document",
+        title: "Product Manual (English)",
+        preview: "manual-en.pdf",
+        updatedAt: "2026-05-29T14:02:30Z",
+      },
+    ],
+    toolTraces: [
+      {
+        id: "trace-task-3-1",
+        toolName: "Translation",
+        summary: "Chinese to English translation",
+        status: "success",
+        startedAt: "2026-05-29T14:00:05Z",
+        durationMs: 145000,
+      },
+    ],
+  },
+];
+
+export function getMockTasks(): Task[] {
+  return mockTasks;
+}
+
+export function getMockTask(id: string): Task | undefined {
+  return mockTasks.find((t) => t.id === id);
+}

@@ -15,7 +15,8 @@ import { isAshLocale, type AshLocale } from "@ash/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { firstWorkbenchHref } from "@/lib/workbench-href";
-import { listConversations } from "@/server/conversations";
+import { listTasks } from "@/server/tasks";
+import { listProjects } from "@/server/projects";
 import { HeroTimeline } from "@/components/animations/hero-timeline";
 import { StaggerGroup } from "@/components/animations/stagger-group";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
@@ -38,8 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MarketingHomePage({ params }: Props) {
   const { locale } = await params;
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
-  const conversations = await listConversations(ashLocale);
-  const workbenchHref = firstWorkbenchHref(conversations);
+  const tasks = await listTasks(ashLocale);
+  const projects = await listProjects(ashLocale);
+  const workbenchHref = firstWorkbenchHref(tasks, projects);
 
   const t = await getTranslations({ locale: ashLocale, namespace: "Home" });
 

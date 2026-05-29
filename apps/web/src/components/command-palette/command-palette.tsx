@@ -6,21 +6,31 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import {
   ArrowLeftRight,
+  FolderPlus,
   Home,
+  ListTodo,
   MessageSquarePlus,
   Search,
   Settings,
+  SquarePlus,
 } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 import { Command } from "cmdk";
 import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
+import type { Task, Project } from "@ash/shared";
 
 interface CommandPaletteProps {
-  onToggleWorkspace: () => void;
+  onToggleWorkspace?: () => void;
+  tasks?: Task[];
+  projects?: Project[];
 }
 
-export function CommandPalette({ onToggleWorkspace }: CommandPaletteProps) {
+export function CommandPalette({
+  onToggleWorkspace,
+  tasks = [],
+  projects = [],
+}: CommandPaletteProps) {
   const { open, closePalette } = useCommandPalette();
   const { openSettings } = useSettingsModal();
   const t = useTranslations("CommandPalette");
@@ -90,6 +100,48 @@ export function CommandPalette({ onToggleWorkspace }: CommandPaletteProps) {
               {t("noResults")}
             </Command.Empty>
 
+            {/* Tasks search group */}
+            {tasks.length > 0 && (
+              <Command.Group heading={t("groupTasks")} className="px-2">
+                {tasks.map((task) => (
+                  <Command.Item
+                    key={task.id}
+                    value={`task-${task.id}-${task.title}`}
+                    className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
+                    onSelect={() =>
+                      runAction(() => router.push(`/app/task/${task.id}`))
+                    }
+                  >
+                    <ListTodo className="size-4 text-muted-foreground" />
+                    <span className="truncate">{task.title}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Projects search group */}
+            {projects.length > 0 && (
+              <Command.Group heading={t("groupProjects")} className="px-2">
+                {projects.map((project) => (
+                  <Command.Item
+                    key={project.id}
+                    value={`project-${project.id}-${project.name}`}
+                    className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
+                    onSelect={() =>
+                      runAction(() =>
+                        router.push(`/app/project/${project.id}`),
+                      )
+                    }
+                  >
+                    <Search className="size-4 text-muted-foreground" />
+                    <span className="truncate">{project.name}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            <Command.Separator className="my-1 h-px bg-border" />
+
             <Command.Group heading={t("groupNavigation")} className="px-2">
               <Command.Item
                 value={t("switchConversation")}
@@ -129,6 +181,22 @@ export function CommandPalette({ onToggleWorkspace }: CommandPaletteProps) {
 
             <Command.Group heading={t("groupActions")} className="px-2">
               <Command.Item
+                value={t("newTask")}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
+                onSelect={() => runAction(() => router.push("/app"))}
+              >
+                <SquarePlus className="size-4 text-muted-foreground" />
+                {t("newTask")}
+              </Command.Item>
+              <Command.Item
+                value={t("newProject")}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
+                onSelect={() => runAction(() => {})}
+              >
+                <FolderPlus className="size-4 text-muted-foreground" />
+                {t("newProject")}
+              </Command.Item>
+              <Command.Item
                 value={t("openSettings")}
                 className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
                 onSelect={() =>
@@ -138,14 +206,16 @@ export function CommandPalette({ onToggleWorkspace }: CommandPaletteProps) {
                 <Settings className="size-4 text-muted-foreground" />
                 {t("openSettings")}
               </Command.Item>
-              <Command.Item
-                value={t("toggleWorkspace")}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
-                onSelect={() => runAction(onToggleWorkspace)}
-              >
-                <ArrowLeftRight className="size-4 text-muted-foreground" />
-                {t("toggleWorkspace")}
-              </Command.Item>
+              {onToggleWorkspace && (
+                <Command.Item
+                  value={t("toggleWorkspace")}
+                  className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm aria-selected:bg-accent"
+                  onSelect={() => runAction(onToggleWorkspace)}
+                >
+                  <ArrowLeftRight className="size-4 text-muted-foreground" />
+                  {t("toggleWorkspace")}
+                </Command.Item>
+              )}
             </Command.Group>
           </Command.List>
         </Command>

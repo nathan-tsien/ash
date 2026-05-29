@@ -52,6 +52,45 @@ export interface Artifact {
   updatedAt: string;
 }
 
+export type TaskStatus = "pending" | "running" | "completed" | "failed";
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  projectId?: string; // undefined for independent tasks
+  messages: Message[];
+  artifacts: Artifact[];
+  toolTraces: ToolTrace[];
+}
+
+export type ProjectStatus = "active" | "paused" | "completed" | "archived";
+
+export interface ProjectMaterial {
+  id: string;
+  name: string;
+  kind: "file" | "connector";
+  size?: string;
+  addedAt: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  createdAt: string;
+  updatedAt: string;
+  materials: ProjectMaterial[];
+  tasks: Task[];
+  artifacts: Artifact[];
+  connectors: Connector[];
+}
+
 export interface UserProfile {
   name: string;
   email: string;

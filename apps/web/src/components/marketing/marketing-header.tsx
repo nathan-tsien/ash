@@ -5,7 +5,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/marketing/locale-switcher";
 import { firstWorkbenchHref } from "@/lib/workbench-href";
-import { listConversations } from "@/server/conversations";
+import { listTasks } from "@/server/tasks";
+import { listProjects } from "@/server/projects";
 
 const NAV_PATHS = [
   { href: "/product" as const, labelKey: "navProduct" as const },
@@ -20,8 +21,9 @@ export async function MarketingHeader() {
   const ashLocale = isAshLocale(localeRaw) ? localeRaw : "zh";
 
   const t = await getTranslations({ locale: ashLocale, namespace: "Header" });
-  const conversations = await listConversations(ashLocale);
-  const workbenchHref = firstWorkbenchHref(conversations);
+  const tasks = await listTasks(ashLocale);
+  const projects = await listProjects(ashLocale);
+  const workbenchHref = firstWorkbenchHref(tasks, projects);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
