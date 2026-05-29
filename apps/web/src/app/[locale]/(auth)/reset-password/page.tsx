@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -21,7 +22,9 @@ export default async function ResetPasswordPage({ params }: Props) {
   return (
     <div>
       <h2 className="mb-1 text-lg font-semibold">{t("resetPasswordTitle")}</h2>
-      <ResetPasswordForm />
+      <Suspense>
+        <ResetPasswordForm />
+      </Suspense>
     </div>
   );
 }
