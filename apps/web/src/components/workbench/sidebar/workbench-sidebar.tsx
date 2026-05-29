@@ -132,7 +132,7 @@ export function WorkbenchSidebar({
       ref={asideRef}
       className="flex w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar"
     >
-      {/* Header: home link visible in both states */}
+      {/* Header: logo + brand + collapse, aligned on one row */}
       <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-2.5">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -146,33 +146,31 @@ export function WorkbenchSidebar({
           </TooltipTrigger>
           <TooltipContent side="bottom">{t("tooltipHomeChrome")}</TooltipContent>
         </Tooltip>
+        <div className="min-w-0 flex-1 text-left">
+          <p className="truncate text-[13px] font-semibold">{t("sidebarBrand")}</p>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              ref={collapseButtonRef}
+              variant="ghost"
+              size="icon"
+              type="button"
+              className="size-9 shrink-0"
+              aria-label={t("collapseAria")}
+              aria-expanded={true}
+              aria-controls={sidebarListId}
+              onClick={collapseSidebar}
+            >
+              <ChevronLeft className="size-[18px]" aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("collapseSidebarTooltip")}</TooltipContent>
+        </Tooltip>
       </div>
 
-      {/* Expanded content: brand, search, task/project sections, footer */}
+      {/* Expanded content: search, task/project sections, footer */}
       <div ref={expandedContentRef} className="flex flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-2.5">
-          <div className="min-w-0 flex-1 text-left">
-            <p className="truncate text-[13px] font-semibold">{t("sidebarBrand")}</p>
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                ref={collapseButtonRef}
-                variant="ghost"
-                size="icon"
-                type="button"
-                className="size-9 shrink-0"
-                aria-label={t("collapseAria")}
-                aria-expanded={true}
-                aria-controls={sidebarListId}
-                onClick={collapseSidebar}
-              >
-                <ChevronLeft className="size-[18px]" aria-hidden />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("collapseSidebarTooltip")}</TooltipContent>
-          </Tooltip>
-        </div>
 
         <div className="space-y-2 px-3 py-3">
           <Button variant="pill" size="sm" className="w-full justify-center gap-2" asChild>
@@ -239,7 +237,9 @@ export function WorkbenchSidebar({
             )}
           </nav>
         </ScrollArea>
-        <FooterAccount />
+        <div className="mt-auto">
+          <FooterAccount />
+        </div>
       </div>
 
       {/* Collapsed rail: icon buttons for quick actions */}
