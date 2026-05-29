@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ash/iam-client": "workspace:*",
     "@ash/shared": "workspace:*",
     "@ash/ui": "workspace:*",
     "@gsap/react": "^2.1.2",

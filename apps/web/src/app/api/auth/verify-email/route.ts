@@ -1,0 +1,20 @@
+import { NextResponse } from "next/server";
+import { createIamClient } from "@ash/iam-client";
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const client = createIamClient();
+
+  const { data, error } = await client.POST("/auth/otp/verify", {
+    body: {
+      email: body.email,
+      code: body.code,
+    },
+  });
+
+  if (error) {
+    return NextResponse.json(error, { status: 400 });
+  }
+
+  return NextResponse.json(data);
+}
