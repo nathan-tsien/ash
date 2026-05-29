@@ -16,6 +16,15 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   const t = useTranslations("Workbench");
   const containerRef = useRef<HTMLDivElement>(null);
   const sendButtonRef = useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 168)}px`;
+  }, [draft]);
 
   // Focus animation on textarea
   useEffect(() => {
@@ -68,6 +77,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
           className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm"
         >
           <textarea
+            ref={textareaRef}
             className="max-h-[168px] min-h-[72px] w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none"
             placeholder={t("textareaPlaceholder")}
             value={draft}
@@ -75,7 +85,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
             aria-multiline="true"
             onChange={(e) => onDraftChange(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 onSend();
               }

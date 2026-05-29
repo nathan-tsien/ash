@@ -302,8 +302,8 @@
     "expandSidebarTooltip": "展开侧栏",
     "collapseSidebarTooltip": "折叠侧栏",
     "newTask": "新建任务",
-    "commandPaletteAria": "命令面板占位",
-    "commandPaletteTooltip": "命令面板（Phase 2）",
+    "commandPaletteAria": "打开命令面板",
+    "commandPaletteTooltip": "命令面板",
     "cmdK": "⌘K",
     "searchPlaceholder": "搜索任务…",
     "searchAria": "搜索会话",
@@ -315,7 +315,7 @@
     "thinkingPlaceholder": "Agent 正在思考…（mock）",
     "textareaPlaceholder": "向 Agent 描述你的任务…",
     "textareaAria": "消息输入框",
-    "shortcutHint": "⌘Enter 发送 · Shift+Enter 换行",
+    "shortcutHint": "Enter 发送 · Shift+Enter 换行",
     "send": "发送",
     "workspaceTitle": "工作台",
     "workspaceFabTooltip": "展开 Plan / 工具 / 工件",
@@ -337,6 +337,20 @@
     "accountSettings": "设置…",
     "accountSwitch": "切换账号",
     "accountSignOut": "退出登录",
-    "accountPhase2Tooltip": "Phase 2 上线"
+    "accountPhase2Tooltip": "Phase 2 上线",
+    "copyMessage": "复制消息",
+    "copiedMessage": "已复制",
+    "scrollToBottom": "回到底部"
+  },
+  "CommandPalette": {
+    "placeholder": "输入命令…",
+    "noResults": "未找到结果",
+    "groupNavigation": "导航",
+    "groupActions": "操作",
+    "switchConversation": "切换会话",
+    "newConversation": "新建会话",
+    "openSettings": "打开设置",
+    "toggleWorkspace": "切换工作台",
+    "goHome": "回到首页"
   }
 }

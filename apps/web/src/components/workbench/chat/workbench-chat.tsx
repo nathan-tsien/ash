@@ -18,6 +18,7 @@ import { messageEntrance, messageStagger } from "@/lib/animations/presets";
 import type { WorkspaceToggleProps } from "../workbench-types";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
+import { ScrollToBottom } from "./scroll-to-bottom";
 
 export interface WorkbenchChatProps {
   locale: AshLocale;
@@ -33,6 +34,7 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
 
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
 
   const messages = useMemo(
@@ -137,52 +139,55 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
         </div>
       </header>
       {banner}
-      <ScrollArea className="min-h-0 flex-1">
-        <div
-          ref={containerRef}
-          className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6"
-          role="log"
-          aria-live="polite"
-          aria-relevant="additions"
-        >
-          {messages.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card">
-                <Sparkles className="size-6 text-muted-foreground" aria-hidden />
+      <div ref={scrollAreaRef} className="relative min-h-0 flex-1">
+        <ScrollArea className="min-h-0 flex-1">
+          <div
+            ref={containerRef}
+            className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+          >
+            {messages.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
+                <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card">
+                  <Sparkles className="size-6 text-muted-foreground" aria-hidden />
+                </div>
+                <h2 className="text-[15px] font-semibold text-foreground">{t("emptyChatTitle")}</h2>
+                <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
               </div>
-              <h2 className="text-[15px] font-semibold text-foreground">{t("emptyChatTitle")}</h2>
-              <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
-            </div>
-          ) : (
-            messages.map((m) => (
-              <div key={m.id} className="message-bubble">
-                <MessageBubble locale={locale} message={m} />
+            ) : (
+              messages.map((m) => (
+                <div key={m.id} className="message-bubble">
+                  <MessageBubble locale={locale} message={m} />
+                </div>
+              ))
+            )}
+            {active.status === "running" && (
+              <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                <Loader2
+                  ref={(el) => {
+                    if (el) {
+                      gsap.to(el, {
+                        scale: 1.05,
+                        repeat: -1,
+                        yoyo: true,
+                        duration: 0.6,
+                        ease: "power1.inOut",
+                      });
+                    }
+                  }}
+                  className="size-4"
+                  aria-hidden
+                />
+                {t("thinkingPlaceholder")}
               </div>
-            ))
-          )}
-          {active.status === "running" && (
-            <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-              <Loader2
-                ref={(el) => {
-                  if (el) {
-                    gsap.to(el, {
-                      scale: 1.05,
-                      repeat: -1,
-                      yoyo: true,
-                      duration: 0.6,
-                      ease: "power1.inOut",
-                    });
-                  }
-                }}
-                className="size-4"
-                aria-hidden
-              />
-              {t("thinkingPlaceholder")}
-            </div>
-          )}
-          <div ref={messagesEndRef} aria-hidden />
-        </div>
-      </ScrollArea>
+            )}
+            <div ref={messagesEndRef} aria-hidden />
+          </div>
+          <ScrollToBottom scrollAreaRef={scrollAreaRef} targetRef={messagesEndRef} />
+        </ScrollArea>
+      </div>
 
       <Composer draft={draft} onDraftChange={setDraft} onSend={sendDraft} />
     </main>
