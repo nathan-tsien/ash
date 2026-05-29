@@ -5,7 +5,10 @@ import { routing } from "@/i18n/routing";
 
 const intlProxy = createMiddleware(routing);
 
+const LOCALES = routing.locales;
+
 const PUBLIC_PATHS = [
+  "/",
   "/login",
   "/register",
   "/forgot-password",
@@ -20,8 +23,17 @@ const PUBLIC_PATHS = [
 function isPublicPath(pathname: string): boolean {
   // Strip locale prefix to get the path
   const segments = pathname.split("/").filter(Boolean);
-  const pathWithoutLocale =
-    segments.length > 1 ? `/${segments.slice(1).join("/")}` : `/${segments[0] ?? ""}`;
+  let pathWithoutLocale: string;
+
+  if (segments.length === 0) {
+    pathWithoutLocale = "/";
+  } else if (LOCALES.includes(segments[0] as (typeof LOCALES)[number])) {
+    // First segment is a locale prefix — use the rest as the path
+    pathWithoutLocale =
+      segments.length > 1 ? `/${segments.slice(1).join("/")}` : "/";
+  } else {
+    pathWithoutLocale = `/${segments.join("/")}`;
+  }
 
   return PUBLIC_PATHS.some(
     (p) => pathWithoutLocale === p || pathWithoutLocale.startsWith(`${p}/`),
