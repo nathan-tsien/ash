@@ -1,13 +1,15 @@
+"use client";
+
 import type { Project } from "@ash/shared";
 import { Settings } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 
 export interface ProjectSettingsCardProps {
   project: Project;
 }
 
-export async function ProjectSettingsCard({ project }: ProjectSettingsCardProps) {
-  const t = await getTranslations("Workbench");
+export function ProjectSettingsCard({ project }: ProjectSettingsCardProps) {
+  const t = useTranslations("Workbench");
 
   return (
     <div>

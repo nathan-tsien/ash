@@ -1,11 +1,13 @@
+"use client";
+
 import type { ToolTrace } from "@ash/shared";
 import { Badge } from "@ash/ui/badge";
 import { cn } from "@ash/ui/lib/utils";
 import { Loader2, Wrench } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 
-export async function ToolsCard({ traces }: { traces: ToolTrace[] }) {
-  const t = await getTranslations("Workbench");
+export function ToolsCard({ traces }: { traces: ToolTrace[] }) {
+  const t = useTranslations("Workbench");
 
   return (
     <div className="space-y-2">

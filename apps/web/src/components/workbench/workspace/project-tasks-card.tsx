@@ -1,8 +1,10 @@
+"use client";
+
 import type { Task } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
 import { Plus } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { taskHref } from "@/lib/workbench-href";
 
@@ -10,8 +12,8 @@ export interface ProjectTasksCardProps {
   tasks: Task[];
 }
 
-export async function ProjectTasksCard({ tasks }: ProjectTasksCardProps) {
-  const t = await getTranslations("Workbench");
+export function ProjectTasksCard({ tasks }: ProjectTasksCardProps) {
+  const t = useTranslations("Workbench");
 
   return (
     <div>

@@ -1,8 +1,10 @@
+"use client";
+
 import type { AshLocale, Task } from "@ash/shared";
 import { ScrollArea } from "@ash/ui/scroll-area";
 import { Separator } from "@ash/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { ArtifactsCard } from "./artifacts-card";
 import { ToolsCard } from "./tools-card";
 
@@ -11,8 +13,8 @@ export interface TaskWorkspaceProps {
   task: Task;
 }
 
-export async function TaskWorkspace({ locale, task }: TaskWorkspaceProps) {
-  const t = await getTranslations("Workbench");
+export function TaskWorkspace({ locale, task }: TaskWorkspaceProps) {
+  const t = useTranslations("Workbench");
 
   return (
     <aside className="flex w-[380px] shrink-0 flex-col border-l border-border bg-workspace">

@@ -1,14 +1,16 @@
+"use client";
+
 import type { ProjectMaterial } from "@ash/shared";
 import { Button } from "@ash/ui/button";
 import { FileText, Database, Upload } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 
 export interface MaterialsCardProps {
   materials: ProjectMaterial[];
 }
 
-export async function MaterialsCard({ materials }: MaterialsCardProps) {
-  const t = await getTranslations("Workbench");
+export function MaterialsCard({ materials }: MaterialsCardProps) {
+  const t = useTranslations("Workbench");
 
   return (
     <div>
