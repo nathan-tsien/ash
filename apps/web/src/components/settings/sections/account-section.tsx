@@ -1,19 +1,23 @@
 "use client";
 
-import { mockUser } from "@ash/shared";
 import { Avatar, AvatarFallback } from "@ash/ui/avatar";
 import { Button } from "@ash/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@ash/ui/tooltip";
+import { LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SectionHeader } from "../section-header";
+import { useAuth } from "@/context/auth-context";
 
 export function AccountSection() {
   const t = useTranslations("Settings");
-  const tWorkbench = useTranslations("Workbench");
+  const { user, logout } = useAuth();
+
+  const displayName = user?.display_name ?? user?.email ?? "User";
+  const initials = displayName
+    .split(" ")
+    .map((s) => s[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div>
@@ -24,41 +28,19 @@ export function AccountSection() {
 
       <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
         <Avatar className="size-12">
-          <AvatarFallback className="text-sm">
-            {mockUser.avatarFallback}
-          </AvatarFallback>
+          <AvatarFallback className="text-sm">{initials}</AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="text-sm font-medium">{mockUser.name}</p>
-          <p className="text-xs text-muted-foreground">{mockUser.email}</p>
+          <p className="text-sm font-medium">{displayName}</p>
+          <p className="text-xs text-muted-foreground">{user?.email ?? ""}</p>
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-dashed border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-        {t("account.mockBanner")}
-      </div>
-
       <div className="mt-6 flex flex-wrap gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span tabIndex={0}>
-              <Button variant="outline" size="sm" disabled>
-                {t("account.switchAccountAction")}
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{tWorkbench("accountPhase2Tooltip")}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span tabIndex={0}>
-              <Button variant="outline" size="sm" disabled>
-                {t("account.signOutAction")}
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{tWorkbench("accountPhase2Tooltip")}</TooltipContent>
-        </Tooltip>
+        <Button variant="outline" size="sm" onClick={() => logout()}>
+          <LogOut className="size-4" aria-hidden />
+          {t("account.signOutAction")}
+        </Button>
       </div>
     </div>
   );
