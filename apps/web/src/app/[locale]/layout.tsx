@@ -9,6 +9,7 @@ import Script from "next/script";
 import { TooltipProvider } from "@ash/ui/tooltip";
 import { ThemeProvider } from "@ash/ui/lib/theme-provider";
 import { routing } from "@/i18n/routing";
+import { AuthProvider } from "@/context/auth-context";
 
 import "../globals.css";
 
@@ -82,7 +83,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         <ThemeProvider>
           <TooltipProvider delayDuration={200}>
             <NextIntlClientProvider locale={locale} messages={messages}>
-              {children}
+              <AuthProvider>
+                {children}
+              </AuthProvider>
             </NextIntlClientProvider>
           </TooltipProvider>
         </ThemeProvider>
