@@ -73,6 +73,14 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
               </div>
             </section>
           )}
+
+          {/* Empty state when no tasks and no projects */}
+          {recentTasks.length === 0 && recentProjects.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <p className="text-sm font-medium text-muted-foreground">{t("homeEmptyTitle")}</p>
+              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{t("homeEmptyBody")}</p>
+            </div>
+          )}
         </div>
       </ScrollArea>
     </main>
