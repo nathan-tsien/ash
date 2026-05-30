@@ -69,6 +69,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html
       lang={htmlLang}
       className={`${dmSans.variable} ${notoSansSc.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <Script
