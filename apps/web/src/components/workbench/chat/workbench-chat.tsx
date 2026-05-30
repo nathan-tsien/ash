@@ -52,15 +52,9 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
       content: text,
       createdAt: now,
     };
-    const ack: Message = {
-      id: `local-bot-${crypto.randomUUID()}`,
-      role: "assistant",
-      content: t("chatMockAcknowledgement"),
-      createdAt: new Date(Date.now() + 400).toISOString(),
-    };
-    setExtraMessages((prev) => [...prev, userMsg, ack]);
+    setExtraMessages((prev) => [...prev, userMsg]);
     setDraft("");
-  }, [draft, t]);
+  }, [draft]);
 
   /* Staggered entrance when conversation changes. */
   useGSAP(

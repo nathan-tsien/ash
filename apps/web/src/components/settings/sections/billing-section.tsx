@@ -22,7 +22,7 @@ export function BillingSection() {
           </p>
           <div className="mt-2 flex items-center gap-2">
             <p className="text-lg font-semibold">{t("billing.explorerPlan")}</p>
-            <Badge variant="muted">Free preview</Badge>
+            <Badge variant="muted">{t("phase2Badge")}</Badge>
           </div>
         </div>
 
@@ -35,13 +35,13 @@ export function BillingSection() {
               <span className="text-sm text-muted-foreground">
                 {t("billing.usageMessages")}
               </span>
-              <span className="text-sm font-medium tabular-nums">12,480</span>
+              <span className="text-sm font-medium tabular-nums">0</span>
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-muted-foreground">
                 {t("billing.usageRuns")}
               </span>
-              <span className="text-sm font-medium tabular-nums">87</span>
+              <span className="text-sm font-medium tabular-nums">0</span>
             </div>
           </div>
         </div>

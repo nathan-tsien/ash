@@ -1,5 +1,4 @@
 import type { AshLocale, Conversation } from "@ash/shared";
-import { Badge } from "@ash/ui/badge";
 import { ScrollArea } from "@ash/ui/scroll-area";
 import { Separator } from "@ash/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
@@ -21,9 +20,6 @@ export async function WorkbenchWorkspace({ locale, active }: WorkbenchWorkspaceP
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <ArrowLeftRight className="size-4 text-muted-foreground" aria-hidden />
         <span className="text-[13px] font-semibold">{t("workspaceTitle")}</span>
-        <Badge variant="muted" className="ml-auto text-[11px]">
-          {t("mockBadge")}
-        </Badge>
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
