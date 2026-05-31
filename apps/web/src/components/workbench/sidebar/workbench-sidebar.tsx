@@ -130,7 +130,7 @@ export function WorkbenchSidebar({
   return (
     <aside
       ref={asideRef}
-      className="flex w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar"
+      className="relative flex w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar"
     >
       {/* Header: logo + brand + collapse, aligned on one row */}
       <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-2.5">
@@ -245,7 +245,7 @@ export function WorkbenchSidebar({
       {/* Collapsed rail: icon buttons for quick actions */}
       <div
         ref={collapsedRailRef}
-        className="mt-auto flex flex-col items-center gap-2 pb-3"
+        className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 pb-3"
         style={{ opacity: 0, visibility: "hidden" }}
       >
         <Tooltip>
