@@ -1,26 +1,14 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  Brain,
-  Layers,
-  LayoutGrid,
-  MessageSquare,
-  Sparkles,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight, LayoutGrid, MessageSquare, Wrench } from "lucide-react";
 import { Button } from "@ash/ui/button";
 import { isAshLocale, type AshLocale } from "@ash/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { firstWorkbenchHref } from "@/lib/workbench-href";
-import { listTasks } from "@/server/tasks";
-import { listProjects } from "@/server/projects";
 import { HeroTimeline } from "@/components/animations/hero-timeline";
 import { StaggerGroup } from "@/components/animations/stagger-group";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 import { HoverScale } from "@/components/animations/hover-scale";
+import { QuickStartDialog } from "@/components/marketing/quick-start-dialog";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -39,9 +27,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MarketingHomePage({ params }: Props) {
   const { locale } = await params;
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
-  const tasks = await listTasks(ashLocale);
-  const projects = await listProjects(ashLocale);
-  const workbenchHref = firstWorkbenchHref(tasks, projects);
 
   const t = await getTranslations({ locale: ashLocale, namespace: "Home" });
 
@@ -79,87 +64,82 @@ export default async function MarketingHomePage({ params }: Props) {
           >
             {t("heroBody")}
           </p>
-          <div
-            data-anim="mockup"
-            className="mx-auto mt-10 hidden w-full max-w-md sm:block"
-          >
-            <div className="flex gap-1.5 rounded-xl border border-border bg-card p-2 shadow-sm">
-              <div
-                data-anim-col="left"
-                className="flex w-[22%] flex-col gap-1.5 rounded-lg bg-muted/60 p-1.5"
-              >
-                <div className="h-2 w-full rounded bg-border" />
-                <div className="h-2 w-3/4 rounded bg-border" />
-                <div className="h-2 w-full rounded bg-border" />
-                <div className="h-2 w-1/2 rounded bg-border" />
-              </div>
-              <div
-                data-anim-col="center"
-                className="flex flex-1 flex-col gap-1.5 rounded-lg bg-background p-1.5"
-              >
-                <div className="h-2 w-5/6 rounded bg-border" />
-                <div className="h-2 w-full rounded bg-muted" />
-                <div className="h-2 w-2/3 rounded bg-border" />
-                <div className="ml-auto h-5 w-12 animate-[pulse-subtle_2s_ease-in-out_1.5s_infinite] rounded-full bg-primary" />
-              </div>
-              <div
-                data-anim-col="right"
-                className="flex w-[26%] flex-col gap-1.5 rounded-lg bg-muted/40 p-1.5"
-              >
-                <div className="h-2 w-full rounded bg-border" />
-                <div className="h-2 w-full rounded bg-muted" />
-                <div className="h-2 w-3/4 rounded bg-border" />
-              </div>
-            </div>
-          </div>
-          <div
-            data-anim="cta"
-            className="mt-10 flex flex-wrap items-center justify-center gap-3"
-          >
-            <Button variant="default" size="lg" className="px-8 shadow-sm" asChild>
-              <Link href={workbenchHref}>
-                {t("ctaStartFree")}
-                <ArrowRight className="size-4" aria-hidden />
-              </Link>
-            </Button>
-            <Button variant="outline" size="lg" className="px-6 bg-card" asChild>
-              <Link href="/product">{t("ctaProduct")}</Link>
-            </Button>
+          <div data-anim="cta">
+            <QuickStartDialog />
+            <p className="mx-auto mt-3 text-center text-[12px] text-muted-foreground/70">
+              {t("quickStartHint")}
+            </p>
           </div>
         </HeroTimeline>
       </section>
 
-      {/* ── Highlights ── */}
+      {/* ── Product Interface Preview ── */}
       <section className="border-b border-border bg-card px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <ScrollReveal>
-            <SectionTitle
-              eyebrow={t("whyEyebrow")}
-              title={t("whyTitle")}
-              subtitle={t("whySubtitle")}
-            />
+            <div className="text-center">
+              <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("previewEyebrow")}
+              </p>
+              <h2 className="mx-auto mt-2 max-w-2xl text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                {t("previewTitle")}
+              </h2>
+            </div>
           </ScrollReveal>
-          <StaggerGroup className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <HighlightCard
-              icon={<LayoutGrid className="size-5" aria-hidden />}
-              title={t("highlight1Title")}
-              body={t("highlight1Body")}
-            />
-            <HighlightCard
-              icon={<Brain className="size-5" aria-hidden />}
-              title={t("highlight2Title")}
-              body={t("highlight2Body")}
-            />
-            <HighlightCard
-              icon={<Layers className="size-5" aria-hidden />}
-              title={t("highlight3Title")}
-              body={t("highlight3Body")}
-            />
-          </StaggerGroup>
+          <ScrollReveal className="mt-10">
+            <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-border bg-background shadow-lg">
+              <div className="flex h-56 sm:h-72">
+                {/* Sidebar */}
+                <div className="flex w-[20%] flex-col gap-2 border-r border-border bg-muted/40 p-3">
+                  <div className="h-2 w-8 rounded bg-border" />
+                  <div className="mt-2 space-y-1.5">
+                    <div className="h-2 w-full rounded bg-border/70" />
+                    <div className="h-2 w-3/4 rounded bg-border/70" />
+                    <div className="h-2 w-full rounded bg-border/70" />
+                    <div className="h-2 w-1/2 rounded bg-border/70" />
+                  </div>
+                </div>
+                {/* Chat */}
+                <div className="flex flex-1 flex-col gap-2 bg-background p-3">
+                  <div className="ml-auto h-5 w-2/3 rounded-md bg-primary/10" />
+                  <div className="h-8 w-3/4 rounded-md bg-muted" />
+                  <div className="ml-auto h-5 w-1/2 rounded-md bg-primary/10" />
+                  <div className="mt-auto h-6 w-full rounded-md border border-border bg-card" />
+                </div>
+                {/* Workspace */}
+                <div className="flex w-[24%] flex-col border-l border-border bg-muted/30 p-3">
+                  <div className="flex gap-1.5">
+                    <div className="h-2 w-6 rounded bg-border" />
+                    <div className="h-2 w-6 rounded bg-border" />
+                    <div className="h-2 w-6 rounded bg-border" />
+                  </div>
+                  <div className="mt-3 space-y-1.5">
+                    <div className="h-2 w-full rounded bg-border/70" />
+                    <div className="h-2 w-3/4 rounded bg-border/70" />
+                    <div className="h-2 w-5/6 rounded bg-border/70" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal stagger={0.1} className="mx-auto mt-8 flex max-w-2xl justify-center gap-8 sm:gap-12">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <LayoutGrid className="size-4" aria-hidden />
+              {t("previewLabel1")}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MessageSquare className="size-4" aria-hidden />
+              {t("previewLabel2")}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Wrench className="size-4" aria-hidden />
+              {t("previewLabel3")}
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* ── Showcase ── */}
+      {/* ── Use Cases ── */}
       <section className="border-b border-border bg-background px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -187,55 +167,6 @@ export default async function MarketingHomePage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Docs & Pricing ── */}
-      <section className="border-b border-border bg-card px-4 py-16 sm:px-6 sm:py-20">
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2">
-          <ScrollReveal x={-30} y={0}>
-            <div className="rounded-2xl border border-border bg-background p-8">
-              <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-card">
-                <BookOpen className="size-5 text-foreground" aria-hidden />
-              </div>
-              <h2 className="mt-5 text-xl font-semibold tracking-tight">{t("docsCardTitle")}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("docsCardBody")}</p>
-              <ul className="mt-6 space-y-2 text-sm text-foreground">
-                <li className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-muted-foreground" aria-hidden />
-                  {t("docsCardBullet1")}
-                </li>
-                <li className="flex items-center gap-2">
-                  <MessageSquare className="size-4 text-muted-foreground" aria-hidden />
-                  {t("docsCardBullet2")}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Wrench className="size-4 text-muted-foreground" aria-hidden />
-                  {t("docsCardBullet3")}
-                </li>
-              </ul>
-              <Button variant="pill" size="sm" className="mt-8 shadow-sm" asChild>
-                <Link href="/docs">{t("docsCardCta")}</Link>
-              </Button>
-            </div>
-          </ScrollReveal>
-          <ScrollReveal x={30} y={0}>
-            <div className="rounded-2xl border border-border bg-background p-8">
-              <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-card">
-                <Sparkles className="size-5 text-foreground" aria-hidden />
-              </div>
-              <h2 className="mt-5 text-xl font-semibold tracking-tight">{t("pricingCardTitle")}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("pricingCardBody")}</p>
-              <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
-                <li>{t("pricingBullet1")}</li>
-                <li>{t("pricingBullet2")}</li>
-                <li>{t("pricingBullet3")}</li>
-              </ul>
-              <Button variant="outline" size="sm" className="mt-8 bg-card" asChild>
-                <Link href="/pricing">{t("pricingCardCta")}</Link>
-              </Button>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
       {/* ── Bottom CTA ── */}
       <section className="bg-primary px-4 py-16 text-primary-foreground sm:px-6 sm:py-20">
         <ScrollReveal>
@@ -248,7 +179,7 @@ export default async function MarketingHomePage({ params }: Props) {
               className="border border-primary-foreground/25 bg-card text-foreground hover:bg-accent"
               asChild
             >
-              <Link href={workbenchHref}>{t("bottomCta")}</Link>
+              <Link href="/app">{t("bottomCta")}</Link>
             </Button>
           </div>
         </ScrollReveal>
@@ -272,24 +203,6 @@ function SectionTitle({
       <h2 className="mt-2 text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
     </div>
-  );
-}
-
-function HighlightCard({
-  icon,
-  title,
-  body,
-}: {
-  icon: ReactNode;
-  title: string;
-  body: string;
-}) {
-  return (
-    <HoverScale className="group rounded-2xl border border-border bg-background p-6 shadow-xs">
-      <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors group-hover:bg-muted">{icon}</div>
-      <h3 className="mt-5 text-[15px] font-semibold text-foreground">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
-    </HoverScale>
   );
 }
 
