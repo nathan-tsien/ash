@@ -29,12 +29,28 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
+  async function fetchUser(): Promise<AuthUser | null> {
+    const res = await fetch("/api/auth/me");
+    if (res.ok) {
+      const data = await res.json();
+      return data?.user ?? null;
+    }
+    if (res.status === 401) {
+      const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+      if (refreshRes.ok) {
+        const retryRes = await fetch("/api/auth/me");
+        if (retryRes.ok) {
+          const data = await retryRes.json();
+          return data?.user ?? null;
+        }
+      }
+    }
+    return null;
+  }
+
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.user) setUser(data.user);
-      })
+    fetchUser()
+      .then((u) => setUser(u))
       .catch(() => {});
   }, []);
 
@@ -60,11 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(() => {
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.user) setUser(data.user);
-      })
+    fetchUser()
+      .then((u) => setUser(u))
       .catch(() => {});
   }, []);
 

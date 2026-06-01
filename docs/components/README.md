@@ -15,6 +15,7 @@ Update these docs **together** whenever shipped behavior diverges (`AGENTS.md` f
 | Document | Scope |
 |----------|-------|
 | [agent-workbench-shell.md](./agent-workbench-shell.md) | Global shell grid, routing, motion, shortcuts |
+| [auth.md](./auth.md) | Login flow, cookie session, automatic token refresh |
 | [workbench-sidebar.md](./workbench-sidebar.md) | Sidebar inventory semantics |
 | [workbench-chat.md](./workbench-chat.md) | Chat rail + composer |
 | [workbench-workspace.md](./workbench-workspace.md) | Workspace cards + modular extensions |
