@@ -25,7 +25,10 @@ export function QuickStartDialog() {
 
   function handleSubmit(e?: FormEvent) {
     e?.preventDefault();
-    if (!input.trim()) return;
+    const prompt = input.trim();
+    if (!prompt) return;
+
+    sessionStorage.setItem("ash_pending_prompt", prompt);
 
     if (user) {
       router.push("/app");
