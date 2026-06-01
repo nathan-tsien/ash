@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { createIamClient } from "@ash/iam-client";
 
 const COOKIE_NAMES = {
   accessToken: "ash_access_token",
@@ -74,4 +75,37 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   } catch {
     return null;
   }
+}
+
+/** Attempt to refresh the access token using the refresh token cookie.
+ *  On success, updates all auth cookies and returns the user.
+ *  On failure, clears all auth cookies and returns null.
+ */
+export async function refreshAccessToken(): Promise<AuthUser | null> {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) return null;
+
+  const client = createIamClient();
+  const { data, error } = await client.POST("/auth/refresh", {
+    body: { refresh_token: refreshToken },
+  });
+
+  if (error || !data) {
+    await clearAuthCookies();
+    return null;
+  }
+
+  const user: AuthUser = {
+    id: data.user_id,
+    email: data.email,
+    role: data.role,
+  };
+
+  await setAuthCookies({
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    user,
+  });
+
+  return user;
 }
