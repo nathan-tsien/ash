@@ -7,7 +7,6 @@ export async function MarketingFooter() {
   const localeRaw = await getLocale();
   const ashLocale = isAshLocale(localeRaw) ? localeRaw : "zh";
   const t = await getTranslations({ locale: ashLocale, namespace: "Footer" });
-  const tHeader = await getTranslations({ locale: ashLocale, namespace: "Header" });
 
   return (
     <footer className="relative bg-card">
@@ -42,12 +41,12 @@ export async function MarketingFooter() {
               </li>
               <li key="/showcase">
                 <Link href="/showcase" className="text-sm text-foreground underline-offset-4 hover:underline">
-                  {tHeader("navShowcase")}
+                  {t("linkShowcase")}
                 </Link>
               </li>
               <li key="/pricing">
                 <Link href="/pricing" className="text-sm text-foreground underline-offset-4 hover:underline">
-                  {tHeader("navPricing")}
+                  {t("linkPricing")}
                 </Link>
               </li>
             </ul>
