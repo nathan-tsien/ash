@@ -60,6 +60,16 @@ Floating pill button appears when user scrolls > 200px from bottom of the `Scrol
 
 Ensure composer remains keyboard navigable (`aria-multiline`, proper label association).
 
+## Live task runs (ADR-0011)
+
+For a Task started in-session, the Chat renders the **live** message list from `TaskRunProvider`. The home composer creates + starts a task via `PraxisTaskClient`, then routes to `/app/task/[id]`; `runtimeEventReducer` folds the praxis `RuntimeEvent` SSE stream into the `Task`:
+
+- `text_delta` chunks accumulate into a single assistant `Message` with `isStreaming: true`; `turn_completed`/`turn_failed` clears the flag.
+- The existing `status === "running"` thinking placeholder covers the turn-in-flight window.
+- `thinking_delta` and `skill_activation_requested` are not surfaced this slice.
+
+This slice ships **no real transport** — a local fake drives the stream (see ADR-0011). The "remote streaming updates" stickiness rule above still applies to the simulated stream.
+
 ## Animations (GSAP)
 
 Message entrance, thinking-state pulse, and composer micro-interactions are powered by GSAP (not CSS transitions). All animations respect `prefers-reduced-motion` via `gsap.matchMedia()` — when the user has reduced motion enabled, elements appear in their final state without animation. Animation foundation lives in `apps/web/src/lib/animations/`.

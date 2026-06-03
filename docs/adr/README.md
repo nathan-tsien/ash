@@ -24,13 +24,15 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0004](./0004-agent-workbench-three-pane-ux.md) | Three-pane workbench UX + extension slots |
 | [0005](./0005-design-tokens-and-visual-discipline-phase-1.md) | Phase 1 design tokens + visual discipline |
 | [0006](./0006-data-adapter-seam.md) | Data adapter seam in `apps/web` |
-| [0007](./0007-transport-sse-vs-websocket.md) | Transport selection — SSE vs WebSocket (Proposed) |
+| [0007](./0007-transport-sse-vs-websocket.md) | Transport selection — SSE vs WebSocket (Accepted: SSE) |
 | [0008](./0008-session-pinning-and-routing.md) | Session pinning and routing (Proposed) |
 | [0009](./0009-tenancy-model.md) | Tenancy model (Proposed) |
+| [0010](./0010-dark-mode-theme-toggle.md) | Dark-mode theme toggle |
+| [0011](./0011-praxis-contract-and-live-task-execution.md) | praxis contract adoption + first live task-execution slice |
 
 ### Reserved band
 
-Next free IDs (**0010+**) cover canonical dark palettes, workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
+Next free IDs (**0012+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
 
 ## Template
 
