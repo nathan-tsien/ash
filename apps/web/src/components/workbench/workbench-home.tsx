@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useState, useCallback, useSyncExternalStore } from "react";
 import { taskHref, projectHref } from "@/lib/workbench-href";
 import { formatRelativeTime } from "@ash/shared";
+import { useRouter } from "@/i18n/navigation";
+import { useStartTask } from "./task-run-provider";
 
 export interface WorkbenchHomeProps {
   locale: AshLocale;
@@ -62,21 +64,21 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
     getPendingPromptServerSnapshot,
   );
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<{ id: string; role: "user" | "agent"; content: string }[]>([]);
+  const [starting, setStarting] = useState(false);
+  const startTask = useStartTask();
+  const router = useRouter();
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback(async () => {
     const prompt = pendingPrompt || draft.trim();
-    if (!prompt) return;
+    if (!prompt || starting) return;
 
+    setStarting(true);
     clearPendingPrompt();
     setDraft("");
 
-    setMessages((prev) => [
-      ...prev,
-      { id: `user-${Date.now()}`, role: "user", content: prompt },
-      { id: `agent-${Date.now()}`, role: "agent", content: t("thinkingPlaceholder") },
-    ]);
-  }, [pendingPrompt, draft, t]);
+    const id = await startTask(prompt);
+    router.push(taskHref(id));
+  }, [pendingPrompt, draft, starting, startTask, router]);
 
   const handleDismiss = useCallback(() => {
     clearPendingPrompt();
@@ -102,7 +104,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
                   <X className="size-4" />
                 </button>
               </div>
-              <Button onClick={handleStart} size="sm" className="mt-3 gap-1.5">
+              <Button onClick={() => void handleStart()} size="sm" className="mt-3 gap-1.5" disabled={starting}>
                 {t("startTask")}
                 <ArrowRight className="size-3.5" />
               </Button>
@@ -119,44 +121,23 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
           </div>
 
           {/* Quick composer when no pending prompt but user wants to type */}
-          {!pendingPrompt && messages.length === 0 && (
+          {!pendingPrompt && (
             <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
               <input
                 type="text"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleStart();
+                  if (e.key === "Enter") void handleStart();
                 }}
                 placeholder={t("textareaPlaceholder")}
                 className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
                 aria-label={t("textareaAria")}
+                disabled={starting}
               />
-              <Button onClick={handleStart} variant="pill" size="sm">
+              <Button onClick={() => void handleStart()} variant="pill" size="sm" disabled={starting}>
                 {t("send")}
               </Button>
-            </div>
-          )}
-
-          {/* Messages */}
-          {messages.length > 0 && (
-            <div className="w-full space-y-4">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm ${
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border bg-muted"
-                    }`}
-                  >
-                    {m.content}
-                  </div>
-                </div>
-              ))}
             </div>
           )}
 
@@ -203,7 +184,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
           )}
 
           {/* Empty state when no tasks and no projects */}
-          {recentTasks.length === 0 && recentProjects.length === 0 && messages.length === 0 && (
+          {recentTasks.length === 0 && recentProjects.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <p className="text-sm font-medium text-muted-foreground">{t("homeEmptyTitle")}</p>
               <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{t("homeEmptyBody")}</p>

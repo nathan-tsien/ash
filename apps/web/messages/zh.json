@@ -347,6 +347,8 @@
     "homeSubtitle": "描述一个任务或选择一个项目开始",
     "homeEmptyTitle": "还没有任务或项目",
     "homeEmptyBody": "在上方输入框描述一个任务，开始你的第一个工作流。",
+    "runNotFoundTitle": "找不到这个任务",
+    "runNotFoundBody": "该任务可能尚未开始，或在本次会话中已丢失。回到首页重新发起一个任务。",
     "pendingPromptLabel": "刚才输入的任务",
     "dismissPromptAria": "清除",
     "startTask": "开始任务",

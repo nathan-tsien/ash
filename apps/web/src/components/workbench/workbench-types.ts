@@ -20,6 +20,8 @@ export interface WorkbenchAppProps {
   activeTask?: Task;
   activeProject?: Project;
   viewMode: WorkbenchViewMode;
+  /** Route task id; lets the client resolve a session-only run the server doesn't know. */
+  taskId?: string;
 }
 
 /** Chat-facing slice of workspace collapse state. */

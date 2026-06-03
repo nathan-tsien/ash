@@ -19,7 +19,7 @@ export const httpPraxisClient: PraxisTaskClient = {
   async startTask() {
     throw new Error(NOT_ENABLED);
   },
-  // eslint-disable-next-line require-yield -- scaffold; real impl yields parsed SSE RuntimeEvents
+  // Scaffold; the real impl yields parsed SSE RuntimeEvents.
   async *streamEvents(): AsyncIterable<RuntimeEvent> {
     throw new Error(NOT_ENABLED);
   },
