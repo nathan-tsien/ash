@@ -6,7 +6,7 @@ import { Button } from "@ash/ui/button";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { taskHref, projectHref } from "@/lib/workbench-href";
 import { formatRelativeTime } from "@ash/shared";
 
@@ -16,15 +16,51 @@ export interface WorkbenchHomeProps {
   projects: Project[];
 }
 
+// Pending prompt handed over from the marketing quick-start dialog via
+// sessionStorage. Modelled as an external store so the server snapshot is
+// always null and hydration stays in sync — reading sessionStorage in a
+// useState initializer would diverge from the server render and mismatch.
+const PENDING_PROMPT_KEY = "ash_pending_prompt";
+type Listener = () => void;
+const pendingPromptListeners = new Set<Listener>();
+
+function subscribePendingPrompt(listener: Listener) {
+  pendingPromptListeners.add(listener);
+  return () => pendingPromptListeners.delete(listener);
+}
+
+function getPendingPromptSnapshot(): string | null {
+  try {
+    return sessionStorage.getItem(PENDING_PROMPT_KEY);
+  } catch {
+    // sessionStorage unavailable
+    return null;
+  }
+}
+
+function getPendingPromptServerSnapshot(): string | null {
+  return null;
+}
+
+function clearPendingPrompt() {
+  try {
+    sessionStorage.removeItem(PENDING_PROMPT_KEY);
+  } catch {
+    // sessionStorage unavailable
+  }
+  for (const listener of pendingPromptListeners) listener();
+}
+
 export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
   const t = useTranslations("Workbench");
   const recentTasks = tasks.slice(0, 6);
   const recentProjects = projects.slice(0, 4);
 
-  const [pendingPrompt, setPendingPrompt] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return sessionStorage.getItem("ash_pending_prompt");
-  });
+  const pendingPrompt = useSyncExternalStore(
+    subscribePendingPrompt,
+    getPendingPromptSnapshot,
+    getPendingPromptServerSnapshot,
+  );
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<{ id: string; role: "user" | "agent"; content: string }[]>([]);
 
@@ -32,8 +68,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
     const prompt = pendingPrompt || draft.trim();
     if (!prompt) return;
 
-    sessionStorage.removeItem("ash_pending_prompt");
-    setPendingPrompt(null);
+    clearPendingPrompt();
     setDraft("");
 
     setMessages((prev) => [
@@ -44,8 +79,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
   }, [pendingPrompt, draft, t]);
 
   const handleDismiss = useCallback(() => {
-    sessionStorage.removeItem("ash_pending_prompt");
-    setPendingPrompt(null);
+    clearPendingPrompt();
   }, []);
 
   return (
