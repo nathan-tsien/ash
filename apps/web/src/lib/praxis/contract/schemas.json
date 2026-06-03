@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "TaskStatus": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "running",
+        "paused",
+        "completed",
+        "failed",
+        "cancelled"
+      ],
+      "description": "Lifecycle states for a praxis task."
+    },
+    "CreateTaskRequest": {
+      "type": "object",
+      "description": "Inbound payload for creating a task.",
+      "properties": {
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "strategy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "user_input": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StartTaskRequest": {
+      "type": "object",
+      "description": "Body for starting a task's first turn.",
+      "properties": {
+        "user_input": { "type": "string" }
+      },
+      "required": ["user_input"],
+      "additionalProperties": false
+    },
+    "SendMessageRequest": {
+      "type": "object",
+      "description": "Body for sending a follow-up user message into a running task.",
+      "properties": {
+        "text": { "type": "string" }
+      },
+      "required": ["text"],
+      "additionalProperties": false
+    },
+    "CreateProjectRequest": {
+      "type": "object",
+      "description": "Inbound payload for creating a project.",
+      "properties": {
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectSummary": {
+      "type": "object",
+      "description": "Summary of a project returned by create/list.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "TaskSummary": {
+      "type": "object",
+      "description": "Summary of a task returned by create/get/list.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/TaskStatus"
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "id",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "ErrorBody": {
+      "type": "object",
+      "description": "Uniform error response body.",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
