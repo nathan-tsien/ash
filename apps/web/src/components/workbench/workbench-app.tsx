@@ -6,6 +6,7 @@ import { WorkbenchChat } from "./chat/workbench-chat";
 import { TaskWorkspace } from "./workspace/task-workspace";
 import { ProjectWorkspace } from "./workspace/project-workspace";
 import { WorkbenchHome } from "./workbench-home";
+import { useTaskRun, useTaskRuns } from "./task-run-provider";
 import { CommandPalette } from "@/components/command-palette/command-palette";
 import { useCallback, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
@@ -33,11 +34,21 @@ export function WorkbenchApp({
   activeTask,
   activeProject,
   viewMode,
+  taskId,
 }: WorkbenchAppProps) {
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations("Workbench");
+
+  // Live runs created this session override / extend server-hydrated tasks.
+  const sessionRuns = useTaskRuns();
+  const resolvedTaskId = activeTask?.id ?? taskId;
+  const liveTask = useTaskRun(resolvedTaskId) ?? activeTask;
+  const mergedTasks = [
+    ...sessionRuns,
+    ...tasks.filter((task) => !sessionRuns.some((run) => run.id === task.id)),
+  ];
 
   const onToggle = useCallback(() => setWorkspaceCollapsed((v) => !v), []);
   const onExpand = useCallback(() => setWorkspaceCollapsed(false), []);
@@ -65,28 +76,28 @@ export function WorkbenchApp({
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background text-foreground">
       <WorkbenchSidebar
         locale={locale}
-        tasks={tasks}
+        tasks={mergedTasks}
         projects={projects}
-        activeTaskId={activeTask?.id}
+        activeTaskId={liveTask?.id}
         activeProjectId={activeProject?.id}
         viewMode={viewMode}
       />
 
       {viewMode === "home" ? (
-        <WorkbenchHome locale={locale} tasks={tasks} projects={projects} />
-      ) : activeTask ? (
+        <WorkbenchHome locale={locale} tasks={mergedTasks} projects={projects} />
+      ) : liveTask ? (
         <WorkbenchChat
           locale={locale}
           active={{
-            id: activeTask.id,
-            title: activeTask.title,
-            preview: activeTask.description,
-            updatedAt: activeTask.updatedAt,
-            status: mapTaskStatus(activeTask.status),
-            messages: activeTask.messages,
+            id: liveTask.id,
+            title: liveTask.title,
+            preview: liveTask.description,
+            updatedAt: liveTask.updatedAt,
+            status: mapTaskStatus(liveTask.status),
+            messages: liveTask.messages,
             plan: [],
-            toolTraces: activeTask.toolTraces,
-            artifacts: activeTask.artifacts,
+            toolTraces: liveTask.toolTraces,
+            artifacts: liveTask.artifacts,
           }}
           workspace={{ collapsed: workspaceCollapsed, onToggle }}
         />
@@ -110,23 +121,30 @@ export function WorkbenchApp({
           }}
           workspace={{ collapsed: workspaceCollapsed, onToggle }}
         />
-      ) : null}
+      ) : (
+        <main className="flex min-w-0 flex-1 flex-col items-center justify-center gap-2 bg-background px-4 text-center">
+          <p className="text-sm font-medium text-muted-foreground">{t("runNotFoundTitle")}</p>
+          <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+            {t("runNotFoundBody")}
+          </p>
+        </main>
+      )}
 
-      {viewMode !== "home" && (
+      {viewMode !== "home" && (liveTask || activeProject) && (
         <div
           ref={workspaceRef}
           className="flex shrink-0 flex-col"
           style={{ width: 380 }}
         >
-          {activeTask ? (
-            <TaskWorkspace locale={locale} task={activeTask} />
+          {liveTask ? (
+            <TaskWorkspace locale={locale} task={liveTask} />
           ) : activeProject ? (
             <ProjectWorkspace locale={locale} project={activeProject} />
           ) : null}
         </div>
       )}
 
-      {viewMode !== "home" && (
+      {viewMode !== "home" && (liveTask || activeProject) && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -149,7 +167,7 @@ export function WorkbenchApp({
 
       <CommandPalette
         onToggleWorkspace={viewMode !== "home" ? onToggle : undefined}
-        tasks={tasks}
+        tasks={mergedTasks}
         projects={projects}
       />
     </div>

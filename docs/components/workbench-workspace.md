@@ -165,6 +165,13 @@ Workspace collapse/expand uses GSAP via `xPercent` slide animation. All animatio
 
 In Phase 1, data flows from `@ash/shared` mocks via server-side fetchers. Future API ingestion swaps adapter internals only -- payloads described here remain contract unless ADR adjusts.
 
+### Live task runs (ADR-0011)
+
+For a Task started in-session, `TaskWorkspace` renders the **live** `Task` from `TaskRunProvider`, not a server mock. The `Task` is produced by folding the praxis `RuntimeEvent` SSE stream through `runtimeEventReducer`:
+
+- `toolTraces[]` accrue from `tool_dispatch_started` (status `running`) → `tool_dispatch_ended` (`success`/`error` + client-computed `durationMs`).
+- `artifacts[]` -- praxis emits no artifact event today (its `task_outputs` is deferred to praxis Sprint 3d), so the reducer **synthesizes a placeholder `.pptx` `document` artifact** on `turn_completed`. This is a provisional seam (`TODO(ash)`), replaced by a real mapping when praxis ships outputs. Label it as a mock-equivalent per the Forbidden rule above.
+
 ## Future extensions
 
 Feature packs (`office`, `media`, ...): mount inside Workspace chrome via `featureRegistry` metadata -- altering rail count still banned without superseding ADR.

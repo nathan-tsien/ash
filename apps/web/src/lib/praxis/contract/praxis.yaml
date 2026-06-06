@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: praxis API
+  version: 0.1.0
+  description: praxis HTTP API. Source of truth for the wire contract (design-first; see ADR-0007).
+servers:
+  - url: /
+paths:
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses:
+        "200":
+          description: Service is live.
+  /v1/tasks:
+    post:
+      operationId: createTask
+      summary: Create a task.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.json#/$defs/CreateTaskRequest"
+      responses:
+        "201":
+          description: Task created.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.json#/$defs/TaskSummary"
+        "401":
+          $ref: "#/components/responses/Error"
+    get:
+      operationId: listTasks
+      summary: List the caller's tasks.
+      responses:
+        "200":
+          description: Task list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "./schemas.json#/$defs/TaskSummary"
+        "401":
+          $ref: "#/components/responses/Error"
+  /v1/projects:
+    post:
+      operationId: createProject
+      summary: Create a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.json#/$defs/CreateProjectRequest"
+      responses:
+        "201":
+          description: Project created.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.json#/$defs/ProjectSummary"
+        "401":
+          $ref: "#/components/responses/Error"
+    get:
+      operationId: listProjects
+      summary: List the caller's projects.
+      responses:
+        "200":
+          description: Project list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "./schemas.json#/$defs/ProjectSummary"
+        "401":
+          $ref: "#/components/responses/Error"
+  /v1/tasks/{id}:
+    get:
+      operationId: getTask
+      summary: Fetch one task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The task.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.json#/$defs/TaskSummary"
+        "404":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /v1/tasks/{id}/start:
+    post:
+      operationId: startTask
+      summary: Start a task's first turn.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.json#/$defs/StartTaskRequest"
+      responses:
+        "202":
+          description: Accepted; task is starting.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.json#/$defs/TaskSummary"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /v1/tasks/{id}/messages:
+    post:
+      operationId: sendTaskMessage
+      summary: Send a follow-up user message into a running task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.json#/$defs/SendMessageRequest"
+      responses:
+        "202":
+          description: Accepted; the message was submitted to the session.
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /v1/tasks/{id}/events:
+    get:
+      operationId: taskEvents
+      summary: Server-sent event stream of a task's runtime events.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: >-
+            SSE stream. Each event's data is a JSON RuntimeEvent (tagged union,
+            field "type"); the full variant set is documented in ADR-0008.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /v1/tasks/{id}/cancel:
+    post:
+      operationId: cancelTask
+      summary: Cancel a non-terminal task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Task cancelled.
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /v1/tasks/{id}/complete:
+    post:
+      operationId: completeTask
+      summary: Mark a paused task complete.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Task completed.
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+components:
+  responses:
+    Error:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            $ref: "./schemas.json#/$defs/ErrorBody"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

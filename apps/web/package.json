@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gen:praxis": "openapi-typescript src/lib/praxis/contract/praxis.yaml -o src/lib/praxis/generated.ts"
   },
   "dependencies": {
     "@ash/iam-client": "workspace:*",
@@ -39,6 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "jsdom": "^29.1.1",
+    "openapi-typescript": "^7",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"

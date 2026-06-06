@@ -2,7 +2,23 @@
 
 ## Status
 
-Proposed
+Accepted (2026-06-03). The working recommendation below is now the decision, settled by the upstream
+praxis contract.
+
+## Update (2026-06-03) — decision locked to SSE
+
+praxis published its HTTP contract (`openapi/praxis.yaml` v0.1.0) and **praxis ADR-0008** which fix the
+transport on the producer side: `GET /v1/tasks/{id}/events` is **SSE** (`text/event-stream`) carrying a
+JSON `RuntimeEvent` tagged union, with `POST /v1/tasks/{id}/start|messages|cancel|complete` as the
+control plane. ash therefore adopts **SSE for transcript/event fan-out + HTTP POST for control**, matching
+the working recommendation in this ADR and the praxis API exactly.
+
+Consumption seam: the browser cannot attach the iam `Authorization: Bearer` header to `EventSource`, so the
+real client connects to an ash **BFF proxy route** (`/api/praxis/tasks/:id/events`) that opens the praxis
+SSE stream server-side with the forwarded JWT and re-streams it. That proxy route is the gated Phase 2
+piece; the first live slice
+(`docs/superpowers/specs/2026-06-03-task-live-execution.md`, ADR-0011) ships only the consumer interface +
+a local fake and **does not** implement the SSE route yet.
 
 ## Context
 
