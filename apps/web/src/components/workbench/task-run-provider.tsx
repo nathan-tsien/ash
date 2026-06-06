@@ -83,14 +83,21 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
             state = runtimeEventReducer(state, event, Date.now());
             upsert(state.task);
           }
-          // One-shot task: settle the praxis FSM (paused -> completed) and release
-          // the session. Best-effort — a failed settle (e.g. the FSM is already
-          // terminal) must not flip a turn that already completed. Fake client
-          // no-ops; real client POSTs /complete.
-          try {
-            await client.complete(summary.id);
-          } catch {
-            // Turn already reduced to its terminal state; ignore the cleanup error.
+          if (state.task.status === "completed" || state.task.status === "failed") {
+            // Normal terminal turn: settle the praxis FSM (paused -> completed)
+            // and release the session. Best-effort — a failed settle (e.g. the
+            // FSM is already terminal) must not flip a turn that already
+            // completed. Fake client no-ops; real client POSTs /complete.
+            try {
+              await client.complete(summary.id);
+            } catch {
+              // Turn already reduced to its terminal state; ignore cleanup error.
+            }
+          } else {
+            // The stream closed without a terminal event (truncated / early
+            // close): the turn ended abnormally, so the task is a failure rather
+            // than stuck in 'running'.
+            upsert({ ...state.task, status: "failed" });
           }
         } catch {
           // An intentional abort (provider unmount) is a teardown, not a failure.
