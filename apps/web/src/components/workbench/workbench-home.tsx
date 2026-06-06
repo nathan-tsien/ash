@@ -76,8 +76,14 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
     clearPendingPrompt();
     setDraft("");
 
-    const id = await startTask(prompt);
-    router.push(taskHref(id));
+    try {
+      const id = await startTask(prompt);
+      router.push(taskHref(id));
+    } catch {
+      // Task creation failed (e.g. real praxis unreachable); re-enable the
+      // composer so the user can retry instead of being stuck disabled.
+      setStarting(false);
+    }
   }, [pendingPrompt, draft, starting, startTask, router]);
 
   const handleDismiss = useCallback(() => {

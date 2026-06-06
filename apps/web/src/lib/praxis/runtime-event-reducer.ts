@@ -122,17 +122,27 @@ export function runtimeEventReducer(
       };
     }
 
-    case "turn_failed":
+    case "turn_failed": {
+      const finalized = finalizeStreaming(task.messages, state.currentAssistantId);
+      // Surface the failure reason to the user instead of silently dropping it.
+      const notice: Message = {
+        id: `assistant-${task.id}-fail-${state.seq}`,
+        role: "assistant",
+        content: `任务执行失败：${event.reason}`,
+        createdAt: iso(nowMs),
+      };
       return {
         ...state,
         currentAssistantId: null,
+        seq: state.seq + 1,
         task: {
           ...task,
-          messages: finalizeStreaming(task.messages, state.currentAssistantId),
+          messages: [...finalized, notice],
           status: "failed",
           updatedAt: iso(nowMs),
         },
       };
+    }
 
     case "turn_cancelled":
       return patch(state, { status: "failed", updatedAt: iso(nowMs) });

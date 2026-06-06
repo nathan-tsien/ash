@@ -88,15 +88,19 @@ describe("runtimeEventReducer", () => {
     expect(s.task.artifacts[0].title).toContain(".pptx");
   });
 
-  it("turn_failed marks failed without synthesizing an artifact", () => {
+  it("turn_failed surfaces the reason and does not synthesize an artifact", () => {
     const s = run(seed(), [
       { type: "turn_started" },
       { type: "text_delta", chunk: "partial" },
-      { type: "turn_failed", reason: "nope" },
+      { type: "turn_failed", reason: "model timeout" },
     ]);
     expect(s.task.status).toBe("failed");
     expect(s.task.artifacts).toHaveLength(0);
-    expect(s.task.messages.at(-1)!.isStreaming).toBe(false);
+    // The partial assistant message is finalized (no longer streaming).
+    const partial = s.task.messages.find((m) => m.content === "partial");
+    expect(partial?.isStreaming).toBe(false);
+    // The failure reason is surfaced to the user.
+    expect(s.task.messages.at(-1)!.content).toContain("model timeout");
   });
 
   it("turn_cancelled maps to failed", () => {
