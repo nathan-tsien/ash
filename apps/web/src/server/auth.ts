@@ -109,3 +109,18 @@ export async function refreshAccessToken(): Promise<AuthUser | null> {
 
   return user;
 }
+
+/** Return the current access token, refreshing once if the cookie is absent.
+ *  Returns undefined if there is no valid session. Use from BFF proxy routes
+ *  that forward the iam JWT to downstream services (e.g. praxis).
+ */
+export async function getAccessTokenWithRefresh(): Promise<string | undefined> {
+  const existing = await getAccessToken();
+  if (existing) return existing;
+
+  const user = await refreshAccessToken();
+  if (!user) return undefined;
+
+  // refreshAccessToken set fresh cookies on the same request's jar; re-read it.
+  return getAccessToken();
+}
