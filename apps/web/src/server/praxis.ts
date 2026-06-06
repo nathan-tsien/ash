@@ -44,7 +44,17 @@ export async function forwardToPraxis(request: Request, segments: string[]): Pro
   }
   if (isSse) headers["accept"] = "text/event-stream";
 
-  const upstream = await fetch(url, init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, init);
+  } catch {
+    // The browser aborting (navigation / provider unmount) aborts request.signal,
+    // which rejects this fetch. That is a benign cancellation — return a quiet
+    // client-closed status, not an unhandled 500. A genuine connect failure
+    // (praxis down) becomes a 502 the client surfaces as a failed task.
+    if (request.signal.aborted) return new Response(null, { status: 499 });
+    return json({ error: "praxis_unreachable" }, 502);
+  }
 
   if (isSse) {
     return new Response(upstream.body, {

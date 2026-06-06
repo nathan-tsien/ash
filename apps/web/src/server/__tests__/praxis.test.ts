@@ -85,6 +85,28 @@ describe("forwardToPraxis", () => {
     expect(await res.text()).toBe("");
   });
 
+  it("returns 499 (not a thrown 500) when the client aborts mid-forward", async () => {
+    const fetchFn = fetchMock();
+    fetchFn.mockRejectedValue(new DOMException("aborted", "AbortError"));
+    // jsdom's Request rejects undici's AbortSignal instance; fetch is mocked, so
+    // a minimal GET stand-in exercises the aborted-signal branch faithfully.
+    const req = { method: "GET", signal: { aborted: true } } as unknown as Request;
+
+    const res = await forwardToPraxis(req, ["tasks", "t1", "events"]);
+
+    expect(res.status).toBe(499);
+  });
+
+  it("returns 502 when praxis is unreachable", async () => {
+    const fetchFn = fetchMock();
+    fetchFn.mockRejectedValue(new TypeError("fetch failed"));
+    const req = new Request("http://localhost/api/praxis/tasks", { method: "POST" });
+
+    const res = await forwardToPraxis(req, ["tasks"]);
+
+    expect(res.status).toBe(502);
+  });
+
   it("streams an events GET through as text/event-stream", async () => {
     const fetchFn = fetchMock();
     fetchFn.mockResolvedValue(

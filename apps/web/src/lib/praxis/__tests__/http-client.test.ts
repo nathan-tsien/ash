@@ -87,6 +87,43 @@ describe("httpPraxisClient", () => {
     expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/events");
   });
 
+  it("yields a final frame that arrives without a trailing blank line", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      sseResponse(
+        'data: {"type":"turn_started"}\n\n',
+        // Server closes right after the last event, no terminating blank line.
+        'data: {"type":"turn_completed"}\n',
+      ),
+    );
+
+    const events = [];
+    for await (const e of httpPraxisClient.streamEvents("t1")) events.push(e);
+
+    expect(events).toEqual([{ type: "turn_started" }, { type: "turn_completed" }]);
+  });
+
+  it("reassembles a multi-byte UTF-8 char split across chunks", async () => {
+    const fetchFn = stubFetch();
+    // "好" is 3 UTF-8 bytes; split the frame mid-character across two reads.
+    const enc = new TextEncoder();
+    const full = enc.encode('data: {"type":"text_delta","chunk":"好"}\n\n');
+    const cut = full.indexOf(enc.encode("好")[0]) + 1; // mid-codepoint
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(full.slice(0, cut));
+        controller.enqueue(full.slice(cut));
+        controller.close();
+      },
+    });
+    fetchFn.mockResolvedValue(new Response(body, { status: 200 }));
+
+    const events = [];
+    for await (const e of httpPraxisClient.streamEvents("t1")) events.push(e);
+
+    expect(events).toEqual([{ type: "text_delta", chunk: "好" }]);
+  });
+
   it("throws when a control call returns a non-2xx status", async () => {
     const fetchFn = stubFetch();
     fetchFn.mockResolvedValue(new Response('{"error":"boom"}', { status: 500 }));

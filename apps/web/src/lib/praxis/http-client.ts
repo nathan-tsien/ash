@@ -55,6 +55,15 @@ export const httpPraxisClient: PraxisTaskClient = {
           yield JSON.parse(data) as RuntimeEvent;
         }
       }
+      // Flush at stream end: the decoder may hold a multi-byte char that spanned
+      // the last read, and the final frame may arrive without a trailing blank
+      // line. Without this the terminal event (e.g. turn_completed) can be lost.
+      for (const data of parser.push(decoder.decode())) {
+        yield JSON.parse(data) as RuntimeEvent;
+      }
+      for (const data of parser.flush()) {
+        yield JSON.parse(data) as RuntimeEvent;
+      }
     } finally {
       reader.releaseLock();
     }

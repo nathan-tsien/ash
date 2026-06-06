@@ -34,4 +34,21 @@ describe("SseParser", () => {
     const p = new SseParser();
     expect(p.push("data: x\r\n\r\n")).toEqual(["x"]);
   });
+
+  it("handles a frame separator split across chunks", () => {
+    const p = new SseParser();
+    expect(p.push("data: a\n")).toEqual([]);
+    expect(p.push("\ndata: b\n\n")).toEqual(["a", "b"]);
+  });
+
+  it("flush emits a trailing frame that has no blank-line terminator", () => {
+    const p = new SseParser();
+    expect(p.push("data: turn_started\n\ndata: turn_completed\n")).toEqual(["turn_started"]);
+    expect(p.flush()).toEqual(["turn_completed"]);
+  });
+
+  it("flush returns nothing when the buffer holds no data line", () => {
+    const p = new SseParser();
+    expect(p.flush()).toEqual([]);
+  });
 });

@@ -84,10 +84,19 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
             upsert(state.task);
           }
           // One-shot task: settle the praxis FSM (paused -> completed) and release
-          // the session. Fake client no-ops; real client POSTs /complete.
-          await client.complete(summary.id);
+          // the session. Best-effort — a failed settle (e.g. the FSM is already
+          // terminal) must not flip a turn that already completed. Fake client
+          // no-ops; real client POSTs /complete.
+          try {
+            await client.complete(summary.id);
+          } catch {
+            // Turn already reduced to its terminal state; ignore the cleanup error.
+          }
         } catch {
-          upsert({ ...state.task, status: "failed" });
+          // An intentional abort (provider unmount) is a teardown, not a failure.
+          if (!controller.signal.aborted) {
+            upsert({ ...state.task, status: "failed" });
+          }
         } finally {
           controllersRef.current.delete(controller);
         }
