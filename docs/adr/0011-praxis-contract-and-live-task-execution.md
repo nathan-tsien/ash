@@ -61,8 +61,8 @@ ash's product model defines a Task as one-shot (create → execute → complete/
   appears in the OpenAPI.
 - **Provisional seams:** artifact synthesis and the auto-complete behaviour are deliberate stand-ins, both
   documented for revisit (praxis Sprint 3d; multi-turn Task chat).
-- **Deferred:** real SSE transport + BFF proxy, server-side persistence, Project live execution, real
-  `.pptx` rendering.
+- **Deferred (partially resolved):** real SSE transport + BFF proxy landed in ADR-0012 (2026-06-06);
+  server-side persistence, Project live execution, and real `.pptx` rendering remain deferred.
 
 ## Related
 

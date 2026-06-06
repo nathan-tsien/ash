@@ -29,10 +29,11 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0009](./0009-tenancy-model.md) | Tenancy model (Proposed) |
 | [0010](./0010-dark-mode-theme-toggle.md) | Dark-mode theme toggle |
 | [0011](./0011-praxis-contract-and-live-task-execution.md) | praxis contract adoption + first live task-execution slice |
+| [0012](./0012-praxis-live-transport.md) | Real praxis transport + BFF SSE proxy |
 
 ### Reserved band
 
-Next free IDs (**0012+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
+Next free IDs (**0013+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
 
 ## Template
 

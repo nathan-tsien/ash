@@ -20,6 +20,12 @@ piece; the first live slice
 (`docs/superpowers/specs/2026-06-03-task-live-execution.md`, ADR-0011) ships only the consumer interface +
 a local fake and **does not** implement the SSE route yet.
 
+## Update (2026-06-06) — BFF SSE proxy landed
+
+The gated proxy route is now implemented (ADR-0012): a same-origin catch-all `/api/praxis/[...segments]`
+forwards the iam JWT and re-streams praxis's `text/event-stream`. Still SSE + POST control plane, exactly as
+locked here.
+
 ## Context
 
 Phase 2 introduces `crates/ash-server` embedding cogito and exposing live agent output to `apps/web`. cogito exposes session-scoped event streams (for example via `SessionHandle::subscribe`) that ash must bridge to browser clients.
