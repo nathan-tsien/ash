@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -32,6 +33,15 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const [runs, setRuns] = useState<Record<string, Task>>({});
   const [order, setOrder] = useState<string[]>([]);
   const clientRef = useRef(getPraxisClient());
+  const controllersRef = useRef<Set<AbortController>>(new Set());
+
+  useEffect(() => {
+    const controllers = controllersRef.current;
+    return () => {
+      for (const controller of controllers) controller.abort();
+      controllers.clear();
+    };
+  }, []);
 
   const upsert = useCallback((task: Task) => {
     setRuns((prev) => ({ ...prev, [task.id]: task }));
@@ -62,20 +72,40 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       upsert(seeded);
       setOrder((prev) => [summary.id, ...prev.filter((x) => x !== summary.id)]);
 
+      const controller = new AbortController();
+      controllersRef.current.add(controller);
       void (async () => {
         let state = initialTaskRunState({ ...seeded, status: "running" });
         try {
           await client.startTask(summary.id, directive);
           upsert(state.task);
-          for await (const event of client.streamEvents(summary.id)) {
+          for await (const event of client.streamEvents(summary.id, controller.signal)) {
             state = runtimeEventReducer(state, event, Date.now());
             upsert(state.task);
           }
-          // One-shot task: settle the praxis FSM (paused -> completed) and release
-          // the session. Fake client no-ops; real client POSTs /complete.
-          await client.complete(summary.id);
+          if (state.task.status === "completed" || state.task.status === "failed") {
+            // Normal terminal turn: settle the praxis FSM (paused -> completed)
+            // and release the session. Best-effort — a failed settle (e.g. the
+            // FSM is already terminal) must not flip a turn that already
+            // completed. Fake client no-ops; real client POSTs /complete.
+            try {
+              await client.complete(summary.id);
+            } catch {
+              // Turn already reduced to its terminal state; ignore cleanup error.
+            }
+          } else {
+            // The stream closed without a terminal event (truncated / early
+            // close): the turn ended abnormally, so the task is a failure rather
+            // than stuck in 'running'.
+            upsert({ ...state.task, status: "failed" });
+          }
         } catch {
-          upsert({ ...state.task, status: "failed" });
+          // An intentional abort (provider unmount) is a teardown, not a failure.
+          if (!controller.signal.aborted) {
+            upsert({ ...state.task, status: "failed" });
+          }
+        } finally {
+          controllersRef.current.delete(controller);
         }
       })();
 
