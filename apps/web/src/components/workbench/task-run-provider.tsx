@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -32,6 +33,15 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const [runs, setRuns] = useState<Record<string, Task>>({});
   const [order, setOrder] = useState<string[]>([]);
   const clientRef = useRef(getPraxisClient());
+  const controllersRef = useRef<Set<AbortController>>(new Set());
+
+  useEffect(() => {
+    const controllers = controllersRef.current;
+    return () => {
+      for (const controller of controllers) controller.abort();
+      controllers.clear();
+    };
+  }, []);
 
   const upsert = useCallback((task: Task) => {
     setRuns((prev) => ({ ...prev, [task.id]: task }));
@@ -62,12 +72,14 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       upsert(seeded);
       setOrder((prev) => [summary.id, ...prev.filter((x) => x !== summary.id)]);
 
+      const controller = new AbortController();
+      controllersRef.current.add(controller);
       void (async () => {
         let state = initialTaskRunState({ ...seeded, status: "running" });
         try {
           await client.startTask(summary.id, directive);
           upsert(state.task);
-          for await (const event of client.streamEvents(summary.id)) {
+          for await (const event of client.streamEvents(summary.id, controller.signal)) {
             state = runtimeEventReducer(state, event, Date.now());
             upsert(state.task);
           }
@@ -76,6 +88,8 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
           await client.complete(summary.id);
         } catch {
           upsert({ ...state.task, status: "failed" });
+        } finally {
+          controllersRef.current.delete(controller);
         }
       })();
 
