@@ -1,0 +1,66 @@
+import "server-only";
+
+import { getAccessTokenWithRefresh } from "./auth";
+
+/** praxis HTTP base URL. Server-only; distinct default from iam's 8090. */
+const PRAXIS_BASE_URL = process.env.PRAXIS_BASE_URL ?? "http://localhost:8091";
+
+/** Only `/v1/tasks/**` is proxied. Keeps this from being an open proxy. */
+const ALLOWED_ROOT = "tasks";
+
+function json(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+/**
+ * Forward a browser request to praxis, attaching the iam JWT from the httpOnly
+ * cookie as a Bearer header. Control-plane responses pass through (status +
+ * JSON body); the SSE `/events` response body is piped straight back.
+ *
+ * Speaks HTTP only — does not import cogito or any praxis Rust crate.
+ */
+export async function forwardToPraxis(request: Request, segments: string[]): Promise<Response> {
+  if (segments[0] !== ALLOWED_ROOT) {
+    return json({ error: "not_found" }, 404);
+  }
+
+  const token = await getAccessTokenWithRefresh();
+  if (!token) {
+    return json({ error: "unauthenticated" }, 401);
+  }
+
+  const isSse = segments[segments.length - 1] === "events";
+  const url = `${PRAXIS_BASE_URL}/v1/${segments.join("/")}`;
+  const headers: Record<string, string> = { authorization: `Bearer ${token}` };
+  const init: RequestInit = { method: request.method, headers, signal: request.signal };
+
+  if (request.method === "POST") {
+    headers["content-type"] = "application/json";
+    const body = await request.text();
+    if (body) init.body = body;
+  }
+  if (isSse) headers["accept"] = "text/event-stream";
+
+  const upstream = await fetch(url, init);
+
+  if (isSse) {
+    return new Response(upstream.body, {
+      status: upstream.status,
+      headers: {
+        "content-type": "text/event-stream",
+        "cache-control": "no-cache, no-transform",
+        connection: "keep-alive",
+      },
+    });
+  }
+
+  // Control plane: pass status + body through. 204/empty bodies stay empty.
+  const text = await upstream.text();
+  return new Response(text || null, {
+    status: upstream.status,
+    headers: text ? { "content-type": "application/json" } : {},
+  });
+}
