@@ -1,35 +1,74 @@
 import type { PraxisTaskClient } from "./client";
-import type { RuntimeEvent } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, TaskSummary } from "./runtime-events";
+import { SseParser } from "./sse";
 
 /**
- * Scaffold for the real praxis transport. NOT enabled this slice.
+ * Real praxis transport. Runs in the browser and talks ONLY to same-origin
+ * `/api/praxis/...` BFF routes (the httpOnly iam cookie rides along
+ * automatically); the route forwards the JWT to praxis. See
+ * docs/superpowers/specs/2026-06-06-praxis-live-transport.md + ADR-0012.
  *
- * The SSE path (`GET /v1/tasks/{id}/events`) requires a BFF proxy route
- * (`/api/praxis/...`) that forwards the iam JWT and re-streams praxis's
- * `text/event-stream` to the browser. That route is the gated Phase 2 piece
- * (docs/adr/0007, praxis ADR-0008). Methods throw to prevent accidental use
- * before the streaming slice wires the proxy + auth header propagation.
+ * Enabled via NEXT_PUBLIC_PRAXIS_TRANSPORT=http (default is the fake client).
  */
-const NOT_ENABLED = "praxis http client not enabled this slice (see docs/adr/0007)";
+const BASE = "/api/praxis/tasks";
+
+async function postJson<T>(url: string, body?: unknown): Promise<T | undefined> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`praxis POST ${url} -> ${res.status}`);
+  if (res.status === 204) return undefined;
+  const text = await res.text();
+  return text ? (JSON.parse(text) as T) : undefined;
+}
 
 export const httpPraxisClient: PraxisTaskClient = {
-  async createTask() {
-    throw new Error(NOT_ENABLED);
+  async createTask(req: CreateTaskRequest): Promise<TaskSummary> {
+    const out = await postJson<TaskSummary>(BASE, req);
+    if (!out) throw new Error("praxis createTask returned no body");
+    return out;
   },
-  async startTask() {
-    throw new Error(NOT_ENABLED);
+
+  async startTask(id: string, userInput: string): Promise<TaskSummary> {
+    const out = await postJson<TaskSummary>(`${BASE}/${id}/start`, { user_input: userInput });
+    if (!out) throw new Error("praxis startTask returned no body");
+    return out;
   },
-  // Scaffold; the real impl yields parsed SSE RuntimeEvents.
-  async *streamEvents(): AsyncIterable<RuntimeEvent> {
-    throw new Error(NOT_ENABLED);
+
+  async *streamEvents(id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent> {
+    const res = await fetch(`${BASE}/${id}/events`, {
+      headers: { accept: "text/event-stream" },
+      signal,
+    });
+    if (!res.ok || !res.body) throw new Error(`praxis events ${id} -> ${res.status}`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    const parser = new SseParser();
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const data of parser.push(decoder.decode(value, { stream: true }))) {
+          yield JSON.parse(data) as RuntimeEvent;
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   },
-  async sendMessage() {
-    throw new Error(NOT_ENABLED);
+
+  async sendMessage(id: string, text: string): Promise<void> {
+    await postJson(`${BASE}/${id}/messages`, { text });
   },
-  async complete() {
-    throw new Error(NOT_ENABLED);
+
+  async complete(id: string): Promise<void> {
+    await postJson(`${BASE}/${id}/complete`);
   },
-  async cancel() {
-    throw new Error(NOT_ENABLED);
+
+  async cancel(id: string): Promise<void> {
+    await postJson(`${BASE}/${id}/cancel`);
   },
 };
