@@ -160,10 +160,17 @@ until then, the table above is the authority.
 
 ## 5. Motion (MOTION)
 
-**MOTION-1 (MUST)** GSAP is the canonical animation engine for interactive chrome (pane collapse,
-composer focus, palette entrance, micro-interactions). CSS keyframes are reserved for ambient,
-non-interactive texture (grain overlay, entrance keyframes consumed by GSAP utilities). Do not mix a
-CSS transition and a GSAP tween on the same property of the same element.
+**MOTION-1 (MUST)** Animation engine is chosen by complexity, not by surface:
+
+- CSS transitions: single-property, un-orchestrated state feedback — hover color/opacity,
+  focus rings, simple reveals (`transition-colors`, `transition-opacity`).
+- GSAP: spatial movement, multi-element orchestration, anything needing a timeline —
+  pane collapse/expand, composer focus scaling, palette entrance, press bounces.
+- CSS keyframes: ambient, non-interactive texture only (grain overlay), plus entrance
+  keyframes consumed by GSAP utilities.
+
+Never drive the same property of the same element with both a CSS transition and a GSAP
+tween.
 
 **MOTION-2 (MUST)** Duration scale:
 
@@ -174,6 +181,9 @@ CSS transition and a GSAP tween on the same property of the same element.
 | `slow` | 350–450ms | Pane re-expansion, marketing entrances |
 
 Anything longer than 700ms is marketing-only and scroll-driven.
+
+Exits run at 50–70% of the corresponding entrance duration (as-built precedent: workspace
+fade-out 100ms vs fade-in 350ms).
 
 **MOTION-3 (MUST)** Easing language: entrances decelerate with `power3.out`; hover/press
 interactions use `power2.out`; playful press feedback MAY use `back.out`. Linear easing only for
