@@ -69,7 +69,7 @@ export function TaskSection({
                           : "bg-muted-foreground/40",
                   )}
                 />
-                <span className="text-label text-muted-foreground">
+                <span className="text-label font-normal text-muted-foreground">
                   {formatRelativeTime(task.updatedAt, locale)}
                 </span>
               </div>
