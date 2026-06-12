@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Noto_Sans_SC } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans, Geist_Mono, Noto_Sans_SC } from "next/font/google";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
@@ -29,6 +29,13 @@ const notoSansSc = Noto_Sans_SC({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+/* Display face (TYPE-6): marketing headlines + wordmark only — variable axis covers 200-800 */
+const bricolageGrotesque = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
   display: "swap",
 });
@@ -68,7 +75,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html
       lang={htmlLang}
-      className={`${dmSans.variable} ${notoSansSc.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${notoSansSc.variable} ${geistMono.variable} ${bricolageGrotesque.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
