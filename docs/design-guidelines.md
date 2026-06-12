@@ -65,15 +65,15 @@ an English `TODO(ash-visual): rationale` comment beside the deviation.
 
 **COLOR-3 (MUST)** Status semantics route through dedicated status tokens, not raw Tailwind hues:
 
-| Token | Meaning | Light direction | Dark direction |
-|-------|---------|-----------------|----------------|
-| `--status-running` | In-flight / active work | blue family | lightened blue |
-| `--status-success` | Completed / verified | emerald family | lightened emerald |
-| `--status-warning` | Degraded, not terminal | amber family | lightened amber |
+| Status | Tokens (each status defines all three) | Use |
+|--------|----------------------------------------|-----|
+| Running (in-flight) | `--status-running` / `--status-running-soft` / `--status-running-foreground` | solid dot+icon / badge wash / text on wash |
+| Success (completed) | `--status-success` / `--status-success-soft` / `--status-success-foreground` | same pattern |
+| Warning (degraded) | `--status-warning` / `--status-warning-soft` / `--status-warning-foreground` | same pattern |
 
-Exact literals are defined in `globals.css` when the tokens land (Appendix A, D-1). Until then,
-existing raw-hue usages are registered deviations, not precedents. `Badge` success/warning variants
-re-route through these tokens at remediation time.
+`*-foreground` on `*-soft` MUST meet WCAG AA in both themes. Canonical literals live in
+`globals.css` (Appendix C mirrors them). Raw Tailwind hues for status are forbidden;
+`Badge` success/warning variants re-route through these tokens at D-1d remediation.
 
 **COLOR-4 (MUST)** Destructive and error semantics use `--destructive` (and badge destructive
 variant) exclusively. Functional red appears nowhere else.
@@ -93,6 +93,9 @@ change.
 **COLOR-8 (SHOULD)** Maintain readable contrast on tinted chrome: sidebar and workspace captions
 rest on their `*-foreground` tokens; never gray-on-gray without checking legibility (WCAG AA
 intent; tooling later).
+
+Focus ring contrast (`--ring` at 0.28 alpha) is unverified against WCAG 2.4.11 non-text
+contrast (3:1) — tracked as D-8.
 
 **COLOR-9 (MAY)** `--muted`/`bg-muted` washes for inset tracks and sparse zebra striping;
 `--accent` for row hover washes.
@@ -371,8 +374,14 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 | `--sidebar-accent` | `#f4f3f2` | `#2a2928` | Sidebar row hover |
 | `--workspace` | `#fafafa` | `#201f1e` | Right audit rail |
 | `--radius` | `0.75rem` | same | Radius core (sm/md/lg/xl derived) |
-| `--status-running` | TBD at D-1 remediation | TBD | In-flight status (COLOR-3) |
-| `--status-success` | TBD at D-1 remediation | TBD | Success status (COLOR-3) |
-| `--status-warning` | TBD at D-1 remediation | TBD | Warning status (COLOR-3) |
+| `--status-running` | `#3b82f6` | `#60a5fa` | In-flight dot/icon (COLOR-3) |
+| `--status-running-soft` | `#eff6ff` | `#1c2940` | Running badge wash |
+| `--status-running-foreground` | `#1d4ed8` | `#93c5fd` | Text on running wash |
+| `--status-success` | `#10b981` | `#34d399` | Success dot/icon (COLOR-3) |
+| `--status-success-soft` | `#ecfdf5` | `#122b22` | Success badge wash |
+| `--status-success-foreground` | `#047857` | `#6ee7b7` | Text on success wash |
+| `--status-warning` | `#f59e0b` | `#fbbf24` | Warning dot/icon (COLOR-3) |
+| `--status-warning-soft` | `#fffbeb` | `#2e2510` | Warning badge wash |
+| `--status-warning-foreground` | `#b45309` | `#fcd34d` | Text on warning wash |
 
 Fonts: `--font-sans` = DM Sans -> Noto Sans SC -> system; `--font-mono` = Geist Mono -> system.
