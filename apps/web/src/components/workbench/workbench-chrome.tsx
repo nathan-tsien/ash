@@ -13,6 +13,7 @@ import gsap from "gsap";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import "@/lib/animations/gsap-setup";
 import { fadeOut, fadeIn } from "@/lib/animations/presets";
+import { PANE_WIDTH } from "@/lib/layout-constants";
 import { SettingsModalProvider } from "@/components/settings/settings-modal-provider";
 import { CommandPaletteProvider, useCommandPalette } from "@/components/command-palette/command-palette-provider";
 import { CommandPalette } from "@/components/command-palette/command-palette";
@@ -98,7 +99,7 @@ function WorkbenchChromeInner({
       <div
         ref={workspaceRef}
         className="flex shrink-0 flex-col"
-        style={{ width: 380 }}
+        style={{ width: PANE_WIDTH.workspace }}
       >
         {workspacePanel}
       </div>

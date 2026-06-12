@@ -20,7 +20,7 @@ export function MarketingHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-[15px] font-semibold tracking-tight text-foreground"
+          className="flex items-center gap-2 text-body-lg font-semibold tracking-tight text-foreground"
           aria-label={t("logoAria")}
         >
           <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-card">
@@ -33,7 +33,7 @@ export function MarketingHeader() {
           {/* Features */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-body-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                 {t("navFeatures")}
                 <ChevronDown className="size-3.5" aria-hidden />
               </button>
@@ -55,7 +55,7 @@ export function MarketingHeader() {
           {/* Solutions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-body-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                 {t("navSolutions")}
                 <ChevronDown className="size-3.5" aria-hidden />
               </button>
@@ -82,7 +82,7 @@ export function MarketingHeader() {
           {/* Resources */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-body-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                 {t("navResources")}
                 <ChevronDown className="size-3.5" aria-hidden />
               </button>
@@ -109,7 +109,7 @@ export function MarketingHeader() {
           {/* Pricing — no dropdown */}
           <Link
             href="/pricing"
-            className="rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-lg px-3 py-2 text-body-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             {t("navPricing")}
           </Link>
@@ -128,7 +128,7 @@ export function MarketingHeader() {
               <Menu className="size-5 text-foreground" />
             </summary>
             <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
-              <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="px-3 py-1.5 text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("navFeatures")}
               </div>
               <Link href="/product" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
@@ -137,7 +137,7 @@ export function MarketingHeader() {
               <Link href="/product" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
                 {t("featureDoc")}
               </Link>
-              <div className="mt-1 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mt-1 px-3 py-1.5 text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("navSolutions")}
               </div>
               <Link href="/showcase" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
@@ -149,7 +149,7 @@ export function MarketingHeader() {
               <Link href="/showcase" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
                 {t("solutionAnalyst")}
               </Link>
-              <div className="mt-1 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mt-1 px-3 py-1.5 text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("navResources")}
               </div>
               <Link href="/docs" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">

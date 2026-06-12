@@ -13,6 +13,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
 import { fadeOut, fadeIn } from "@/lib/animations/presets";
+import { PANE_WIDTH } from "@/lib/layout-constants";
 import { PanelRightOpen } from "lucide-react";
 import { Button } from "@ash/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
@@ -134,7 +135,7 @@ export function WorkbenchApp({
         <div
           ref={workspaceRef}
           className="flex shrink-0 flex-col"
-          style={{ width: 380 }}
+          style={{ width: PANE_WIDTH.workspace }}
         >
           {liveTask ? (
             <TaskWorkspace locale={locale} task={liveTask} />

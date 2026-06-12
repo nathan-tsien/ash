@@ -40,7 +40,7 @@ export default async function PricingPage({ params }: Props) {
   return (
     <div className="border-b border-border bg-background px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <p className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
+        <p className="text-body-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
         <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {t("title")}
         </h1>
@@ -63,7 +63,7 @@ export default async function PricingPage({ params }: Props) {
                     : "border-border bg-card text-foreground hover:-translate-y-0.5 hover:shadow-sm"
                 }`}
               >
-                <h2 className="text-[13px] font-semibold uppercase tracking-wider opacity-90">{name}</h2>
+                <h2 className="text-body-sm font-semibold uppercase tracking-wider opacity-90">{name}</h2>
                 <p className="mt-3 text-3xl font-semibold tracking-tight">{price}</p>
                 <p
                   className={`mt-2 text-sm leading-relaxed ${
@@ -96,7 +96,7 @@ export default async function PricingPage({ params }: Props) {
           })}
         </div>
 
-        <p className="mt-12 text-center text-[13px] text-muted-foreground">{t("footnote")}</p>
+        <p className="mt-12 text-center text-body-sm text-muted-foreground">{t("footnote")}</p>
       </div>
     </div>
   );

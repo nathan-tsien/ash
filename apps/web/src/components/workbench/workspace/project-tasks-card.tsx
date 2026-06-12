@@ -35,9 +35,9 @@ export function ProjectTasksCard({ tasks }: ProjectTasksCardProps) {
                 className={cn(
                   "size-2 rounded-full",
                   task.status === "completed"
-                    ? "bg-emerald-500"
+                    ? "bg-status-success"
                     : task.status === "running"
-                      ? "animate-pulse bg-blue-500"
+                      ? "animate-pulse bg-status-running"
                       : task.status === "failed"
                         ? "bg-destructive"
                         : "border border-muted-foreground/40",

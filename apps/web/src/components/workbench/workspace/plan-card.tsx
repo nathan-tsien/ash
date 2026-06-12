@@ -8,7 +8,7 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
 
   return (
     <div className="space-y-2">
-      <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
         {t("planHeading")}
       </h2>
       <ol className="space-y-1 rounded-lg bg-muted/30 p-2">

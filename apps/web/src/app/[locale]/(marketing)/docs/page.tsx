@@ -53,7 +53,7 @@ export default async function DocsHubPage({ params }: Props) {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xl">
-            <p className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
+            <p className="text-body-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
             <h1 id="spec" className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               {t("title")}
             </h1>
@@ -71,7 +71,7 @@ export default async function DocsHubPage({ params }: Props) {
             </div>
           </div>
           <div className="rounded-2xl border border-border bg-card p-6 lg:max-w-sm">
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-foreground">
+            <div className="flex items-center gap-2 text-body-sm font-semibold text-foreground">
               <BookOpen className="size-4 text-muted-foreground" aria-hidden />
               {t("sideTitle")}
             </div>
@@ -88,7 +88,7 @@ export default async function DocsHubPage({ params }: Props) {
             const Icon = section.icon;
             return (
               <div key={section.title} className="rounded-2xl border border-border bg-card p-6">
-                <div className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
+                <div className="flex items-center gap-2 text-body-lg font-semibold text-foreground">
                   <Icon className="size-4 text-muted-foreground" aria-hidden />
                   {section.title}
                 </div>
@@ -97,7 +97,7 @@ export default async function DocsHubPage({ params }: Props) {
                     <li key={itemKey}>
                       <span className="text-sm text-muted-foreground">{t(itemKey)}</span>
                       {itemKey !== "itemSpecPhase1" ? (
-                        <span className="ml-2 text-[11px] uppercase tracking-wide text-muted-foreground/70">
+                        <span className="ml-2 text-label uppercase tracking-wide text-muted-foreground/70">
                           {t("inRepoBadge")}
                         </span>
                       ) : null}

@@ -64,10 +64,10 @@ export function ProjectSection({
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium leading-snug">
+                  <p className="truncate text-body-sm font-medium">
                     {project.name}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 text-label text-muted-foreground">
                     {runningTasks > 0 && `${runningTasks} ${t("running")} · `}
                     {completedTasks} {t("completed")}
                   </p>

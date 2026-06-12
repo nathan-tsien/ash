@@ -11,7 +11,7 @@ export function ToolsCard({ traces }: { traces: ToolTrace[] }) {
 
   return (
     <div className="space-y-2">
-      <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
         {t("toolsHeading")}
       </h2>
       {traces.length === 0 ? (
@@ -23,11 +23,11 @@ export function ToolsCard({ traces }: { traces: ToolTrace[] }) {
               <Wrench className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <code className="rounded-md bg-muted px-1.5 py-px text-[11px] font-mono">
+                  <code className="rounded-md bg-muted px-1.5 py-px text-caption font-mono">
                     {trace.toolName}
                   </code>
                   {trace.durationMs !== undefined ? (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                       {trace.durationMs} ms
                     </span>
                   ) : trace.status === "running" ? (

@@ -53,7 +53,7 @@ export function TaskSection({
                   : "hover:bg-sidebar-accent/60",
               )}
             >
-              <p className="truncate text-[13px] font-medium leading-snug">
+              <p className="truncate text-body-sm font-medium">
                 {task.title}
               </p>
               <div className="mt-1 flex items-center gap-2">
@@ -69,7 +69,7 @@ export function TaskSection({
                           : "bg-muted-foreground/40",
                   )}
                 />
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-label text-muted-foreground">
                   {formatRelativeTime(task.updatedAt, locale)}
                 </span>
               </div>

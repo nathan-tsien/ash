@@ -52,7 +52,7 @@ export function SettingsNav({ section, onSelect }: SettingsNavProps) {
     >
       {SETTINGS_SECTION_GROUPS.map((group) => (
         <div key={group.id}>
-          <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1.5 px-2 text-label font-semibold uppercase tracking-wider text-muted-foreground">
             {group.id === "account"
               ? t("groupAccountLabel")
               : t("groupFeaturesLabel")}

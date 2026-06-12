@@ -37,7 +37,7 @@ export default async function ShowcasePage({ params }: Props) {
   return (
     <div className="border-b border-border bg-background px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <p className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
+        <p className="text-body-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
         <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {t("title")}
         </h1>
@@ -55,7 +55,7 @@ export default async function ShowcasePage({ params }: Props) {
               key={c.id}
               className="flex flex-col rounded-2xl border border-border bg-card p-8 transition-shadow hover:shadow-md"
             >
-              <span className="w-fit rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <span className="w-fit rounded-full border border-border bg-muted px-2.5 py-0.5 text-label uppercase tracking-wide text-muted-foreground">
                 {c.industry}
               </span>
               <h2 className="mt-5 text-xl font-semibold tracking-tight text-foreground">{c.title}</h2>

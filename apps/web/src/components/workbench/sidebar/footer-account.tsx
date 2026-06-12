@@ -39,11 +39,11 @@ export function FooterAccount() {
             aria-label={t("accountMenuOpenAria")}
           >
             <Avatar className="size-8">
-              <AvatarFallback className="text-[11px]">{initials}</AvatarFallback>
+              <AvatarFallback className="text-label">{initials}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1 text-left">
               <p className="truncate text-xs font-medium">{displayName}</p>
-              <p className="truncate text-[11px] text-muted-foreground">
+              <p className="truncate text-caption text-muted-foreground">
                 {user?.email ?? ""}
               </p>
             </div>
@@ -57,11 +57,11 @@ export function FooterAccount() {
         >
           <DropdownMenuLabel className="flex items-center gap-2 px-2 py-1.5 font-normal">
             <Avatar className="size-6">
-              <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+              <AvatarFallback className="text-label">{initials}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium">{displayName}</p>
-              <p className="truncate text-[11px] text-muted-foreground">
+              <p className="truncate text-caption text-muted-foreground">
                 {user?.email ?? ""}
               </p>
             </div>

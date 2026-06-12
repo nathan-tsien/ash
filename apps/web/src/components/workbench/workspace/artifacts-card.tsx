@@ -16,7 +16,7 @@ export function ArtifactsCard({
 
   return (
     <div className="space-y-2 pb-8">
-      <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
         {t("artifactsHeading")}
       </h2>
       {artifacts.length === 0 ? (

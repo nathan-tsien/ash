@@ -124,7 +124,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
               {copied ? t("copiedMessage") : t("copyMessage")}
             </TooltipContent>
           </Tooltip>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-label text-muted-foreground">
             {formatRelativeTime(message.createdAt, locale)}
           </p>
         </div>

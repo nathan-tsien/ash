@@ -26,6 +26,7 @@ import { useTranslations } from "next-intl";
 import { useSettingsModal } from "@/components/settings/settings-modal-provider";
 import { useCommandPalette } from "@/components/command-palette/command-palette-provider";
 import { Link } from "@/i18n/navigation";
+import { PANE_WIDTH } from "@/lib/layout-constants";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkbenchViewMode } from "../workbench-types";
 import { FooterAccount } from "./footer-account";
@@ -104,12 +105,12 @@ export function WorkbenchSidebar({
       if (sidebarCollapsed) {
         const tl = gsap.timeline();
         tl.to(expanded, fadeOut())
-          .to(aside, { width: 56, duration: 0.25, ease: "power3.out" }, "<0.05")
+          .to(aside, { width: PANE_WIDTH.rail, duration: 0.25, ease: "power3.out" }, "<0.05")
           .to(collapsed, fadeIn(0.15), "<0.1");
       } else {
         const tl = gsap.timeline();
         tl.to(collapsed, fadeOut(0.1))
-          .to(aside, { width: 260, duration: 0.35, ease: "power2.out" }, "<0.05")
+          .to(aside, { width: PANE_WIDTH.sidebar, duration: 0.35, ease: "power2.out" }, "<0.05")
           .to(expanded, fadeIn(), "<0.1");
       }
     },
@@ -130,7 +131,7 @@ export function WorkbenchSidebar({
   return (
     <aside
       ref={asideRef}
-      className="relative flex w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar"
+      className="relative flex w-sidebar shrink-0 flex-col border-r border-sidebar-border bg-sidebar"
     >
       {/* Header: logo + brand + collapse, aligned on one row */}
       <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-2.5">
@@ -147,7 +148,7 @@ export function WorkbenchSidebar({
           <TooltipContent side="bottom">{t("tooltipHomeChrome")}</TooltipContent>
         </Tooltip>
         <div className="min-w-0 flex-1 text-left">
-          <p className="truncate text-[13px] font-semibold">{t("sidebarBrand")}</p>
+          <p className="truncate text-body-sm font-semibold">{t("sidebarBrand")}</p>
         </div>
         <Tooltip>
           <TooltipTrigger asChild>

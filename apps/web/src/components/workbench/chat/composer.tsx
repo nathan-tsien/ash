@@ -23,6 +23,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";
+    // 168 mirrors the max-h-[168px] cap on the textarea below; keep both in sync.
     textarea.style.height = `${Math.min(textarea.scrollHeight, 168)}px`;
   }, [draft]);
 
@@ -76,6 +77,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
           ref={containerRef}
           className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm"
         >
+          {/* Composer grows from roughly 3 to 7 text rows (72px-168px at the 14px/1.625 line-height, both 4px-grid multiples) before scrolling (SPACE-1 documented off-scale values) */}
           <textarea
             ref={textareaRef}
             className="max-h-[168px] min-h-[72px] w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none"
@@ -93,7 +95,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
           />
         </div>
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[11px] text-muted-foreground">{t("shortcutHint")}</p>
+          <p className="text-label text-muted-foreground">{t("shortcutHint")}</p>
           <Button
             ref={sendButtonRef}
             type="button"

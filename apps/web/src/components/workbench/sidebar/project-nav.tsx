@@ -26,7 +26,7 @@ export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
         >
           <ArrowLeft className="size-4" aria-hidden />
         </Link>
-        <p className="truncate text-[13px] font-semibold">{project.name}</p>
+        <p className="truncate text-body-sm font-semibold">{project.name}</p>
       </div>
 
       <div className="flex items-center justify-between px-3 py-2">
@@ -60,15 +60,15 @@ export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
                   className={cn(
                     "size-1.5 rounded-full",
                     task.status === "completed"
-                      ? "bg-emerald-500"
+                      ? "bg-status-success"
                       : task.status === "running"
-                        ? "animate-pulse bg-blue-500"
+                        ? "animate-pulse bg-status-running"
                         : task.status === "failed"
                           ? "bg-destructive"
                           : "bg-muted-foreground/40",
                   )}
                 />
-                <p className="truncate text-[13px] font-medium leading-snug">
+                <p className="truncate text-body-sm font-medium">
                   {task.title}
                 </p>
               </div>
