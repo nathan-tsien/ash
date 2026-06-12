@@ -58,6 +58,21 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Named interface type scale (TYPE-2): size + line-height pairs */
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1rem;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.125rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-body-lg: 0.9375rem;
+  --text-body-lg--line-height: 1.375rem;
+  /* Pane geometry (SPACE-4): enables w-sidebar / w-rail / w-workspace */
+  --spacing-sidebar: 260px;
+  --spacing-rail: 56px;
+  --spacing-workspace: 380px;
   --font-sans: var(--font-dm-sans), var(--font-noto-sc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
