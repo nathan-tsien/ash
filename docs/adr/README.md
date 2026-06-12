@@ -31,10 +31,11 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0011](./0011-praxis-contract-and-live-task-execution.md) | praxis contract adoption + first live task-execution slice |
 | [0012](./0012-praxis-live-transport.md) | Real praxis transport + BFF SSE proxy |
 | [0013](./0013-consolidated-design-guidelines.md) | Consolidated design guidelines as single normative authority |
+| [0014](./0014-ash-native-identity.md) | ash-native visual identity ("Ash & Ember") |
 
 ### Reserved band
 
-Next free IDs (**0014+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
+Next free IDs (**0015+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
 
 ## Template
 

@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v0.2.2 |
+| Version | v1.0.0 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -25,7 +25,7 @@ How to read this document:
 
 Related decision records: ADR-0003 (stack), ADR-0004 (three-pane IA), ADR-0005 (token
 discipline, narrative superseded by this document), ADR-0010 (dark mode), ADR-0013 (this
-consolidation).
+consolidation), ADR-0014 (ash-native identity).
 
 ## 1. Design principles (PRIN)
 
@@ -37,14 +37,15 @@ Surfaces present work, provenance, and control; decoration that does not serve t
 **PRIN-2 (MUST)** Emotional tone is composed, highly legible, low visual noise. When in doubt,
 remove an element rather than add one.
 
-**PRIN-3 (MUST)** The visual identity is Manus-aligned: a minimal neutral system anchored on the
-Manus brand foundation (`#34322D` ink, `#F8F8F8` canvas, `#FFFFFF` sheets) plus derived neutrals.
-Phase 1 admits no saturated marketing hue; introducing one is a brand-posture change requiring an ADR
-and a revision of this document.
+**PRIN-3 (MUST)** The visual identity is "Ash & Ember" (ADR-0014, spec
+`docs/superpowers/specs/2026-06-13-ash-identity-design.md`): a warm mineral-neutral system
+anchored on the ash-native foundation trio — charcoal ink `#2A2825`, ash-paper canvas
+`#F7F6F4`, white sheets `#FFFFFF` — plus derived neutrals on the same warm axis (no cold
+grays), and a single brand accent, ember (COLOR-10). Any further saturated hue is a
+brand-posture change requiring an ADR and a MAJOR revision of this document.
 
-The Manus anchoring is a Phase 1 bootstrap, not a destination: an ash-native identity
-pass (own foundation trio, typography identity, accent posture) is expected before public
-marketing, and lands as a MAJOR revision plus ADR (roadmap iteration I3).
+Provenance: v0.x bootstrapped on the public Manus brand trio (`#34322D`/`#F8F8F8`/`#FFFFFF`,
+ADR-0005); retired by ADR-0014.
 
 **PRIN-4 (MUST)** Hierarchy comes from structure (borders, spacing, typography weight), not from
 color or shadow. Color carries meaning only for status and destructive intent.
@@ -62,8 +63,10 @@ dilution of signatures.
 | Signature | Where it lives | Posture |
 |-----------|----------------|---------|
 | Grain texture overlay | Marketing hero (`grain` keyframes) | Cultivate; MAY extend to other marketing surfaces |
-| Ink monochrome CTA | `--primary` ink-on-white pill buttons | Protect; no colored primary buttons |
-| Warm neutral palette | `#34322d`-family warm grays throughout | Protect; no cold-gray drift |
+| Ink monochrome CTA | `--primary` ink-on-white pill buttons | Protect; no colored primary buttons — ember does not touch buttons |
+| Warm neutral palette | `#2a2825`-family warm grays throughout | Protect; no cold-gray drift |
+| Ember mark | Wordmark "ash." ember period + marketing accents | Cultivate within COLOR-10 scope |
+| Display voice | Bricolage Grotesque marketing headlines (TYPE-6) | Cultivate; never inside workbench panes |
 
 Adding or removing a signature is a MINOR revision; contradicting one in product code is
 a SHOULD violation requiring written rationale.
@@ -111,11 +114,18 @@ change.
 rest on their `*-foreground` tokens; never gray-on-gray without checking legibility (WCAG AA
 intent; tooling later).
 
-Focus ring contrast (`--ring` at 0.28 alpha) is unverified against WCAG 2.4.11 non-text
-contrast (3:1) — tracked as D-8.
+Focus ring contrast: `--ring` alpha 0.55 (ADR-0014) meets WCAG 2.4.11 non-text 3:1 against
+canvas in both themes — see D-8.
 
 **COLOR-9 (MAY)** `--muted`/`bg-muted` washes for inset tracks and sparse zebra striping;
 `--accent` for row hover washes.
+
+**COLOR-10 (MUST)** Ember (`--ember` / `--ember-soft`) is the only brand accent and is
+scoped to brand expression: marketing surfaces (hero kickers, section accents, docs covers)
+and the wordmark "ash." period wherever the brand mark appears. Ember NEVER appears in
+workbench functional chrome (buttons, links, focus, selection), never carries status
+meaning (COLOR-3 owns status), never signals destruction (COLOR-4). `--ember` on white and
+on `--ember-soft` meets WCAG AA for text in both themes.
 
 Canonical palette values: see Appendix C and `packages/ui/src/globals.css`.
 
@@ -129,6 +139,7 @@ in `globals.css`:
 | UI sans | DM Sans | `--font-dm-sans` -> `--font-sans` |
 | CJK fallback | Noto Sans SC | `--font-noto-sc` |
 | Monospace | Geist Mono | `--font-geist-mono` -> `--font-mono` |
+| Display (marketing) | Bricolage Grotesque | `--font-bricolage` -> `--font-display` |
 
 **TYPE-2 (MUST)** Interface type uses the named scale below. Arbitrary pixel values
 (`text-[13px]` etc.) are forbidden once the scale tokens land (Appendix A, D-2):
@@ -155,6 +166,11 @@ utility. Sizes above `body-lg` use the standard Tailwind heading scale
 `leading-relaxed` line heights for mixed-script runs.
 
 **TYPE-5 (SHOULD)** Monospace is reserved for code, IDs, and mono chips — not for emphasis.
+
+**TYPE-6 (MUST)** The display face (`--font-display`, Bricolage Grotesque) appears only on
+marketing surfaces and auth pages: headlines (h1/h2) and the wordmark. It never appears
+inside workbench panes (Sidebar/Chat/Workspace), settings, or the command palette — dense
+chrome stays on the TYPE-2 scale in `--font-sans`.
 
 ## 4. Space, shape, elevation (SPACE)
 
@@ -374,7 +390,7 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 | D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | closed(e93128c) |
 | D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open |
 | D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | closed(e93128c) |
-| D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast unverified vs WCAG 2.4.11 (3:1 non-text); needs measurement and possible alpha bump | open |
+| D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast vs WCAG 2.4.11: alpha 0.28 measured ~2.0:1; raised to 0.55 (~3.2:1 light / ~3.4:1 dark) per ADR-0014 | in-progress (closes at I4 implementation) |
 | D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays use `z-50` (scale says `z-40`); sticky marketing header at `z-50` fits no layer | open |
 | D-10 | UX-9 | widespread (`apps/web`) | As-built icon sizes 12/14px (`size-3`, `size-3.5`) outside the 16/18/20 scale; 18px unused | open |
 
@@ -402,6 +418,7 @@ Changelog:
 | v0.2.0 | 2026-06-13 | Design-review amendments: MOTION-1 complexity boundary, MOTION-2 exit durations, COLOR-3 token triplets, TYPE-2 full scale + CJK floor, PRIN-3 sunset clause, PRIN-6 signature registry, IA-3 z-scale, SPACE-3 dark elevation, UX-9/10/11, D-8/D-9/D-10 registered |
 | v0.2.1 | 2026-06-13 | I2 remediation bookkeeping: D-1 family, D-2/3/4/5/7 closed; D-1e/D-1f registered (register misses found during sweep) |
 | v0.2.2 | 2026-06-13 | I2 review fixes: tailwind-merge taught the named type scale (cn() was dropping text-label), dropdown content height cap, font-normal on 12px body sites, status icon contrast to -foreground tier, register wording |
+| v1.0.0 | 2026-06-13 | MAJOR — ash-native identity "Ash & Ember" (ADR-0014): PRIN-3 rewritten on ash foundation trio, ember accent + COLOR-10, display face + TYPE-6, PRIN-6 registry extended, palette re-derived (Appendix C), ring alpha 0.55 (D-8 path) |
 
 ## Appendix C. Token reference snapshot
 
@@ -410,24 +427,26 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 
 | Token | Light | Dark | Role |
 |-------|-------|------|------|
-| `--background` | `#f8f8f8` | `#1a1918` | App canvas |
-| `--foreground` | `#34322d` | `#f0efed` | Primary ink |
-| `--card` | `#ffffff` | `#252423` | Raised panels, assistant bubbles |
-| `--popover` | `#ffffff` | `#252423` | Floating sheets |
-| `--primary` | `#34322d` | `#f0efed` | Solid CTA fill (ink-on-white inversion) |
-| `--primary-foreground` | `#ffffff` | `#1a1918` | Text on primary |
-| `--secondary` | `#ebeae8` | `#2a2928` | User bubble fill, ghost surfaces |
-| `--muted` | `#f0efed` | `#252423` | Inset trays |
-| `--muted-foreground` | `#706e69` | `#a09e9a` | Secondary labels, captions |
-| `--accent` | `#eae9e7` | `#2a2928` | Row hover washes |
+| `--background` | `#f7f6f4` | `#191817` | App canvas (ash paper / smoke) |
+| `--foreground` | `#2a2825` | `#efedea` | Primary ink (charcoal) |
+| `--card` | `#ffffff` | `#232220` | Raised panels, assistant bubbles |
+| `--popover` | `#ffffff` | `#232220` | Floating sheets |
+| `--primary` | `#2a2825` | `#efedea` | Solid CTA fill (ink-on-white inversion) |
+| `--primary-foreground` | `#ffffff` | `#191817` | Text on primary |
+| `--secondary` | `#eceae6` | `#2b2a27` | User bubble fill, ghost surfaces |
+| `--muted` | `#f0eeea` | `#232220` | Inset trays |
+| `--muted-foreground` | `#6e6a63` | `#a39f99` | Secondary labels, captions |
+| `--accent` | `#eae7e2` | `#2b2a27` | Row hover washes |
 | `--destructive` | `#c53030` | `#e55050` | Destructive intent only |
-| `--border` / `--input` | `#e4e4e1` | `#333230` | Hairlines, field chrome |
-| `--ring` | `rgba(52,50,45,0.28)` | `rgba(240,239,237,0.28)` | Focus rings |
-| `--sidebar` | `#ffffff` | `#1e1d1c` | Sidebar chrome |
-| `--sidebar-foreground` | `#34322d` | `#f0efed` | Sidebar text |
-| `--sidebar-border` | `#ecebe9` | `#2a2928` | Sidebar hairlines |
-| `--sidebar-accent` | `#f4f3f2` | `#2a2928` | Sidebar row hover |
-| `--workspace` | `#fafafa` | `#201f1e` | Right audit rail |
+| `--border` / `--input` | `#e3e1dc` | `#343230` | Hairlines, field chrome |
+| `--ring` | `rgba(42,40,37,0.55)` | `rgba(239,237,234,0.55)` | Focus rings (3:1 non-text, D-8) |
+| `--sidebar` | `#ffffff` | `#1d1c1b` | Sidebar chrome |
+| `--sidebar-foreground` | `#2a2825` | `#efedea` | Sidebar text |
+| `--sidebar-border` | `#eae8e4` | `#2b2a27` | Sidebar hairlines |
+| `--sidebar-accent` | `#f2f0ec` | `#2b2a27` | Sidebar row hover |
+| `--workspace` | `#faf9f7` | `#1f1e1c` | Right audit rail |
+| `--ember` | `#b8441f` | `#e07b52` | Brand accent (COLOR-10 scope only) |
+| `--ember-soft` | `#f8e8e0` | `#36211a` | Marketing washes behind ember text |
 | `--radius` | `0.75rem` | same | Radius core (sm/md/lg/xl derived) |
 | `--status-running` | `#3b82f6` | `#60a5fa` | In-flight dot/icon (COLOR-3) |
 | `--status-running-soft` | `#eff6ff` | `#1c2940` | Running badge wash |
@@ -439,4 +458,5 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 | `--status-warning-soft` | `#fffbeb` | `#2e2510` | Warning badge wash |
 | `--status-warning-foreground` | `#b45309` | `#fcd34d` | Text on warning wash |
 
-Fonts: `--font-sans` = DM Sans -> Noto Sans SC -> system; `--font-mono` = Geist Mono -> system.
+Fonts: `--font-sans` = DM Sans -> Noto Sans SC -> system; `--font-mono` = Geist Mono -> system;
+`--font-display` = Bricolage Grotesque -> `--font-sans` chain (marketing only, TYPE-6).
