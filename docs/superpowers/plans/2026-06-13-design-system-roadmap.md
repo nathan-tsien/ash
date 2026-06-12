@@ -20,8 +20,8 @@ remediate all registered deviations, and pass a full REV-3 audit.
 | Iteration | Scope | Guideline version | Plan | Status |
 |-----------|-------|-------------------|------|--------|
 | I1 | Guidelines v0.2.0 amendments + token infrastructure | v0.1.0 -> v0.2.0 | [2026-06-13-iteration-1-guidelines-v0.2-and-tokens.md](./2026-06-13-iteration-1-guidelines-v0.2-and-tokens.md) | done(a809297) |
-| I2 | Deviation remediation sweep (components) | v0.2.0 (register updates only) | written at I2 start | in-progress |
-| I3 | ash-native identity design (own design system) | v0.2.x -> v1.0.0 (MAJOR) + ADR-0014 | written after identity spec approved | planned |
+| I2 | Deviation remediation sweep (components) | v0.2.0 (register updates only) | written at I2 start | done(042f345) |
+| I3 | ash-native identity design (own design system) | v0.2.x -> v1.0.0 (MAJOR) + ADR-0014 | written after identity spec approved | in-progress |
 | I4 | Identity implementation + marketing refresh | v1.0.x | written after I3 spec | planned |
 | I5 | Full REV-3 audit + register closure | v1.0.x | written at I5 start | planned |
 
