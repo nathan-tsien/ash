@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v0.2.0 |
+| Version | v0.2.1 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -361,17 +361,19 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 
 | ID | Rule | Location | Deviation | Status |
 |----|------|----------|-----------|--------|
-| D-1 | COLOR-3 | `globals.css` | Status token triplets defined (622237d); downstream raw hues remain (D-1a..D-1d) | in-progress |
-| D-1a | COLOR-2/3 | `apps/web/src/components/workbench/sidebar/task-section.tsx` (status dots) | `bg-blue-500` (running), `bg-emerald-500` (completed) | open |
-| D-1b | COLOR-2/3 | `apps/web/src/components/workbench/chat/message-bubble.tsx` (copy success) | `text-green-600` | open |
-| D-1c | COLOR-2/3 | `apps/web/src/components/workbench/workspace/plan-card.tsx` (check icon) | `text-emerald-600` | open |
-| D-1d | COLOR-3 | `packages/ui/src/components/badge.tsx` | success/warning variants on raw `emerald-*`/`amber-*` utilities (legal under old DT-5; re-route to status tokens) | open |
-| D-2 | TYPE-2 | widespread (`apps/web`) | Arbitrary `text-[11px]/[12px]/[13px]/[15px]` instead of named scale tokens (scale defined in 2c25ae1; migration pending) | in-progress |
-| D-3 | SPACE-4 | `workbench-sidebar.tsx`, `workbench-workspace.tsx`, `workbench-chrome.tsx` | Pane widths as inline magic numbers (`w-[260px]`, `w-[380px]`, `style={{width:380}}`); shell doc still says 360px | open |
-| D-4 | SPACE-1 | `apps/web/src/components/workbench/chat/composer.tsx` | `max-h-[168px] min-h-[72px]` magic heights, undocumented | open |
-| D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | open |
+| D-1 | COLOR-3 | `globals.css` | Status token triplets defined (622237d); downstream raw hues migrated (03f9bd7, fe4451e) | closed(03f9bd7) |
+| D-1a | COLOR-2/3 | `apps/web/src/components/workbench/sidebar/task-section.tsx` (status dots) | `bg-blue-500` (running), `bg-emerald-500` (completed) | closed(03f9bd7) |
+| D-1b | COLOR-2/3 | `apps/web/src/components/workbench/chat/message-bubble.tsx` (copy success) | `text-green-600` | closed(03f9bd7) |
+| D-1c | COLOR-2/3 | `apps/web/src/components/workbench/workspace/plan-card.tsx` (check icon) | `text-emerald-600` | closed(03f9bd7) |
+| D-1d | COLOR-3 | `packages/ui/src/components/badge.tsx` | success/warning variants on raw `emerald-*`/`amber-*` utilities (legal under old DT-5; re-route to status tokens) | closed(03f9bd7) |
+| D-1e | COLOR-2/3 | `apps/web/src/components/workbench/sidebar/project-nav.tsx` (status dots) | `bg-blue-500`/`bg-emerald-500` (register miss, found in I2) | closed(fe4451e) |
+| D-1f | COLOR-2/3 | `apps/web/src/components/workbench/workspace/project-tasks-card.tsx` (status dots) | `bg-blue-500`/`bg-emerald-500` (register miss, found in I2) | closed(fe4451e) |
+| D-2 | TYPE-2 | widespread (`apps/web`) | Arbitrary `text-[11px]/[12px]/[13px]/[15px]` instead of named scale tokens (scale defined in 2c25ae1); migrated to named scale with CJK-floor judgments (fe4451e) | closed(fe4451e) |
+| D-3 | SPACE-4 | `workbench-sidebar.tsx`, `workbench-workspace.tsx`, `workbench-chrome.tsx` | Pane widths as inline magic numbers (`w-[260px]`, `w-[380px]`, `style={{width:380}}`); shell doc still says 360px | closed(fe4451e) |
+| D-4 | SPACE-1 | `apps/web/src/components/workbench/chat/composer.tsx` | `max-h-[168px] min-h-[72px]` magic heights, undocumented; rationale comment added | closed(fe4451e) |
+| D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | closed(e93128c) |
 | D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open |
-| D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | open |
+| D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | closed(e93128c) |
 | D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast unverified vs WCAG 2.4.11 (3:1 non-text); needs measurement and possible alpha bump | open |
 | D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays use `z-50` (scale says `z-40`); sticky marketing header at `z-50` fits no layer | open |
 | D-10 | UX-9 | widespread (`apps/web`) | As-built icon sizes 12/14px (`size-3`, `size-3.5`) outside the 16/18/20 scale; 18px unused | open |
@@ -398,6 +400,7 @@ Changelog:
 |---------|------|--------|
 | v0.1.0 | 2026-06-13 | Initial consolidation: absorbs `docs/visual-language-and-theme.md`, codifies rule IDs, status-token plan, named type scale, pane constants, motion scale, deviation register (ADR-0013) |
 | v0.2.0 | 2026-06-13 | Design-review amendments: MOTION-1 complexity boundary, MOTION-2 exit durations, COLOR-3 token triplets, TYPE-2 full scale + CJK floor, PRIN-3 sunset clause, PRIN-6 signature registry, IA-3 z-scale, SPACE-3 dark elevation, UX-9/10/11, D-8/D-9/D-10 registered |
+| v0.2.1 | 2026-06-13 | I2 remediation bookkeeping: D-1 family, D-2/3/4/5/7 closed; D-1e/D-1f registered (register misses found during sweep) |
 
 ## Appendix C. Token reference snapshot
 
