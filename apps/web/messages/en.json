@@ -291,7 +291,6 @@
   "Workbench": {
     "sidebarHomeAria": "ash home",
     "sidebarConversationsAria": "Conversation list",
-    "sidebarBrand": "ash",
     "tooltipHomeChrome": "Workbench landing",
     "collapseAria": "Collapse sidebar",
     "expandSidebarTooltip": "Expand sidebar",

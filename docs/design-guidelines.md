@@ -390,7 +390,7 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 | D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | closed(e93128c) |
 | D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open |
 | D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | closed(e93128c) |
-| D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast: alpha raised 0.28 -> 0.55 (~3.2:1 light / ~3.4:1 dark vs canvas), WCAG 2.4.11 pass (ADR-0014) | closed(a25b67d) |
+| D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast: alpha raised 0.28 -> 0.55 (~3.2:1 light / ~3.4:1 dark vs canvas), WCAG 2.4.11 pass (ADR-0014); consumer opacity modifiers removed so the token alpha is effective | closed(a25b67d) |
 | D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays use `z-50` (scale says `z-40`); sticky marketing header at `z-50` fits no layer | open |
 | D-10 | UX-9 | widespread (`apps/web`) | As-built icon sizes 12/14px (`size-3`, `size-3.5`) outside the 16/18/20 scale; 18px unused | open |
 

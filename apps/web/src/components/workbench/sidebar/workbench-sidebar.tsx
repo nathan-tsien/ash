@@ -149,7 +149,7 @@ export function WorkbenchSidebar({
           <TooltipContent side="bottom">{t("tooltipHomeChrome")}</TooltipContent>
         </Tooltip>
         <div className="min-w-0 flex-1 text-left">
-          {/* Brand mark, not copy (COLOR-10): replaces the sidebarBrand string */}
+          {/* Brand mark, not copy (COLOR-10): intentionally untranslated */}
           <p className="truncate text-body-sm font-semibold">
             <Wordmark />
           </p>

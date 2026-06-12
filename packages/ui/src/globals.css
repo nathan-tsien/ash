@@ -58,6 +58,8 @@
   --color-status-warning: var(--status-warning);
   --color-status-warning-soft: var(--status-warning-soft);
   --color-status-warning-foreground: var(--status-warning-foreground);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -80,8 +82,6 @@
   --spacing-workspace: 380px;
   /* Skeleton pulse (UX-11) */
   --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
-  --color-ember: var(--ember);
-  --color-ember-soft: var(--ember-soft);
   --font-sans: var(--font-dm-sans), var(--font-noto-sc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-bricolage), var(--font-dm-sans), var(--font-noto-sc), ui-sans-serif, system-ui, sans-serif;
@@ -196,7 +196,8 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* ring alpha lives in the --ring token (D-8) — no opacity modifiers on consumers */
+    @apply border-border outline-ring;
   }
 
   body {

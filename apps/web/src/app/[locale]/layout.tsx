@@ -33,10 +33,11 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-/* Display face (TYPE-6): marketing headlines + wordmark only — variable axis covers 200-800 */
+/* Display face (TYPE-6): marketing headlines + wordmark only — weight 600 is the sole callsite weight, so restrict the payload */
 const bricolageGrotesque = Bricolage_Grotesque({
   variable: "--font-bricolage",
   subsets: ["latin"],
+  weight: "600",
   display: "swap",
 });
 
