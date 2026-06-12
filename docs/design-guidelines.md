@@ -116,16 +116,19 @@ in `globals.css`:
 **TYPE-2 (MUST)** Interface type uses the named scale below. Arbitrary pixel values
 (`text-[13px]` etc.) are forbidden once the scale tokens land (Appendix A, D-2):
 
-| Name | Size | Use |
-|------|------|-----|
-| `caption` | 11px | Timestamps, tertiary metadata in dense rails |
-| `label` | 12px | Chips, badges, rail labels |
-| `body-sm` | 13px | Sidebar rows, workspace card text, nav items |
-| `body` | 14px (`text-sm`) | Chat bubbles, default interface copy |
-| `body-lg` | 15px | Chat pane headers, marketing body copy |
+| Name | Size / line-height / weight | Use |
+|------|-----------------------------|-----|
+| `caption` | 11px / 16px / 400 | Timestamps, IDs — Latin/numeric content only |
+| `label` | 12px / 16px / 500 | Chips, badges, rail labels |
+| `body-sm` | 13px / 18px / 400 | Sidebar rows, workspace card text, nav items |
+| `body` | 14px / 20px / 400 | Chat bubbles, default interface copy |
+| `body-lg` | 15px / 22px / 400 | Chat pane headers, marketing body copy |
 
-Sizes above `body-lg` use the standard Tailwind heading scale (`text-base` and up) and stay
-light-weight (PRIN-2).
+CJK floor: text that renders Han characters MUST be 12px or larger; `caption` is reserved
+for pure Latin/numeric strings. The scale is deliberately compressed (11–15px) for
+workbench density — hierarchy within it comes from weight and `--muted-foreground` color,
+not from size jumps. Sizes above `body-lg` use the standard Tailwind heading scale
+(`text-base` and up) and stay light-weight (PRIN-2).
 
 **TYPE-3 (MUST)** Chat reading measure stays a narrow central column (about `max-w-3xl`).
 
