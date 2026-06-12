@@ -15,7 +15,7 @@ and UI-free; ash owns transports, quotas, SSO, frontend craft.
 - **`packages/ui`** — shadcn-style primitives + ash theme tokens (`globals.css` entry).
 - **`packages/shared`** — TypeScript domain scaffolding, mocks, `featureRegistry`.
 - **`apps/web`** — Next.js：`/` 营销站、`/product`、`/showcase`、`/docs`、`/pricing`；工作台 `/c/[id]`，`/settings` 占位。
-- **Documentation** mirroring cogito ergonomics (`AGENTS.md`, `docs/components`, `docs/adr`, **`docs/visual-language-and-theme.md`**).
+- **Documentation** mirroring cogito ergonomics (`AGENTS.md`, `docs/components`, `docs/adr`, **`docs/design-guidelines.md`**).
 
 **cogito** (upstream Agent Runtime repo): **`https://github.com/nathan-tsien/cogito`**.
 
@@ -67,7 +67,7 @@ pnpm build
 | `CONTRIBUTING.md` | Human collaborator notes + checklist alignment |
 | `ROADMAP.md` | Accepted slices versus deferrals |
 | `docs/components/` | Pane UX + payload specs |
-| `docs/visual-language-and-theme.md` | Phase 1 chroma roles, typography, spacing, elevation, motion, acceptance checklist |
+| `docs/design-guidelines.md` | Normative design rules (PRIN/COLOR/TYPE/SPACE/MOTION/IA/UX/IMPL/REV), token reference, deviation register |
 | `docs/adr/` | Decision records (**0005** = token discipline) |
 | `docs/superpowers/specs/2026-05-23-ash-startup-design.md` | Phase 1 charter |
 

@@ -76,7 +76,7 @@ Rust server crate(s) intentionally absent during Phase **1**. Introducing them m
 | State management | Lightweight local/session store when needed | Sync with server SSE + optimistic policies under ADRs |
 | AuthN/Z | Explicitly unavailable | SSO + tenant headers once server introduces contracts |
 | Observability | Frontend error boundaries baseline | Correlate spans with ash-server traces later |
-| Visual system | **`docs/visual-language-and-theme.md`** + ADR-0005 | Dark theme, accent brand hues, HC themes via superseding ADRs |
+| Visual system | **`docs/design-guidelines.md`** + ADR-0013 | Dark theme, accent brand hues, HC themes via superseding ADRs |
 
 ## Versioning stance
 

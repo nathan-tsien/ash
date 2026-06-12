@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-0013](./0013-consolidated-design-guidelines.md) (normative authority relocated
+to `docs/design-guidelines.md`; DT-1..DT-5 map to COLOR-* rules there)
 
 ## Context
 
