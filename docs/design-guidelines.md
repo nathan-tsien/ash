@@ -42,6 +42,10 @@ Manus brand foundation (`#34322D` ink, `#F8F8F8` canvas, `#FFFFFF` sheets) plus 
 Phase 1 admits no saturated marketing hue; introducing one is a brand-posture change requiring an ADR
 and a revision of this document.
 
+The Manus anchoring is a Phase 1 bootstrap, not a destination: an ash-native identity
+pass (own foundation trio, typography identity, accent posture) is expected before public
+marketing, and lands as a MAJOR revision plus ADR (roadmap iteration I3).
+
 **PRIN-4 (MUST)** Hierarchy comes from structure (borders, spacing, typography weight), not from
 color or shadow. Color carries meaning only for status and destructive intent.
 
@@ -50,6 +54,19 @@ color or shadow. Color carries meaning only for status and destructive intent.
 2. Does a precedent exist in the workbench? Match the precedent.
 3. Does the simpler of the candidate options survive PRIN-1/PRIN-2? Take it.
 4. Still ambiguous? File it as a proposed rule change (Appendix B), do not improvise silently.
+
+**PRIN-6 (SHOULD)** Signature elements registry. These existing elements carry ash's
+visual identity and are protected: reviews check not only for rule violations but for
+dilution of signatures.
+
+| Signature | Where it lives | Posture |
+|-----------|----------------|---------|
+| Grain texture overlay | Marketing hero (`grain` keyframes) | Cultivate; MAY extend to other marketing surfaces |
+| Ink monochrome CTA | `--primary` ink-on-white pill buttons | Protect; no colored primary buttons |
+| Warm neutral palette | `#34322d`-family warm grays throughout | Protect; no cold-gray drift |
+
+Adding or removing a signature is a MINOR revision; contradicting one in product code is
+a SHOULD violation requiring written rationale.
 
 ## 2. Color and theming (COLOR)
 
