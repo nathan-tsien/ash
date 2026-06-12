@@ -10,6 +10,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@ash/ui/tooltip";
+import { Wordmark } from "@ash/ui/wordmark";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
@@ -148,7 +149,10 @@ export function WorkbenchSidebar({
           <TooltipContent side="bottom">{t("tooltipHomeChrome")}</TooltipContent>
         </Tooltip>
         <div className="min-w-0 flex-1 text-left">
-          <p className="truncate text-body-sm font-semibold">{t("sidebarBrand")}</p>
+          {/* Brand mark, not copy (COLOR-10): replaces the sidebarBrand string */}
+          <p className="truncate text-body-sm font-semibold">
+            <Wordmark />
+          </p>
         </div>
         <Tooltip>
           <TooltipTrigger asChild>

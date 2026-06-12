@@ -53,8 +53,8 @@ export default async function DocsHubPage({ params }: Props) {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xl">
-            <p className="text-body-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
-            <h1 id="spec" className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <p className="text-body-sm font-semibold uppercase tracking-wider text-ember">{t("kicker")}</p>
+            <h1 id="spec" className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               {t("title")}
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{t("intro")}</p>

@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { Wordmark } from "@ash/ui/wordmark";
 import { isAshLocale } from "@ash/shared";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -19,7 +20,7 @@ export async function MarketingFooter() {
               <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-background">
                 <Sparkles className="size-4" aria-hidden />
               </span>
-              ash
+              <Wordmark className="font-display" />
             </Link>
             {/* Mini workbench illustration */}
             <div className="mt-4 flex w-fit gap-1 rounded-md border border-border/60 bg-background p-1">

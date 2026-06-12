@@ -47,13 +47,13 @@ export default async function MarketingHomePage({ params }: Props) {
         <HeroTimeline className="relative mx-auto max-w-6xl">
           <p
             data-anim="kicker"
-            className="text-center text-body-sm font-medium uppercase tracking-widest text-muted-foreground"
+            className="text-center text-body-sm font-medium uppercase tracking-widest text-ember"
           >
             {t("heroKicker")}
           </p>
           <h1
             data-anim="title"
-            className="mx-auto mt-4 max-w-3xl text-balance text-center text-4xl font-semibold tracking-tight text-foreground sm:text-5xl"
+            className="mx-auto mt-4 max-w-3xl text-balance text-center font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl"
           >
             <span className="split-line block">{t("heroTitleLine1")}</span>
             <span className="split-line block">{t("heroTitleLine2")}</span>
@@ -81,7 +81,7 @@ export default async function MarketingHomePage({ params }: Props) {
               <p className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("previewEyebrow")}
               </p>
-              <h2 className="mx-auto mt-2 max-w-2xl text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="mx-auto mt-2 max-w-2xl text-balance font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 {t("previewTitle")}
               </h2>
             </div>
@@ -171,7 +171,7 @@ export default async function MarketingHomePage({ params }: Props) {
       <section className="bg-primary px-4 py-16 text-primary-foreground sm:px-6 sm:py-20">
         <ScrollReveal>
           <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center">
-            <h2 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">{t("bottomTitle")}</h2>
+            <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">{t("bottomTitle")}</h2>
             <p className="max-w-lg text-sm leading-relaxed text-primary-foreground/85">{t("bottomBody")}</p>
             <Button
               variant="pill"
@@ -200,7 +200,7 @@ function SectionTitle({
   return (
     <div className="text-center sm:text-left">
       <p className="text-label font-semibold uppercase tracking-wider text-muted-foreground">{eyebrow}</p>
-      <h2 className="mt-2 text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h2>
+      <h2 className="mt-2 text-balance font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
     </div>
   );

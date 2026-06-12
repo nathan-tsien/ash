@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@ash/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
+import { Wordmark } from "@ash/ui/wordmark";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/marketing/locale-switcher";
@@ -29,7 +30,7 @@ export function MarketingHeader() {
           <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-card">
             <Sparkles className="size-4 text-foreground" aria-hidden />
           </span>
-          ash
+          <Wordmark className="font-display" />
         </Link>
 
         <nav className="hidden flex-1 items-center gap-1 md:flex">

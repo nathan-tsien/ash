@@ -20,7 +20,7 @@ export default async function LoginPage({ params }: Props) {
 
   return (
     <div>
-      <h2 className="mb-1 text-lg font-semibold">{t("loginTitle")}</h2>
+      <h2 className="mb-1 font-display text-lg font-semibold">{t("loginTitle")}</h2>
       <p className="mb-6 text-sm text-muted-foreground">{t("loginDescription")}</p>
       <LoginForm />
     </div>
