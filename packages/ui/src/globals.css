@@ -63,6 +63,7 @@
   --text-caption--line-height: 1rem;
   --text-label: 0.75rem;
   --text-label--line-height: 1rem;
+  --text-label--font-weight: 500;
   --text-body-sm: 0.8125rem;
   --text-body-sm--line-height: 1.125rem;
   --text-body: 0.875rem;
@@ -73,6 +74,8 @@
   --spacing-sidebar: 260px;
   --spacing-rail: 56px;
   --spacing-workspace: 380px;
+  /* Skeleton pulse (UX-11) */
+  --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
   --font-sans: var(--font-dm-sans), var(--font-noto-sc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }

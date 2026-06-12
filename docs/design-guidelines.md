@@ -89,7 +89,7 @@ an English `TODO(ash-visual): rationale` comment beside the deviation.
 | Warning (degraded) | `--status-warning` / `--status-warning-soft` / `--status-warning-foreground` | same pattern |
 
 `*-foreground` on `*-soft` MUST meet WCAG AA in both themes. Canonical literals live in
-`globals.css` (Appendix C mirrors them). Raw Tailwind hues for status are forbidden;
+`globals.css` (Appendix C mirrors them). Raw Tailwind hue utilities (`bg-blue-500` etc.) in application code are forbidden for status;
 `Badge` success/warning variants re-route through these tokens at D-1d remediation.
 
 **COLOR-4 (MUST)** Destructive and error semantics use `--destructive` (and badge destructive
@@ -144,7 +144,9 @@ in `globals.css`:
 CJK floor: text that renders Han characters MUST be 12px or larger; `caption` is reserved
 for pure Latin/numeric strings. The scale is deliberately compressed (11–15px) for
 workbench density — hierarchy within it comes from weight and `--muted-foreground` color,
-not from size jumps. Sizes above `body-lg` use the standard Tailwind heading scale
+not from size jumps. Weights in the table are delivered by the tokens where Tailwind supports
+it (`--text-label--font-weight`); otherwise apply `font-medium` explicitly alongside the size
+utility. Sizes above `body-lg` use the standard Tailwind heading scale
 (`text-base` and up) and stay light-weight (PRIN-2).
 
 **TYPE-3 (MUST)** Chat reading measure stays a narrow central column (about `max-w-3xl`).
@@ -180,8 +182,9 @@ cue — do not add shadows to compensate.
 | Workspace | 380px | Canonical as-built value; the former 360px figure in shell docs is obsolete |
 | Workspace collapsed | 0 | Floating toggle / FAB re-opens |
 
-These values live as named constants (single definition point) once D-3 in Appendix A is remediated;
-until then, the table above is the authority.
+Two artifacts carry these values and MUST change together: `--spacing-sidebar/rail/workspace`
+tokens in `globals.css` (class usage) and `PANE_WIDTH` in `apps/web/src/lib/layout-constants.ts`
+(GSAP timelines). This table is the authority over both.
 
 **SPACE-5 (SHOULD)** Dividers prefer `<Separator>` plus border tokens over filler gray blocks.
 
@@ -209,8 +212,8 @@ tween.
 
 Anything longer than 700ms is marketing-only and scroll-driven.
 
-Exits run at 50–70% of the corresponding entrance duration (as-built precedent: workspace
-fade-out 100ms vs fade-in 350ms).
+Exits run at 30–70% of the corresponding entrance duration (as-built precedent: workspace
+fade-out 150ms vs fade-in 350ms, about 43%).
 
 **MOTION-3 (MUST)** Easing language: entrances decelerate with `power3.out`; hover/press
 interactions use `power2.out`; playful press feedback MAY use `back.out`. Linear easing only for
@@ -337,7 +340,7 @@ rationale in the PR description.
 | Palette drift | Zero new raw color literals (COLOR-1/2); no new raw status hues (COLOR-3) |
 | Token parity | Token/alias changes update Appendix C + version bump (COLOR-7) |
 | Type scale | No new arbitrary `text-[Npx]` values (TYPE-2) |
-| Geometry | No new pane-width or spacing magic numbers (SPACE-1/4) |
+| Geometry | No new pane-width/spacing magic numbers; `PANE_WIDTH` matches `--spacing-*` tokens (SPACE-1/4) |
 | Motion | New animation uses the duration/easing scale + reduced-motion (MOTION-2/3/4) |
 | States | New async surfaces cover empty/loading/error (UX-1) |
 | a11y | Icon-only controls labeled; focus visible (UX-2/3) |
@@ -358,18 +361,20 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 
 | ID | Rule | Location | Deviation | Status |
 |----|------|----------|-----------|--------|
-| D-1 | COLOR-3 | `globals.css` | Status tokens (`--status-running/success/warning`) not yet defined; raw hues in use downstream (D-1a..D-1d) | open |
+| D-1 | COLOR-3 | `globals.css` | Status token triplets defined (622237d); downstream raw hues remain (D-1a..D-1d) | in-progress |
 | D-1a | COLOR-2/3 | `apps/web/src/components/workbench/sidebar/task-section.tsx` (status dots) | `bg-blue-500` (running), `bg-emerald-500` (completed) | open |
 | D-1b | COLOR-2/3 | `apps/web/src/components/workbench/chat/message-bubble.tsx` (copy success) | `text-green-600` | open |
 | D-1c | COLOR-2/3 | `apps/web/src/components/workbench/workspace/plan-card.tsx` (check icon) | `text-emerald-600` | open |
 | D-1d | COLOR-3 | `packages/ui/src/components/badge.tsx` | success/warning variants on raw `emerald-*`/`amber-*` utilities (legal under old DT-5; re-route to status tokens) | open |
-| D-2 | TYPE-2 | widespread (`apps/web`) | Arbitrary `text-[11px]/[12px]/[13px]/[15px]` instead of named scale tokens (tokens not yet defined) | open |
+| D-2 | TYPE-2 | widespread (`apps/web`) | Arbitrary `text-[11px]/[12px]/[13px]/[15px]` instead of named scale tokens (scale defined in 2c25ae1; migration pending) | in-progress |
 | D-3 | SPACE-4 | `workbench-sidebar.tsx`, `workbench-workspace.tsx`, `workbench-chrome.tsx` | Pane widths as inline magic numbers (`w-[260px]`, `w-[380px]`, `style={{width:380}}`); shell doc still says 360px | open |
 | D-4 | SPACE-1 | `apps/web/src/components/workbench/chat/composer.tsx` | `max-h-[168px] min-h-[72px]` magic heights, undocumented | open |
 | D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | open |
 | D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open |
 | D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | open |
 | D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast unverified vs WCAG 2.4.11 (3:1 non-text); needs measurement and possible alpha bump | open |
+| D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays use `z-50` (scale says `z-40`); sticky marketing header at `z-50` fits no layer | open |
+| D-10 | UX-9 | widespread (`apps/web`) | As-built icon sizes 12/14px (`size-3`, `size-3.5`) outside the 16/18/20 scale; 18px unused | open |
 
 ## Appendix B. Revision protocol and changelog
 
@@ -392,7 +397,7 @@ Changelog:
 | Version | Date | Change |
 |---------|------|--------|
 | v0.1.0 | 2026-06-13 | Initial consolidation: absorbs `docs/visual-language-and-theme.md`, codifies rule IDs, status-token plan, named type scale, pane constants, motion scale, deviation register (ADR-0013) |
-| v0.2.0 | 2026-06-13 | Design-review amendments: MOTION-1 complexity boundary, MOTION-2 exit durations, COLOR-3 token triplets, TYPE-2 full scale + CJK floor, PRIN-3 sunset clause, PRIN-6 signature registry, IA-3 z-scale, SPACE-3 dark elevation, UX-9/10/11, D-8 registered |
+| v0.2.0 | 2026-06-13 | Design-review amendments: MOTION-1 complexity boundary, MOTION-2 exit durations, COLOR-3 token triplets, TYPE-2 full scale + CJK floor, PRIN-3 sunset clause, PRIN-6 signature registry, IA-3 z-scale, SPACE-3 dark elevation, UX-9/10/11, D-8/D-9/D-10 registered |
 
 ## Appendix C. Token reference snapshot
 
