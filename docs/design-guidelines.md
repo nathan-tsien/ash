@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v1.0.0 |
+| Version | v1.0.1 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -390,7 +390,7 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 | D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | closed(e93128c) |
 | D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open |
 | D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | closed(e93128c) |
-| D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast vs WCAG 2.4.11: alpha 0.28 measured ~2.0:1; raised to 0.55 (~3.2:1 light / ~3.4:1 dark) per ADR-0014 | in-progress (closes at I4 implementation) |
+| D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast: alpha raised 0.28 -> 0.55 (~3.2:1 light / ~3.4:1 dark vs canvas), WCAG 2.4.11 pass (ADR-0014) | closed(a25b67d) |
 | D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays use `z-50` (scale says `z-40`); sticky marketing header at `z-50` fits no layer | open |
 | D-10 | UX-9 | widespread (`apps/web`) | As-built icon sizes 12/14px (`size-3`, `size-3.5`) outside the 16/18/20 scale; 18px unused | open |
 
@@ -419,6 +419,7 @@ Changelog:
 | v0.2.1 | 2026-06-13 | I2 remediation bookkeeping: D-1 family, D-2/3/4/5/7 closed; D-1e/D-1f registered (register misses found during sweep) |
 | v0.2.2 | 2026-06-13 | I2 review fixes: tailwind-merge taught the named type scale (cn() was dropping text-label), dropdown content height cap, font-normal on 12px body sites, status icon contrast to -foreground tier, register wording |
 | v1.0.0 | 2026-06-13 | MAJOR — ash-native identity "Ash & Ember" (ADR-0014): PRIN-3 rewritten on ash foundation trio, ember accent + COLOR-10, display face + TYPE-6, PRIN-6 registry extended, palette re-derived (Appendix C), ring alpha 0.55 (D-8 path) |
+| v1.0.1 | 2026-06-13 | I4 landed: palette/fonts/wordmark implemented; D-8 closed |
 
 ## Appendix C. Token reference snapshot
 
