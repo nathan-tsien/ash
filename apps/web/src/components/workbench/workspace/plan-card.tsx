@@ -38,7 +38,7 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
 
 function PlanStatusIcon({ status }: { status: PlanStep["status"] }) {
   if (status === "done") {
-    return <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />;
+    return <CheckCircle2 className="size-4 shrink-0 text-status-success" />;
   }
   if (status === "failed") {
     return <AlertCircle className="size-4 shrink-0 text-destructive" />;

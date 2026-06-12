@@ -61,9 +61,9 @@ export function TaskSection({
                   className={cn(
                     "size-1.5 rounded-full",
                     task.status === "running"
-                      ? "animate-pulse bg-blue-500"
+                      ? "animate-pulse bg-status-running"
                       : task.status === "completed"
-                        ? "bg-emerald-500"
+                        ? "bg-status-success"
                         : task.status === "failed"
                           ? "bg-destructive"
                           : "bg-muted-foreground/40",

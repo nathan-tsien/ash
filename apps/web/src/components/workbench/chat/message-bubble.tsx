@@ -114,7 +114,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
                 onClick={handleCopy}
               >
                 {copied ? (
-                  <Check className="size-3.5 text-green-600" />
+                  <Check className="size-3.5 text-status-success" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}
