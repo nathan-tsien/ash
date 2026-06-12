@@ -167,6 +167,10 @@ separates surfaces. Shadows (`shadow-xs`/`shadow-sm`) appear only where affordan
 lift (primary pill CTA, floating overlays). Never rely on opacity-only separation between panes
 (color-blind readability).
 
+In dark mode, borders carry more of the elevation load (shadows read poorly on dark
+canvas); surface lightening (`--card` one step above `--background`) is the secondary
+cue — do not add shadows to compensate.
+
 **SPACE-4 (MUST)** Pane geometry constants:
 
 | Constant | Value | Notes |
@@ -236,6 +240,9 @@ register tabs/panels inside Workspace chrome.
 **IA-3 (MUST)** Overlay layering order (bottom to top): shell tint, pane scrollports, local
 overlays (popover/dropdown/tooltip), global shells (command palette, dialogs, future drawers).
 
+Numeric scale: shell tint `z-0`, pane scrollports `z-10`, local overlays `z-40`, global
+shells `z-50`. No other z-index values in application code.
+
 **IA-4 (MUST)** Settings is a global modal (no dedicated route), triggered from the Sidebar
 account footer. The command palette opens on `Meta+K` / `Ctrl+K`.
 
@@ -275,6 +282,23 @@ the Badge variants or a shared status-dot primitive — not ad hoc colored divs.
 
 **UX-8 (SHOULD)** Optimistic or streamed content (chat tokens, tool traces) appears with `message-in`
 style entrance at `fast`/`base` durations; no layout jank on stream (reserve space before fill).
+
+**UX-9 (MUST)** Icon scale: 16px (dense rails, inline), 18px (default chrome), 20px
+(headers, emphasis). lucide `strokeWidth` stays at the default 2. No other icon sizes
+without a SPACE-1-style justification comment.
+
+**UX-10 (MUST)** Interaction state matrix for interactive rows/controls:
+
+| State | Treatment |
+|-------|-----------|
+| Hover | `--accent` wash (`--sidebar-accent` inside Sidebar) |
+| Active/pressed | GSAP press feedback (MOTION-3) or one wash step deeper; never color-only |
+| Selected | Persistent `--accent` wash + `--foreground` text (vs `--muted-foreground` resting) |
+| Disabled | `opacity-50` + `pointer-events-none`/`disabled` attr; no bespoke gray repaints |
+
+**UX-11 (MUST)** Loading patterns: content surfaces (lists, cards, panes) use skeletons
+(`bg-muted` blocks + `pulse-subtle`); in-button waits use an inline spinner replacing the
+label or icon. Full-page spinners are forbidden.
 
 ## 8. Implementation discipline (IMPL)
 
