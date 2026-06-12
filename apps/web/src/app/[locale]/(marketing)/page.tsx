@@ -219,6 +219,7 @@ function TeaserTile({
 }) {
   return (
     <HoverScale className="group flex flex-col rounded-2xl border border-border bg-card p-6">
+      {/* Tag badge is Latin-only (Research/Growth/Soon untranslated product nouns), so caption (11px) is legal; switch to label (12px) per the TYPE-2 CJK floor if these ever localize */}
       <span className="w-fit rounded-full border border-border bg-muted px-2.5 py-0.5 text-caption font-medium uppercase tracking-wide text-muted-foreground">
         {tag}
       </span>

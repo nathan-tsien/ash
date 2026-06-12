@@ -20,7 +20,7 @@ Reserve query-driven focus swaps (example `?focus=workspace`) for future charter
 |--------|--------------|-------|
 | Sidebar | `260px` + collapse to rail `~56px` | Persist collapse preference client-side eventually |
 | Chat | fluid `flex: 1 1 auto` | maintain comfortable reading measure |
-| Workspace | `360px` default, collapsible to `0` | optional floating toggle / FAB parity |
+| Workspace | `380px` default, collapsible to `0` (per SPACE-4 in `docs/design-guidelines.md`) | optional floating toggle / FAB parity |
 
 Separate columns with subtle `border` tokens — never rely on opacity-only separation for color-blind readability.
 

@@ -6,8 +6,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ash/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/marketing/locale-switcher";
@@ -120,58 +123,86 @@ export function MarketingHeader() {
           <Button variant="pill" size="sm" className="hidden sm:inline-flex shadow-sm" asChild>
             <Link href="/app">{t("startExperience")}</Link>
           </Button>
-          <details className="relative md:hidden">
-            <summary
-              className="flex cursor-pointer list-none items-center justify-center rounded-lg border border-border bg-card p-2 [&::-webkit-details-marker]:hidden"
-              aria-label={t("openMenuAria")}
-            >
-              <Menu className="size-5 text-foreground" />
-            </summary>
-            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
-              <div className="px-3 py-1.5 text-label font-semibold uppercase tracking-wider text-muted-foreground">
+          {/* Mobile menu — Radix DropdownMenu per UX-4 (native disclosure elements are forbidden for interactive menus) */}
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center justify-center rounded-lg border border-border bg-card p-2 text-foreground transition-colors hover:bg-accent md:hidden"
+                    aria-label={t("openMenuAria")}
+                  >
+                    <Menu className="size-5" aria-hidden />
+                  </button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t("openMenuAria")}</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("navFeatures")}
-              </div>
-              <Link href="/product" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("featurePpt")}
-              </Link>
-              <Link href="/product" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("featureDoc")}
-              </Link>
-              <div className="mt-1 px-3 py-1.5 text-label font-semibold uppercase tracking-wider text-muted-foreground">
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href="/product" className="cursor-pointer">
+                  {t("featurePpt")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/product" className="cursor-pointer">
+                  {t("featureDoc")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("navSolutions")}
-              </div>
-              <Link href="/showcase" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("solutionCreative")}
-              </Link>
-              <Link href="/showcase" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("solutionProduct")}
-              </Link>
-              <Link href="/showcase" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("solutionAnalyst")}
-              </Link>
-              <div className="mt-1 px-3 py-1.5 text-label font-semibold uppercase tracking-wider text-muted-foreground">
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href="/showcase" className="cursor-pointer">
+                  {t("solutionCreative")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/showcase" className="cursor-pointer">
+                  {t("solutionProduct")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/showcase" className="cursor-pointer">
+                  {t("solutionAnalyst")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("navResources")}
-              </div>
-              <Link href="/docs" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("resourceBlog")}
-              </Link>
-              <Link href="/showcase" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("resourceCases")}
-              </Link>
-              <Link href="/product" className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent">
-                {t("resourceSecurity")}
-              </Link>
-              <Link href="/pricing" className="mt-1 block rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
-                {t("navPricing")}
-              </Link>
-              <Link
-                href="/app"
-                className="mt-1 block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
-              >
-                {t("startExperience")}
-              </Link>
-            </div>
-          </details>
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href="/docs" className="cursor-pointer">
+                  {t("resourceBlog")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/showcase" className="cursor-pointer">
+                  {t("resourceCases")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/product" className="cursor-pointer">
+                  {t("resourceSecurity")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/pricing" className="cursor-pointer font-medium">
+                  {t("navPricing")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/app" className="cursor-pointer font-medium">
+                  {t("startExperience")}
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
