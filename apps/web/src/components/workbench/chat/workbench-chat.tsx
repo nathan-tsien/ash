@@ -16,7 +16,6 @@ import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
 import { messageEntrance, messageStagger } from "@/lib/animations/presets";
 import type { WorkspaceToggleProps } from "../workbench-types";
-import { useCancelTask } from "../task-run-provider";
 import { AnswerPrompt } from "./answer-prompt";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
@@ -35,13 +34,18 @@ export interface WorkbenchChatProps {
    * supports follow-up messages (the provider handles the optimistic append).
    */
   onFollowUp?: (text: string) => Promise<void>;
+  /**
+   * When provided, a cancel control is shown for a non-terminal task and invokes
+   * this handler. Passed only for task views (not project conversations), so the
+   * control never appears where there is no cancellable praxis task.
+   */
+  onCancel?: () => void;
 }
 
-export function WorkbenchChat({ locale, active, workspace, banner, pendingQuestion, onAnswer, onFollowUp }: WorkbenchChatProps) {
+export function WorkbenchChat({ locale, active, workspace, banner, pendingQuestion, onAnswer, onFollowUp, onCancel }: WorkbenchChatProps) {
   const [draft, setDraft] = useState("");
   const [extraMessages, setExtraMessages] = useState<Message[]>([]);
   const t = useTranslations("Workbench");
-  const cancelTask = useCancelTask();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -57,6 +61,13 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
     const text = draft.trim();
     if (!text) return;
     setDraft("");
+    if (pendingQuestion && onAnswer) {
+      // While the agent is awaiting an answer, the composer answers the pending
+      // question (same path as AnswerPrompt) rather than sending a free follow-up
+      // — praxis expects an answer keyed to the live ask_id, not a /messages turn.
+      onAnswer(text);
+      return;
+    }
     if (onFollowUp) {
       // Provider handles the optimistic user-message append; do NOT also append
       // locally — that would duplicate the message in the rendered list since
@@ -74,7 +85,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
       createdAt: now,
     };
     setExtraMessages((prev) => [...prev, userMsg]);
-  }, [draft, onFollowUp]);
+  }, [draft, pendingQuestion, onAnswer, onFollowUp]);
 
   /* Staggered entrance when conversation changes. */
   useGSAP(
@@ -124,12 +135,12 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {(active.status === "running" || Boolean(pendingQuestion)) ? (
+          {onCancel && (active.status === "running" || Boolean(pendingQuestion)) ? (
             <Button
               variant="ghost"
               size="sm"
               type="button"
-              onClick={() => void cancelTask(active.id)}
+              onClick={onCancel}
             >
               {t("cancelTask")}
             </Button>
