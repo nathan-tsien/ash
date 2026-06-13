@@ -3,7 +3,7 @@ import { createPraxisFetchClient } from "../openapi-fetch-client";
 
 describe("createPraxisFetchClient", () => {
   it("issues contract paths against the given base url", async () => {
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn<(input: Request) => Promise<Response>>(async () =>
       new Response(JSON.stringify({ items: [], next_cursor: null }), {
         status: 200,
         headers: { "content-type": "application/json" },
@@ -20,7 +20,7 @@ describe("createPraxisFetchClient", () => {
   });
 
   it("injects a bearer token when an auth resolver is supplied", async () => {
-    const fetchMock = vi.fn(async () => new Response("{}", { status: 200, headers: { "content-type": "application/json" } }));
+    const fetchMock = vi.fn<(...args: [Request] | [string, RequestInit?]) => Promise<Response>>(async () => new Response("{}", { status: 200, headers: { "content-type": "application/json" } }));
     const client = createPraxisFetchClient({
       baseUrl: "http://localhost:8091",
       fetch: fetchMock,
