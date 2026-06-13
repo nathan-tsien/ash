@@ -29,9 +29,15 @@ export interface WorkbenchChatProps {
   banner?: ReactNode;
   pendingQuestion?: PendingQuestion;
   onAnswer?: (text: string) => void;
+  /**
+   * When provided, the composer routes non-answer submits to this handler
+   * instead of appending locally. Pass when the chat is bound to a Task that
+   * supports follow-up messages (the provider handles the optimistic append).
+   */
+  onFollowUp?: (text: string) => Promise<void>;
 }
 
-export function WorkbenchChat({ locale, active, workspace, banner, pendingQuestion, onAnswer }: WorkbenchChatProps) {
+export function WorkbenchChat({ locale, active, workspace, banner, pendingQuestion, onAnswer, onFollowUp }: WorkbenchChatProps) {
   const [draft, setDraft] = useState("");
   const [extraMessages, setExtraMessages] = useState<Message[]>([]);
   const t = useTranslations("Workbench");
@@ -50,6 +56,16 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
   const sendDraft = useCallback(() => {
     const text = draft.trim();
     if (!text) return;
+    setDraft("");
+    if (onFollowUp) {
+      // Provider handles the optimistic user-message append; do NOT also append
+      // locally — that would duplicate the message in the rendered list since
+      // active.messages (from the provider) already contains it after the upsert.
+      void onFollowUp(text);
+      return;
+    }
+    // Fallback: no follow-up handler (e.g. project views) — append locally for
+    // a lightweight optimistic display.
     const now = new Date().toISOString();
     const userMsg: Message = {
       id: `local-user-${crypto.randomUUID()}`,
@@ -58,8 +74,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
       createdAt: now,
     };
     setExtraMessages((prev) => [...prev, userMsg]);
-    setDraft("");
-  }, [draft]);
+  }, [draft, onFollowUp]);
 
   /* Staggered entrance when conversation changes. */
   useGSAP(

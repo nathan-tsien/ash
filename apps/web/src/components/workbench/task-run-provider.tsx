@@ -1,6 +1,6 @@
 "use client";
 
-import type { Task } from "@ash/shared";
+import type { Message, Task } from "@ash/shared";
 import {
   createContext,
   useCallback,
@@ -37,6 +37,8 @@ interface TaskRunContextValue {
   seedTask(task: Task): void;
   /** Cancel a non-terminal task (praxis POST /cancel) and abort its stream. */
   cancelTask(taskId: string): Promise<void>;
+  /** Send a free follow-up message into an existing task, then stream the reply. */
+  sendFollowUp(taskId: string, text: string): Promise<void>;
 }
 
 const TaskRunContext = createContext<TaskRunContextValue | null>(null);
@@ -275,6 +277,42 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  // Send a free follow-up message into an existing task. Optimistically appends
+  // the user message to the task's messages and flips status to running, calls
+  // client.sendMessage, then re-subscribes to the live stream for the assistant
+  // turn using the same AbortController/activeStreams bookkeeping as startTask.
+  const sendFollowUp = useCallback(
+    async (taskId: string, text: string): Promise<void> => {
+      const cur = runsRef.current[taskId];
+      if (!cur) return;
+      const msg: Message = {
+        id: `local-${taskId}-${cur.messages.length}`,
+        role: "user",
+        content: text,
+        createdAt: new Date().toISOString(),
+      };
+      const next: Task = { ...cur, status: "running" as const, messages: [...cur.messages, msg] };
+      upsert(next);
+      await clientRef.current.sendMessage(taskId, text);
+      // Re-subscribe for the assistant turn; mirror startTask's controller lifecycle
+      // so controllers and activeStreams are properly tracked and cleaned up.
+      if (activeStreamsRef.current.has(taskId)) return; // already streaming, bail
+      const controller = new AbortController();
+      controllersRef.current.add(controller);
+      activeStreamsRef.current.add(taskId);
+      void (async () => {
+        try {
+          await runStream(taskId, next, controller);
+        } catch {
+          // runStream itself handles cleanup in finally; this catch is a safety net.
+          controllersRef.current.delete(controller);
+          activeStreamsRef.current.delete(taskId);
+        }
+      })();
+    },
+    [upsert, runStream],
+  );
+
   const value = useMemo<TaskRunContextValue>(
     () => ({
       runs: order.map((id) => runs[id]).filter(Boolean) as Task[],
@@ -284,8 +322,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       attach,
       seedTask,
       cancelTask,
+      sendFollowUp,
     }),
-    [order, runs, startTask, answer, attach, seedTask, cancelTask],
+    [order, runs, startTask, answer, attach, seedTask, cancelTask, sendFollowUp],
   );
 
   return <TaskRunContext.Provider value={value}>{children}</TaskRunContext.Provider>;
@@ -351,4 +390,13 @@ export function useSeedTask(): (task: Task) => void {
  */
 export function useCancelTask(): (taskId: string) => Promise<void> {
   return useTaskRunContext().cancelTask;
+}
+
+/**
+ * Returns the `sendFollowUp` function to post a free-form follow-up message
+ * into an existing task (including completed ones) and stream the assistant reply.
+ * The user message is optimistically appended to the task's messages in the provider.
+ */
+export function useSendFollowUp(): (taskId: string, text: string) => Promise<void> {
+  return useTaskRunContext().sendFollowUp;
 }
