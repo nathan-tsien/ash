@@ -380,7 +380,12 @@
     "runtimeTruncationNotice": "回复因达到长度上限被截断。",
     "answerPlaceholder": "输入你的回复…",
     "answerSubmit": "发送",
-    "answerLabel": "回复问题"
+    "answerLabel": "回复问题",
+    "allTasksTitle": "全部任务",
+    "loadMore": "加载更多",
+    "tasksEmpty": "还没有任务",
+    "tasksError": "加载失败，点击重试",
+    "viewAllTasks": "查看全部任务"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
