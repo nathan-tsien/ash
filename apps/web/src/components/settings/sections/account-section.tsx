@@ -11,7 +11,8 @@ export function AccountSection() {
   const t = useTranslations("Settings");
   const { user, logout } = useAuth();
 
-  const displayName = user?.display_name ?? user?.email ?? "User";
+  const displayName =
+    user?.display_name ?? user?.email ?? t("account.userFallback");
   const initials = displayName
     .split(" ")
     .map((s) => s[0])

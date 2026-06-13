@@ -4,9 +4,16 @@ import type { AshLocale, Task } from "@ash/shared";
 import { formatRelativeTime } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
+import { StatusDot } from "@ash/ui/status-dot";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@ash/ui/tooltip";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { taskStatusDotVariant, taskStatusLabelKey } from "@/lib/task-status";
 import { taskHref } from "@/lib/workbench-href";
 
 export interface TaskSectionProps {
@@ -31,15 +38,20 @@ export function TaskSection({
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {t("tasksSection")}
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6"
-          onClick={onNewTask}
-          aria-label={t("newTask")}
-        >
-          <Plus className="size-3.5" aria-hidden />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={onNewTask}
+              aria-label={t("newTask")}
+            >
+              <Plus className="size-3.5" aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("newTask")}</TooltipContent>
+        </Tooltip>
       </div>
       <ul role="list" className="flex flex-col gap-0.5 px-1">
         {displayTasks.map((task) => (
@@ -57,17 +69,9 @@ export function TaskSection({
                 {task.title}
               </p>
               <div className="mt-1 flex items-center gap-2">
-                <span
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    task.status === "running"
-                      ? "animate-pulse bg-status-running"
-                      : task.status === "completed"
-                        ? "bg-status-success"
-                        : task.status === "failed"
-                          ? "bg-destructive"
-                          : "bg-muted-foreground/40",
-                  )}
+                <StatusDot
+                  status={taskStatusDotVariant(task.status)}
+                  label={t(taskStatusLabelKey(task.status))}
                 />
                 <span className="text-label font-normal text-muted-foreground">
                   {formatRelativeTime(task.updatedAt, locale)}

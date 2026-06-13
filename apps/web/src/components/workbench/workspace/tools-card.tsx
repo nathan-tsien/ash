@@ -46,7 +46,12 @@ export function ToolsCard({ traces }: { traces: ToolTrace[] }) {
 }
 
 function ToolBadge({ status }: { status: ToolTrace["status"] }) {
-  if (status === "success") return <Badge variant="success">ok</Badge>;
-  if (status === "error") return <Badge variant="destructive">err</Badge>;
-  return <Badge variant="secondary">···</Badge>;
+  const t = useTranslations("Workbench");
+  if (status === "success") {
+    return <Badge variant="success">{t("toolStatusOk")}</Badge>;
+  }
+  if (status === "error") {
+    return <Badge variant="destructive">{t("toolStatusError")}</Badge>;
+  }
+  return <Badge variant="secondary">{t("toolStatusRunning")}</Badge>;
 }

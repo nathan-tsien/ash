@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 function Dialog({
   ...props
@@ -64,13 +65,22 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogClose
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none"
-          aria-label={closeAriaLabel}
-        >
-          <X className="size-4" />
-          <span className="sr-only">{closeAriaLabel}</span>
-        </DialogClose>
+        {/* Icon-only close gets a tooltip per UX-2; relies on the app-level
+            TooltipProvider mounted in the consuming layout. */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogClose
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none"
+              aria-label={closeAriaLabel}
+            >
+              <X className="size-4" />
+              <span className="sr-only">{closeAriaLabel}</span>
+            </DialogClose>
+          </TooltipTrigger>
+          {/* z-50: tooltip portals to <body>, so it must sit on the dialog's
+              global-shell layer (IA-3 scale) or it paints behind the overlay. */}
+          <TooltipContent className="z-50">{closeAriaLabel}</TooltipContent>
+        </Tooltip>
       </DialogPrimitive.Content>
     </DialogPortal>
   );

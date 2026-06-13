@@ -20,7 +20,7 @@ export function FooterAccount() {
   const { openSettings } = useSettingsModal();
   const { user, logout } = useAuth();
 
-  const displayName = user?.display_name ?? user?.email ?? "User";
+  const displayName = user?.display_name ?? user?.email ?? t("userFallback");
   const initials = displayName
     .split(" ")
     .map((s) => s[0])

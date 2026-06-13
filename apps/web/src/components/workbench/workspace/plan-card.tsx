@@ -11,28 +11,32 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
       <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
         {t("planHeading")}
       </h2>
-      <ol className="space-y-1 rounded-lg bg-muted/30 p-2">
-        {steps.map((step, i) => (
-          <li
-            key={step.id}
-            className={cn(
-              "flex gap-2 rounded-md px-2 py-1.5 text-sm leading-snug",
-              i % 2 === 0 && "bg-muted/40",
-            )}
-          >
-            <PlanStatusIcon status={step.status} />
-            <span
+      {steps.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{t("emptyPlanSteps")}</p>
+      ) : (
+        <ol className="space-y-1 rounded-lg bg-muted/30 p-2">
+          {steps.map((step, i) => (
+            <li
+              key={step.id}
               className={cn(
-                "flex-1",
-                // -2px optical alignment against the border-l-2 timeline rail (SPACE-1 documented)
-                step.status === "running" && "border-l-2 border-primary pl-3 -ml-[2px]",
+                "flex gap-2 rounded-md px-2 py-1.5 text-sm leading-snug",
+                i % 2 === 0 && "bg-muted/40",
               )}
             >
-              {step.label}
-            </span>
-          </li>
-        ))}
-      </ol>
+              <PlanStatusIcon status={step.status} />
+              <span
+                className={cn(
+                  "flex-1",
+                  // -2px optical alignment against the border-l-2 timeline rail (SPACE-1 documented)
+                  step.status === "running" && "border-l-2 border-primary pl-3 -ml-[2px]",
+                )}
+              >
+                {step.label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

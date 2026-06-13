@@ -77,6 +77,7 @@ export async function MarketingFooter() {
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-border/60 pt-8 text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           {/* Copyright line is Latin/numeric only, so caption (11px) is legal; privacy/terms render Han glyphs and take label (12px) per the TYPE-2 CJK floor */}
+          {/* font-mono as deliberate footer-meta voice (TYPE-5 rationale): machine-tag tone for the legal/meta line, Latin-only */}
           <span className="font-mono text-caption tracking-tight">
             &copy; {new Date().getFullYear()} ash &middot; {t("copyright")}
           </span>
