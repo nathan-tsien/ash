@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v1.1.0 |
+| Version | v1.1.1 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -405,9 +405,9 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 | D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast: alpha raised 0.28 -> 0.55 (~3.2:1 light / ~3.4:1 dark vs canvas), WCAG 2.4.11 pass (ADR-0014); consumer opacity modifiers removed so the token alpha is effective | closed(a25b67d) |
 | D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays used `z-50`; remediated to `z-40` | closed(0af0130) |
 | D-10 | UX-9 | widespread (`apps/web`) | Original 16/18/20 scale mismatched as-built reality (14px x9, 12px x1, 24-28px heroes; 18px later adopted in chrome) | closed(v1.1.0 rule amendment, REV-4) |
-| D-11 | UX-4/MOTION-2 | `apps/web/src/components/command-palette/command-palette.tsx` | Hand-rolled overlay: no focus trap or focus return, no exit animation; rebuild on the Dialog primitive (or cmdk `Command.Dialog`) | open — owner: post-v1 a11y pass |
-| D-12 | IMPL-3 | `apps/web/src/lib/praxis/runtime-event-reducer.ts`, `fake-client.ts` | Runtime-generated zh-CN UI copy outside next-intl catalogs (reducer failure text, demo stream chunks) | open — owner: Phase 2 transport/i18n pass |
-| D-13 | UX-3 | `composer.tsx`, `command-palette.tsx`, `workbench-home.tsx` | Text inputs use `focus:outline-none` without a visible ring substitute (caret-only focus) | open — owner: post-v1 a11y pass |
+| D-11 | UX-4/MOTION-2 | `apps/web/src/components/command-palette/command-palette.tsx` | Hand-rolled overlay: no focus trap or focus return, no exit animation; rebuild on the Dialog primitive (or cmdk `Command.Dialog`) | closed(76a3c1f) — rebuilt on cmdk `Command.Dialog` (Radix Dialog: focus trap/return, Escape/outside dismiss, scroll lock) with symmetric data-state enter/exit |
+| D-12 | IMPL-3 | `apps/web/src/lib/praxis/runtime-event-reducer.ts`, `fake-client.ts` | Runtime-generated zh-CN UI copy outside next-intl catalogs (reducer failure text, demo stream chunks) | closed(56bfe40) — reducer copy injected via `ReducerLabels` from next-intl; `fake-client` chunks retained as simulated agent output (fixture content, not UI chrome — outside IMPL-3 by design) |
+| D-13 | UX-3 | `composer.tsx`, `command-palette.tsx`, `workbench-home.tsx` | Text inputs use `focus:outline-none` without a visible ring substitute (caret-only focus) | closed(56bfe40, 76a3c1f) — composer + home boxes light via `focus-within` ring tokens; palette search row resolved in the D-11 rebuild |
 
 ## Appendix B. Revision protocol and changelog
 
@@ -436,6 +436,7 @@ Changelog:
 | v1.0.0 | 2026-06-13 | MAJOR — ash-native identity "Ash & Ember" (ADR-0014): PRIN-3 rewritten on ash foundation trio, ember accent + COLOR-10, display face + TYPE-6, PRIN-6 registry extended, palette re-derived (Appendix C), ring alpha 0.55 (D-8 path) |
 | v1.0.1 | 2026-06-13 | I4 landed: palette/fonts/wordmark implemented; D-8 closed |
 | v1.1.0 | 2026-06-13 | REV-3 audit outcomes: MOTION-1/2/3 codify as-built conventions (status keyframes, 200-300ms base, 350-500ms slow, power2/power3 dichotomy, symmetric overlay exits), SPACE-3 marketing shadow carve-out, UX-9 scale rewrite (closes D-10 via REV-4), IA-3 portal note, TYPE-2 stock-utility equivalence, --overlay token, D-9 closed, D-11/12/13 registered |
+| v1.1.1 | 2026-06-13 | Post-v1 a11y/i18n pass: D-13 closed (focus-within rings on composer/home/palette inputs, UX-3), D-12 closed (reducer copy via next-intl `ReducerLabels`, IMPL-3; fake-client fixture chunks scoped out), D-11 closed (command palette rebuilt on cmdk `Command.Dialog` / Radix Dialog, UX-4 + MOTION-2). Deviation-register bookkeeping only — no rule semantics changed |
 
 ## Appendix C. Token reference snapshot
 
