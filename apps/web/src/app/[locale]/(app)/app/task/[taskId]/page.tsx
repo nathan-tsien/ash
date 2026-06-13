@@ -1,5 +1,6 @@
 import { isAshLocale, type AshLocale } from "@ash/shared";
 import { WorkbenchApp } from "@/components/workbench/workbench-app";
+import { TaskSeeder } from "@/components/workbench/task-seeder";
 import { listTasks } from "@/server/tasks";
 import { listProjects } from "@/server/projects";
 import { getActiveTask } from "@/server/tasks";
@@ -19,13 +20,16 @@ export default async function TaskPage({ params }: PageProps) {
   const activeTask = await getActiveTask(taskId, ashLocale);
 
   return (
-    <WorkbenchApp
-      locale={ashLocale}
-      tasks={tasks}
-      projects={projects}
-      activeTask={activeTask}
-      taskId={taskId}
-      viewMode="task"
-    />
+    <>
+      {activeTask && <TaskSeeder task={activeTask} />}
+      <WorkbenchApp
+        locale={ashLocale}
+        tasks={tasks}
+        projects={projects}
+        activeTask={activeTask}
+        taskId={taskId}
+        viewMode="task"
+      />
+    </>
   );
 }

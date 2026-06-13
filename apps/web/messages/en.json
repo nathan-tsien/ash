@@ -380,7 +380,13 @@
     "runtimeTruncationNotice": "Response was truncated (reached the max length).",
     "answerPlaceholder": "Type your answer…",
     "answerSubmit": "Send",
-    "answerLabel": "Answer the question"
+    "answerLabel": "Answer the question",
+    "allTasksTitle": "All tasks",
+    "loadMore": "Load more",
+    "tasksEmpty": "No tasks yet",
+    "tasksError": "Failed to load, click to retry",
+    "viewAllTasks": "View all tasks",
+    "cancelTask": "Cancel task"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

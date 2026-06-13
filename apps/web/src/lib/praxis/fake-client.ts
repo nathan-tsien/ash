@@ -1,5 +1,5 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
 
 /**
  * Local fake praxis client. Emits real-shaped events for a scripted run, with
@@ -19,6 +19,14 @@ interface FakeRun {
 }
 
 const runs = new Map<string, FakeRun>();
+
+// Two+ seeded pages so the list UI exercises cursor pagination without a backend.
+const SEED: TaskSummary[] = [
+  { id: "seed-1", title: "生成季度汇报 PPT", status: "completed", project_id: null },
+  { id: "seed-2", title: "整理用户访谈纪要", status: "running", project_id: null },
+  { id: "seed-3", title: "竞品分析草稿", status: "awaiting_input", project_id: null },
+  { id: "seed-4", title: "周报模板", status: "draft", project_id: null },
+];
 
 export const fakePraxisClient: PraxisTaskClient = {
   async createTask(req: CreateTaskRequest): Promise<TaskSummary> {
@@ -40,6 +48,23 @@ export const fakePraxisClient: PraxisTaskClient = {
       return run.summary;
     }
     return { id, status: "running" };
+  },
+
+  async listTasks(params?: { limit?: number; cursor?: string }): Promise<TaskList> {
+    const all = [...SEED, ...[...runs.values()].map((r) => r.summary)];
+    const limit = params?.limit ?? 2;
+    const start = params?.cursor ? Number(params.cursor) : 0;
+    const slice = all.slice(start, start + limit);
+    const next = start + limit < all.length ? String(start + limit) : null;
+    return { items: slice, next_cursor: next };
+  },
+
+  async getTask(id: string): Promise<TaskSummary> {
+    const fromRun = runs.get(id)?.summary;
+    const fromSeed = SEED.find((s) => s.id === id);
+    const summary = fromRun ?? fromSeed;
+    if (!summary) throw new Error(`fake getTask: unknown id ${id}`);
+    return summary;
   },
 
   async *streamEvents(id: string): AsyncIterable<RuntimeEvent> {
@@ -81,7 +106,10 @@ export const fakePraxisClient: PraxisTaskClient = {
     yield { type: "stream_end", task_status: "completed" };
   },
 
-  async sendMessage(): Promise<void> {},
+  async sendMessage(id: string): Promise<void> {
+    const run = runs.get(id);
+    if (run) run.summary.status = "running";
+  },
 
   async answer(id: string): Promise<void> {
     runs.get(id)?.answered?.resolve();

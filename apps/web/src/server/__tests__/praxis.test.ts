@@ -28,11 +28,23 @@ afterEach(() => {
 });
 
 describe("forwardToPraxis", () => {
+  // --- allowlist ---
+
   it("404s a path outside the tasks allowlist without calling praxis", async () => {
     const fetchFn = fetchMock();
-    const req = new Request("http://localhost/api/praxis/projects", { method: "POST" });
+    const req = new Request("http://localhost/api/praxis/v1/projects", { method: "POST" });
 
-    const res = await forwardToPraxis(req, ["projects"]);
+    const res = await forwardToPraxis(req, ["v1", "projects"]);
+
+    expect(res.status).toBe(404);
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("404s when segments root is not v1 (old-style path)", async () => {
+    const fetchFn = fetchMock();
+    const req = new Request("http://localhost/api/praxis/tasks", { method: "POST" });
+
+    const res = await forwardToPraxis(req, ["tasks"]);
 
     expect(res.status).toBe(404);
     expect(fetchFn).not.toHaveBeenCalled();
@@ -41,12 +53,28 @@ describe("forwardToPraxis", () => {
   it("401s when there is no session", async () => {
     const fetchFn = fetchMock();
     mockToken.mockResolvedValue(undefined);
-    const req = new Request("http://localhost/api/praxis/tasks", { method: "POST" });
+    const req = new Request("http://localhost/api/praxis/v1/tasks", { method: "POST" });
 
-    const res = await forwardToPraxis(req, ["tasks"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks"]);
 
     expect(res.status).toBe(401);
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  // --- transparent forwarding (no double /v1) ---
+
+  it("forwards /api/praxis/v1/tasks/... 1:1 to PRAXIS_BASE_URL (no double /v1)", async () => {
+    const fetchFn = fetchMock();
+    fetchFn.mockResolvedValue(
+      new Response("{}", { status: 200, headers: { "content-type": "application/json" } }),
+    );
+    const req = new Request("http://app/api/praxis/v1/tasks?limit=2", { method: "GET" });
+
+    await forwardToPraxis(req, ["v1", "tasks"]);
+
+    const calledUrl = String(fetchFn.mock.calls[0][0]);
+    expect(calledUrl).toContain("/v1/tasks?limit=2");
+    expect(calledUrl).not.toContain("/v1/v1/");
   });
 
   it("forwards a control-plane POST with the bearer token and passes the body through", async () => {
@@ -57,12 +85,12 @@ describe("forwardToPraxis", () => {
         headers: { "content-type": "application/json" },
       }),
     );
-    const req = new Request("http://localhost/api/praxis/tasks", {
+    const req = new Request("http://localhost/api/praxis/v1/tasks", {
       method: "POST",
       body: '{"user_input":"hi"}',
     });
 
-    const res = await forwardToPraxis(req, ["tasks"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks"]);
 
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ id: "t1", status: "draft" });
@@ -77,9 +105,9 @@ describe("forwardToPraxis", () => {
   it("passes a 204 through with an empty body", async () => {
     const fetchFn = fetchMock();
     fetchFn.mockResolvedValue(new Response(null, { status: 204 }));
-    const req = new Request("http://localhost/api/praxis/tasks/t1/complete", { method: "POST" });
+    const req = new Request("http://localhost/api/praxis/v1/tasks/t1/complete", { method: "POST" });
 
-    const res = await forwardToPraxis(req, ["tasks", "t1", "complete"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks", "t1", "complete"]);
 
     expect(res.status).toBe(204);
     expect(await res.text()).toBe("");
@@ -92,11 +120,11 @@ describe("forwardToPraxis", () => {
     // a minimal GET stand-in exercises the aborted-signal branch faithfully.
     const req = {
       method: "GET",
-      url: "http://localhost/api/praxis/tasks/t1/events",
+      url: "http://localhost/api/praxis/v1/tasks/t1/events",
       signal: { aborted: true },
     } as unknown as Request;
 
-    const res = await forwardToPraxis(req, ["tasks", "t1", "events"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks", "t1", "events"]);
 
     expect(res.status).toBe(499);
   });
@@ -104,9 +132,9 @@ describe("forwardToPraxis", () => {
   it("returns 502 when praxis is unreachable", async () => {
     const fetchFn = fetchMock();
     fetchFn.mockRejectedValue(new TypeError("fetch failed"));
-    const req = new Request("http://localhost/api/praxis/tasks", { method: "POST" });
+    const req = new Request("http://localhost/api/praxis/v1/tasks", { method: "POST" });
 
-    const res = await forwardToPraxis(req, ["tasks"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks"]);
 
     expect(res.status).toBe(502);
   });
@@ -116,14 +144,17 @@ describe("forwardToPraxis", () => {
     fetchFn.mockResolvedValue(
       new Response('{"items":[]}', { status: 200, headers: { "content-type": "application/json" } }),
     );
-    const req = new Request("http://localhost/api/praxis/tasks/t1/history?cursor=abc&limit=50", {
-      method: "GET",
-    });
+    const req = new Request(
+      "http://localhost/api/praxis/v1/tasks/t1/history?cursor=abc&limit=50",
+      { method: "GET" },
+    );
 
-    const res = await forwardToPraxis(req, ["tasks", "t1", "history"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks", "t1", "history"]);
 
     expect(res.status).toBe(200);
-    expect(fetchFn.mock.calls[0][0]).toBe("http://localhost:8091/v1/tasks/t1/history?cursor=abc&limit=50");
+    expect(fetchFn.mock.calls[0][0]).toBe(
+      "http://localhost:8091/v1/tasks/t1/history?cursor=abc&limit=50",
+    );
   });
 
   it("streams an events GET through as text/event-stream", async () => {
@@ -134,9 +165,9 @@ describe("forwardToPraxis", () => {
         headers: { "content-type": "text/event-stream" },
       }),
     );
-    const req = new Request("http://localhost/api/praxis/tasks/t1/events", { method: "GET" });
+    const req = new Request("http://localhost/api/praxis/v1/tasks/t1/events", { method: "GET" });
 
-    const res = await forwardToPraxis(req, ["tasks", "t1", "events"]);
+    const res = await forwardToPraxis(req, ["v1", "tasks", "t1", "events"]);
 
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("text/event-stream");

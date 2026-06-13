@@ -21,6 +21,12 @@ function baseClient(overrides: Partial<PraxisTaskClient>): PraxisTaskClient {
     async startTask(id) {
       return { id, status: "running" };
     },
+    async listTasks() {
+      return { items: [], next_cursor: null };
+    },
+    async getTask(id) {
+      return { id, status: "draft" };
+    },
     async *streamEvents(): AsyncIterable<RuntimeEvent> {
       // no events by default; overridden per test
     },

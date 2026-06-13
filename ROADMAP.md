@@ -47,7 +47,12 @@ Blocked until roadmap owners accept **streaming ADR trio** (transport, session p
 | ID | Deliverable | PR | Status |
 |----|--------------|-----|--------|
 | P2.1 | Auth IAM integration — `@ash/iam-client` package, BFF API routes, AuthContext, auth pages, middleware guard | #10 | **Committed + merged** |
+| P2.2 | Live praxis transport (`httpPraxisClient` + BFF SSE proxy) + 0.1.5 interactive execution (ask_user/answer + history catch-up) | #18, #22 | **Committed + merged** |
+| P2.3 | Praxis task lifecycle — contract-first codegen (gh sync to pinned tag + `openapi-fetch`), transparent BFF, RSC direct fetch, task list (`GET /v1/tasks` + `/app/tasks` page), deep-link cold load (`GET /v1/tasks/{id}`), cancel, multi-turn follow-up (`POST /messages`) | — | **Committed** (ADR-0016) |
 
+> P2.3 wires the task business flow end-to-end against the praxis contract; all API access is
+> codegen'd from the OpenAPI contract (single source of truth). Projects (list/create) stay deferred.
+>
 > P2.1 delivers auth posture (registration, login, logout, password reset) against an external IAM service
 > (`localhost:8090`) without touching cogito or `ash-server`. It was pulled forward because the web layer
 > was ready and auth is a prerequisite for any user-facing feature work.

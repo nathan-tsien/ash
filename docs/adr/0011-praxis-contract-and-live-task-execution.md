@@ -49,6 +49,8 @@ ash's product model defines a Task as one-shot (create → execute → complete/
    FSM and release the session. Single-Task multi-turn follow-up (`/messages`) is deferred — it belongs to
    the Project main-conversation line, and would require an ash status beyond the current four.
 
+   > Superseded by ADR-0016 (2026-06-13): multi-turn follow-up is now implemented (`POST /v1/tasks/{id}/messages` via `sendFollowUp`; composer enabled on terminal tasks).
+
 6. **Status mapping.** praxis `draft→pending`, `running→running`, `paused|completed→completed`,
    `failed→failed`, `cancelled→failed` (ash has no `cancelled` state this slice).
 

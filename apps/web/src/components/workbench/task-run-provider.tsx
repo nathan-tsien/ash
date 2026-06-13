@@ -1,11 +1,12 @@
 "use client";
 
-import type { Task } from "@ash/shared";
+import type { Message, Task } from "@ash/shared";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -32,6 +33,12 @@ interface TaskRunContextValue {
   answer(taskId: string, text: string): Promise<void>;
   /** Re-attach a task's stream: catch up via /history, then re-subscribe. */
   attach(taskId: string): Promise<void>;
+  /** Seed a task fetched on the server (deep-link cold load) into session state. */
+  seedTask(task: Task): void;
+  /** Cancel a non-terminal task (praxis POST /cancel) and abort its stream. */
+  cancelTask(taskId: string): Promise<void>;
+  /** Send a free follow-up message into an existing task, then stream the reply. */
+  sendFollowUp(taskId: string, text: string): Promise<void>;
 }
 
 const TaskRunContext = createContext<TaskRunContextValue | null>(null);
@@ -88,7 +95,12 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
+  // Mirror runs into the ref via useLayoutEffect so it is always current before
+  // any useEffect fires in child components.  useLayoutEffect runs synchronously
+  // after the DOM is committed and before browser paint — crucially, it runs
+  // before children's useEffect callbacks, ensuring runsRef is up-to-date by the
+  // time useReattachOnView (or any other consumer effect) reads it.
+  useLayoutEffect(() => {
     runsRef.current = runs;
   }, [runs]);
 
@@ -239,6 +251,68 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     [historyLabels, upsert, runStream],
   );
 
+  // Seed a server-fetched task into session state for deep-link cold loads.
+  // Upserts without clobbering an already-present live run (first write wins).
+  const seedTask = useCallback((task: Task) => {
+    setRuns((prev) => (prev[task.id] ? prev : { ...prev, [task.id]: task }));
+    setOrder((prev) => (prev.includes(task.id) ? prev : [task.id, ...prev]));
+  }, []);
+
+  // Cancel a non-terminal task: POST /cancel to praxis, abort the live stream
+  // controller (if any), then flip the local status to failed so the UI reflects
+  // termination immediately — the stream's finally block will no-op on abort.
+  const cancelTask = useCallback(async (taskId: string) => {
+    await clientRef.current.cancel(taskId);
+    // Abort the live stream for this task, if one is running.
+    // controllersRef holds all active AbortControllers; we abort all of them
+    // that correspond to this task by aborting each and letting runStream's
+    // finally handler clean them from the set.
+    for (const controller of controllersRef.current) {
+      controller.abort();
+    }
+    controllersRef.current.clear();
+    activeStreamsRef.current.delete(taskId);
+    setRuns((prev) =>
+      prev[taskId] ? { ...prev, [taskId]: { ...prev[taskId], status: "failed" } } : prev,
+    );
+  }, []);
+
+  // Send a free follow-up message into an existing task. Optimistically appends
+  // the user message to the task's messages and flips status to running, calls
+  // client.sendMessage, then re-subscribes to the live stream for the assistant
+  // turn using the same AbortController/activeStreams bookkeeping as startTask.
+  const sendFollowUp = useCallback(
+    async (taskId: string, text: string): Promise<void> => {
+      const cur = runsRef.current[taskId];
+      if (!cur) return;
+      const msg: Message = {
+        id: `local-${taskId}-${cur.messages.length}`,
+        role: "user",
+        content: text,
+        createdAt: new Date().toISOString(),
+      };
+      const next: Task = { ...cur, status: "running" as const, messages: [...cur.messages, msg] };
+      upsert(next);
+      await clientRef.current.sendMessage(taskId, text);
+      // Re-subscribe for the assistant turn; mirror startTask's controller lifecycle
+      // so controllers and activeStreams are properly tracked and cleaned up.
+      if (activeStreamsRef.current.has(taskId)) return; // already streaming, bail
+      const controller = new AbortController();
+      controllersRef.current.add(controller);
+      activeStreamsRef.current.add(taskId);
+      void (async () => {
+        try {
+          await runStream(taskId, next, controller);
+        } catch {
+          // runStream itself handles cleanup in finally; this catch is a safety net.
+          controllersRef.current.delete(controller);
+          activeStreamsRef.current.delete(taskId);
+        }
+      })();
+    },
+    [upsert, runStream],
+  );
+
   const value = useMemo<TaskRunContextValue>(
     () => ({
       runs: order.map((id) => runs[id]).filter(Boolean) as Task[],
@@ -246,8 +320,11 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       startTask,
       answer,
       attach,
+      seedTask,
+      cancelTask,
+      sendFollowUp,
     }),
-    [order, runs, startTask, answer, attach],
+    [order, runs, startTask, answer, attach, seedTask, cancelTask, sendFollowUp],
   );
 
   return <TaskRunContext.Provider value={value}>{children}</TaskRunContext.Provider>;
@@ -282,15 +359,44 @@ export function useAttachTask(): (taskId: string) => Promise<void> {
 
 /**
  * Re-attach a task's stream when its detail view is (re)opened — the navigate-back
- * trigger. Fires whenever `taskId` changes; `attach` is internally guarded, so it
- * no-ops for unknown/terminal tasks and ones already streaming. On a task left
- * awaiting input whose stream has since closed, this catches up via `/history` and
- * re-subscribes, recovering the live `ask_id`. Pass `undefined` to disable (e.g.
- * when not on a task view).
+ * trigger. Fires whenever `taskId` changes or the run first becomes present in the
+ * provider (covering the deep-link cold-load case where a seeder and this hook mount
+ * together). `attach` is internally guarded, so it no-ops for unknown/terminal tasks
+ * and ones already streaming. On a task left awaiting input whose stream has since
+ * closed, this catches up via `/history` and re-subscribes, recovering the live
+ * `ask_id`. Pass `undefined` to disable (e.g. when not on a task view).
  */
 export function useReattachOnView(taskId: string | undefined): void {
-  const { attach } = useTaskRunContext();
+  const { attach, getRun } = useTaskRunContext();
+  const present = taskId ? Boolean(getRun(taskId)) : false;
   useEffect(() => {
-    if (taskId) void attach(taskId);
-  }, [taskId, attach]);
+    if (taskId && present) void attach(taskId);
+  }, [taskId, present, attach]);
+}
+
+/**
+ * Returns the `seedTask` function for seeding a server-fetched task into the
+ * provider on deep-link cold loads. Must be used within a TaskRunProvider.
+ */
+export function useSeedTask(): (task: Task) => void {
+  const ctx = useContext(TaskRunContext);
+  if (!ctx) throw new Error("useSeedTask must be used within TaskRunProvider");
+  return ctx.seedTask;
+}
+
+/**
+ * Returns the `cancelTask` function to cancel a non-terminal task via praxis
+ * and immediately reflect the terminal state in the UI.
+ */
+export function useCancelTask(): (taskId: string) => Promise<void> {
+  return useTaskRunContext().cancelTask;
+}
+
+/**
+ * Returns the `sendFollowUp` function to post a free-form follow-up message
+ * into an existing task (including completed ones) and stream the assistant reply.
+ * The user message is optimistically appended to the task's messages in the provider.
+ */
+export function useSendFollowUp(): (taskId: string, text: string) => Promise<void> {
+  return useTaskRunContext().sendFollowUp;
 }

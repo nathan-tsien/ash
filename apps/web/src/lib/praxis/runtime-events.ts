@@ -20,3 +20,4 @@ export type RuntimeEvent = components["schemas"]["RuntimeEvent"];
 export type HistoryEvent = components["schemas"]["HistoryEvent"];
 export type HistoryItem = components["schemas"]["HistoryItem"];
 export type TaskHistoryPage = components["schemas"]["TaskHistoryPage"];
+export type TaskList = components["schemas"]["TaskList"];

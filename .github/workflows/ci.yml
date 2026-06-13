@@ -21,6 +21,10 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Fail if the committed praxis client drifted from the vendored contract.
+      # (Contract<->upstream-tag provenance is checked manually via `sync:praxis:check`,
+      # which needs an authenticated gh against the private praxis repo.)
+      - run: pnpm --filter @ash/web gen:praxis:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm build

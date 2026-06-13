@@ -1,7 +1,8 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
 import { PraxisError } from "./errors";
 import { SseParser } from "./sse";
+import { createPraxisFetchClient } from "./openapi-fetch-client";
 
 /**
  * Real praxis transport. Runs in the browser and talks ONLY to same-origin
@@ -9,55 +10,107 @@ import { SseParser } from "./sse";
  * automatically); the route forwards the JWT to praxis. See
  * docs/superpowers/specs/2026-06-06-praxis-live-transport.md + ADR-0012.
  *
+ * Control-plane calls (list, create, start, etc.) go through openapi-fetch so
+ * the generated `paths` type guards every URL and param shape at compile time.
+ * SSE is the one hand-written carve-out: openapi-fetch cannot consume
+ * text/event-stream, so we read the body with a manual ReadableStream loop
+ * exactly as before.
+ *
  * Enabled via NEXT_PUBLIC_PRAXIS_TRANSPORT=http (default is the fake client).
  */
-const BASE = "/api/praxis/tasks";
 
-async function readError(res: Response, method: string, url: string): Promise<PraxisError> {
-  let code = "";
-  try {
-    const body = (await res.json()) as { code?: string };
-    code = body?.code ?? "";
-  } catch {
-    // non-JSON error body; fall through to status-only message
+// Browser transport: same-origin BFF carries the httpOnly cookie automatically.
+// The fetch wrapper delegates to the current globalThis.fetch at call time so
+// that test stubs applied via vi.stubGlobal / globalThis.fetch assignment are
+// picked up correctly (openapi-fetch captures baseFetch at construction time,
+// not at call time, which would break stubbing otherwise).
+const api = createPraxisFetchClient({
+  baseUrl: "/api/praxis",
+  fetch: (req) => globalThis.fetch(req),
+});
+// SSE path mirrors the contract path; the BFF is a transparent forwarder.
+const SSE_BASE = "/api/praxis/v1/tasks";
+
+function unwrap<T>(res: { data?: T; error?: unknown; response: Response }, op: string): T {
+  if (res.error !== undefined || !res.response.ok) {
+    // openapi-fetch sets res.error to the parsed JSON body on non-2xx responses.
+    const body = res.error as { code?: string; message?: string } | undefined;
+    const code = body?.code ?? "";
+    const suffix = code ? ` (${code})` : "";
+    throw new PraxisError(
+      `praxis ${op} -> ${res.response.status}${suffix}`,
+      res.response.status,
+      code,
+    );
   }
-  const suffix = code ? ` (${code})` : "";
-  return new PraxisError(`praxis ${method} ${url} -> ${res.status}${suffix}`, res.status, code);
-}
-
-async function postJson<T>(url: string, body?: unknown): Promise<T | undefined> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  if (!res.ok) throw await readError(res, "POST", url);
-  if (res.status === 204) return undefined;
-  const text = await res.text();
-  return text ? (JSON.parse(text) as T) : undefined;
-}
-
-async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { accept: "application/json" } });
-  if (!res.ok) throw await readError(res, "GET", url);
-  return (await res.json()) as T;
+  return res.data as T;
 }
 
 export const httpPraxisClient: PraxisTaskClient = {
   async createTask(req: CreateTaskRequest): Promise<TaskSummary> {
-    const out = await postJson<TaskSummary>(BASE, req);
-    if (!out) throw new Error("praxis createTask returned no body");
-    return out;
+    return unwrap(await api.POST("/v1/tasks", { body: req }), "createTask");
   },
 
   async startTask(id: string, userInput: string): Promise<TaskSummary> {
-    const out = await postJson<TaskSummary>(`${BASE}/${id}/start`, { user_input: userInput });
-    if (!out) throw new Error("praxis startTask returned no body");
-    return out;
+    return unwrap(
+      await api.POST("/v1/tasks/{id}/start", { params: { path: { id } }, body: { user_input: userInput } }),
+      "startTask",
+    );
+  },
+
+  async listTasks(params?: { limit?: number; cursor?: string }): Promise<TaskList> {
+    return unwrap(
+      await api.GET("/v1/tasks", { params: { query: { limit: params?.limit, cursor: params?.cursor } } }),
+      "listTasks",
+    );
+  },
+
+  async getTask(id: string): Promise<TaskSummary> {
+    return unwrap(
+      await api.GET("/v1/tasks/{id}", { params: { path: { id } } }),
+      "getTask",
+    );
+  },
+
+  async sendMessage(id: string, text: string): Promise<void> {
+    unwrap(
+      await api.POST("/v1/tasks/{id}/messages", { params: { path: { id } }, body: { text } }),
+      "sendMessage",
+    );
+  },
+
+  async answer(id: string, askId: string, answer: string): Promise<void> {
+    unwrap(
+      await api.POST("/v1/tasks/{id}/answers", { params: { path: { id } }, body: { ask_id: askId, answer } }),
+      "answer",
+    );
+  },
+
+  async history(id: string, cursor?: string): Promise<TaskHistoryPage> {
+    return unwrap(
+      await api.GET("/v1/tasks/{id}/history", { params: { path: { id }, query: { cursor } } }),
+      "history",
+    );
+  },
+
+  async complete(id: string): Promise<void> {
+    unwrap(
+      await api.POST("/v1/tasks/{id}/complete", { params: { path: { id } } }),
+      "complete",
+    );
+  },
+
+  async cancel(id: string): Promise<void> {
+    unwrap(
+      await api.POST("/v1/tasks/{id}/cancel", { params: { path: { id } } }),
+      "cancel",
+    );
   },
 
   async *streamEvents(id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent> {
-    const res = await fetch(`${BASE}/${id}/events`, {
+    // SSE is the one hand-written carve-out: openapi-fetch cannot read
+    // text/event-stream. Still yields the generated RuntimeEvent union.
+    const res = await fetch(`${SSE_BASE}/${id}/events`, {
       headers: { accept: "text/event-stream" },
       signal,
     });
@@ -86,26 +139,5 @@ export const httpPraxisClient: PraxisTaskClient = {
     } finally {
       reader.releaseLock();
     }
-  },
-
-  async sendMessage(id: string, text: string): Promise<void> {
-    await postJson(`${BASE}/${id}/messages`, { text });
-  },
-
-  async answer(id: string, askId: string, answer: string): Promise<void> {
-    await postJson(`${BASE}/${id}/answers`, { ask_id: askId, answer });
-  },
-
-  async history(id: string, cursor?: string): Promise<TaskHistoryPage> {
-    const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-    return getJson<TaskHistoryPage>(`${BASE}/${id}/history${qs}`);
-  },
-
-  async complete(id: string): Promise<void> {
-    await postJson(`${BASE}/${id}/complete`);
-  },
-
-  async cancel(id: string): Promise<void> {
-    await postJson(`${BASE}/${id}/cancel`);
   },
 };
