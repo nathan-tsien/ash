@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -29,6 +30,19 @@ export function CommandPaletteProvider({
   const openPalette = useCallback(() => setOpen(true), []);
   const closePalette = useCallback(() => setOpen(false), []);
   const togglePalette = useCallback(() => setOpen((v) => !v), []);
+
+  // Global Meta+K / Ctrl+K shortcut (IA-4) — bound at the provider so every
+  // shell that mounts CommandPaletteProvider gets the binding for free.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        togglePalette();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [togglePalette]);
 
   const value = useMemo(
     () => ({ open, openPalette, closePalette, togglePalette }),

@@ -68,7 +68,7 @@ export function CommandPalette({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-overlay backdrop-blur-sm"
         onClick={closePalette}
         aria-hidden
       />

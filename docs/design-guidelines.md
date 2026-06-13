@@ -431,13 +431,17 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 | `--background` | `#f7f6f4` | `#191817` | App canvas (ash paper / smoke) |
 | `--foreground` | `#2a2825` | `#efedea` | Primary ink (charcoal) |
 | `--card` | `#ffffff` | `#232220` | Raised panels, assistant bubbles |
+| `--card-foreground` | `#2a2825` | `#efedea` | Text on card surfaces |
 | `--popover` | `#ffffff` | `#232220` | Floating sheets |
+| `--popover-foreground` | `#2a2825` | `#efedea` | Text on floating sheets |
 | `--primary` | `#2a2825` | `#efedea` | Solid CTA fill (ink-on-white inversion) |
 | `--primary-foreground` | `#ffffff` | `#191817` | Text on primary |
 | `--secondary` | `#eceae6` | `#2b2a27` | User bubble fill, ghost surfaces |
+| `--secondary-foreground` | `#2a2825` | `#efedea` | Text on secondary fills |
 | `--muted` | `#f0eeea` | `#232220` | Inset trays |
 | `--muted-foreground` | `#6e6a63` | `#a39f99` | Secondary labels, captions |
 | `--accent` | `#eae7e2` | `#2b2a27` | Row hover washes |
+| `--accent-foreground` | `#2a2825` | `#efedea` | Text on accent washes |
 | `--destructive` | `#c53030` | `#e55050` | Destructive intent only |
 | `--border` / `--input` | `#e3e1dc` | `#343230` | Hairlines, field chrome |
 | `--ring` | `rgba(42,40,37,0.55)` | `rgba(239,237,234,0.55)` | Focus rings (3:1 non-text, D-8) |
@@ -446,6 +450,7 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 | `--sidebar-border` | `#eae8e4` | `#2b2a27` | Sidebar hairlines |
 | `--sidebar-accent` | `#f2f0ec` | `#2b2a27` | Sidebar row hover |
 | `--workspace` | `#faf9f7` | `#1f1e1c` | Right audit rail |
+| `--overlay` | `rgba(42,40,37,0.45)` | `rgba(12,11,10,0.6)` | Modal/backdrop scrim (COLOR-2) |
 | `--ember` | `#b8441f` | `#e07b52` | Brand accent (COLOR-10 scope only) |
 | `--ember-soft` | `#f8e8e0` | `#36211a` | Marketing washes behind ember text |
 | `--radius` | `0.75rem` | same | Radius core (sm/md/lg/xl derived) |

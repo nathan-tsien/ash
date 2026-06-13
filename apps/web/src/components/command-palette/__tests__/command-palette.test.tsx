@@ -53,6 +53,28 @@ describe("CommandPaletteProvider", () => {
     );
     expect(screen.getByTestId("trigger")).toHaveTextContent("closed");
   });
+
+  it("toggles via Meta+K / Ctrl+K window keydown (IA-4)", () => {
+    render(
+      <CommandPaletteProvider>
+        <TriggerButton />
+      </CommandPaletteProvider>,
+    );
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+    expect(screen.getByTestId("trigger")).toHaveTextContent("open");
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+    expect(screen.getByTestId("trigger")).toHaveTextContent("closed");
+  });
+
+  it("ignores plain k without modifier", () => {
+    render(
+      <CommandPaletteProvider>
+        <TriggerButton />
+      </CommandPaletteProvider>,
+    );
+    fireEvent.keyDown(window, { key: "k" });
+    expect(screen.getByTestId("trigger")).toHaveTextContent("closed");
+  });
 });
 
 describe("CommandPalette", () => {

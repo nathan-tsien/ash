@@ -60,6 +60,7 @@
   --color-status-warning-foreground: var(--status-warning-foreground);
   --color-ember: var(--ember);
   --color-ember-soft: var(--ember-soft);
+  --color-overlay: var(--overlay);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -140,6 +141,9 @@
   --status-warning: #f59e0b;
   --status-warning-soft: #fffbeb;
   --status-warning-foreground: #b45309;
+
+  /* Modal/backdrop scrim (COLOR-2) */
+  --overlay: rgba(42, 40, 37, 0.45);
 }
 
 /*
@@ -192,6 +196,9 @@
   --status-warning: #fbbf24;
   --status-warning-soft: #2e2510;
   --status-warning-foreground: #fcd34d;
+
+  /* Modal/backdrop scrim (COLOR-2) */
+  --overlay: rgba(12, 11, 10, 0.6);
 }
 
 @layer base {
@@ -215,44 +222,6 @@
 }
 
 /* -- Entrance animations -- */
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }

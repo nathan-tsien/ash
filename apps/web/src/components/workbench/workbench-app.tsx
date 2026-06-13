@@ -61,13 +61,14 @@ export function WorkbenchApp({
       if (!ws || !fab) return;
 
       if (workspaceCollapsed) {
+        // Width collapses alongside the slide so chat reclaims the gutter (IA-2).
         const tl = gsap.timeline();
-        tl.to(ws, { xPercent: 100, ...fadeOut() })
+        tl.to(ws, { xPercent: 100, width: 0, ...fadeOut() })
           .from(fab, { scale: 0.8, autoAlpha: 0, duration: 0.2, ease: "power2.out" }, "<0.1");
       } else {
         const tl = gsap.timeline();
         tl.to(fab, fadeOut(0.1))
-          .to(ws, { xPercent: 0, ...fadeIn(0.35) }, "<0.05");
+          .to(ws, { xPercent: 0, width: PANE_WIDTH.workspace, ...fadeIn(0.35) }, "<0.05");
       }
     },
     { dependencies: [workspaceCollapsed] },
@@ -134,7 +135,7 @@ export function WorkbenchApp({
       {viewMode !== "home" && (liveTask || activeProject) && (
         <div
           ref={workspaceRef}
-          className="flex shrink-0 flex-col"
+          className="flex shrink-0 flex-col overflow-hidden"
           style={{ width: PANE_WIDTH.workspace }}
         >
           {liveTask ? (

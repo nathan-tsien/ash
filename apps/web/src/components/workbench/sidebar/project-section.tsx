@@ -67,7 +67,7 @@ export function ProjectSection({
                   <p className="truncate text-body-sm font-medium">
                     {project.name}
                   </p>
-                  <p className="mt-0.5 text-label text-muted-foreground">
+                  <p className="mt-0.5 text-label font-normal text-muted-foreground">
                     {runningTasks > 0 && `${runningTasks} ${t("running")} · `}
                     {completedTasks} {t("completed")}
                   </p>

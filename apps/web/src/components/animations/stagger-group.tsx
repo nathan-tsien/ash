@@ -4,6 +4,7 @@ import { type ReactNode, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import "@/lib/animations/gsap-setup";
 
 gsap.registerPlugin(ScrollTrigger);
 

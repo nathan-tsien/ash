@@ -10,15 +10,16 @@ gsap.defaults({
   overwrite: "auto",
 });
 
-// Respect prefers-reduced-motion globally.
+// Respect prefers-reduced-motion globally (MOTION-4).
+// timeScale on the global timeline collapses ALL tweens — including those with
+// explicit per-call durations, which gsap.defaults() cannot override.
 // Guard against SSR — matchMedia requires a browser environment.
 if (typeof window !== "undefined") {
-  gsap.matchMedia().add(
-    { reduceMotion: "(prefers-reduced-motion: reduce)" },
-    (context) => {
-      if (context.conditions?.reduceMotion) {
-        gsap.defaults({ duration: 0 });
-      }
-    },
-  );
+  gsap.matchMedia().add("(prefers-reduced-motion: reduce)", () => {
+    gsap.globalTimeline.timeScale(1000);
+    // Revert when the preference stops matching.
+    return () => {
+      gsap.globalTimeline.timeScale(1);
+    };
+  });
 }

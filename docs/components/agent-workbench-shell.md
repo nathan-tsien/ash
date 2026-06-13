@@ -70,7 +70,7 @@ Semantic landmarks (`nav`, `main`, `aside` equivalents acceptable). Maintain vis
 
 ## GSAP animation layer
 
-Sidebar collapse/expand and Workspace collapse/expand use GSAP timelines instead of CSS transitions. Sidebar slides between the full width and rail width; Workspace slides via `xPercent`. Composer focus and send-button press also use GSAP micro-interactions. Message copy button uses GSAP scale bounce. Scroll-to-bottom button uses GSAP fade animation. Command palette entrance uses GSAP fromTo animation. All animations honor `prefers-reduced-motion` through `gsap.matchMedia()`. Shared animation utilities live in `apps/web/src/lib/animations/`.
+Sidebar collapse/expand and Workspace collapse/expand use GSAP timelines instead of CSS transitions. Sidebar slides between the full width and rail width; Workspace slides via `xPercent`. Composer focus and send-button press also use GSAP micro-interactions. Message copy button uses GSAP scale bounce. Scroll-to-bottom button uses GSAP fade animation. Command palette entrance uses GSAP fromTo animation. `prefers-reduced-motion` is honored via `gsap.globalTimeline.timeScale(1000)` set under `gsap.matchMedia()` in `gsap-setup.ts` — this collapses every tween (including ones with explicit per-call durations) to effectively instant; scrubbed ScrollTriggers are position-linked rather than time-based, so scroll-driven effects (Parallax) additionally skip creating their triggers under the same media query. Shared animation utilities live in `apps/web/src/lib/animations/`.
 
 ## See also
 

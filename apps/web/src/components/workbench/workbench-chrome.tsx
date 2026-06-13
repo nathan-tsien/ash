@@ -10,12 +10,12 @@ import { PanelRightOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import "@/lib/animations/gsap-setup";
 import { fadeOut, fadeIn } from "@/lib/animations/presets";
 import { PANE_WIDTH } from "@/lib/layout-constants";
 import { SettingsModalProvider } from "@/components/settings/settings-modal-provider";
-import { CommandPaletteProvider, useCommandPalette } from "@/components/command-palette/command-palette-provider";
+import { CommandPaletteProvider } from "@/components/command-palette/command-palette-provider";
 import { CommandPalette } from "@/components/command-palette/command-palette";
 import { WorkbenchChat } from "./chat/workbench-chat";
 import { WorkbenchSidebar } from "./sidebar/workbench-sidebar";
@@ -39,7 +39,6 @@ function WorkbenchChromeInner({
   const workspaceRef = useRef<HTMLDivElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations("Workbench");
-  const { togglePalette } = useCommandPalette();
 
   const onToggle = useCallback(() => setWorkspaceCollapsed((v) => !v), []);
   const onExpand = useCallback(() => setWorkspaceCollapsed(false), []);
@@ -49,17 +48,7 @@ function WorkbenchChromeInner({
     [workspaceCollapsed, onToggle],
   );
 
-  // Global Cmd+K shortcut
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        togglePalette();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [togglePalette]);
+  // Meta+K / Ctrl+K binding lives in CommandPaletteProvider (IA-4).
 
   useGSAP(
     () => {
@@ -68,13 +57,14 @@ function WorkbenchChromeInner({
       if (!ws || !fab) return;
 
       if (workspaceCollapsed) {
+        // Width collapses alongside the slide so chat reclaims the gutter (IA-2).
         const tl = gsap.timeline();
-        tl.to(ws, { xPercent: 100, ...fadeOut() })
+        tl.to(ws, { xPercent: 100, width: 0, ...fadeOut() })
           .from(fab, { scale: 0.8, autoAlpha: 0, duration: 0.2, ease: "power2.out" }, "<0.1");
       } else {
         const tl = gsap.timeline();
         tl.to(fab, fadeOut(0.1))
-          .to(ws, { xPercent: 0, ...fadeIn(0.35) }, "<0.05");
+          .to(ws, { xPercent: 0, width: PANE_WIDTH.workspace, ...fadeIn(0.35) }, "<0.05");
       }
     },
     { dependencies: [workspaceCollapsed] },
@@ -98,7 +88,7 @@ function WorkbenchChromeInner({
 
       <div
         ref={workspaceRef}
-        className="flex shrink-0 flex-col"
+        className="flex shrink-0 flex-col overflow-hidden"
         style={{ width: PANE_WIDTH.workspace }}
       >
         {workspacePanel}
