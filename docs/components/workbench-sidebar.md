@@ -19,10 +19,9 @@ Switching to `project` mode replaces the dual-section layout entirely with `Proj
 
 ```
 +------------------------------+
-|  Logo            [Cmd+K]     |
+|  Logo            [collapse]  |
 |  [New Task pill]             |
-|  [Command palette button]    |
-|  [Search input]              |
+|  [Search input        ⌘K]   |
 |------------------------------|
 |  -- TASKS ----------- [+] -- |
 |  task 1   (dot)  relative   |
@@ -116,6 +115,8 @@ When `viewMode === "project"` and an `activeProject` is resolved, the sidebar re
 ## Search
 
 Unified search box filters both Tasks and Projects by title/name (case-insensitive substring, `~200ms` debounce). Empty results display `emptySearch` i18n string. Placeholder: `searchPlaceholder` (zh-CN).
+
+The command palette trigger is folded into this one row as a trailing `⌘K` kbd-styled button (right-aligned inside the field, `aria-label` `commandPaletteAria`, tooltip `commandPaletteTooltip`): typing filters the inventory locally, clicking the kbd opens the global palette. This collapses the former three-control stack (new-task / standalone palette button / search) to two without losing discoverability (PRIN-2). The `Meta+K` / `Ctrl+K` shortcut is unchanged.
 
 Search filters are applied via `useMemo` on `sidebarQuery` state:
 

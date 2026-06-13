@@ -184,31 +184,32 @@ export function WorkbenchSidebar({
               {t("newTask")}
             </Link>
           </Button>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                className="w-full gap-2 text-muted-foreground"
-                aria-label={t("commandPaletteAria")}
-                onClick={openPalette}
-              >
-                <span className="text-xs">{t("cmdK")}</span>
-                <Search className="size-4" aria-hidden />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("commandPaletteTooltip")}</TooltipContent>
-          </Tooltip>
+          {/* One search row, two affordances: typing filters the inventory
+              locally; the trailing kbd opens the global command palette. Folding
+              the palette trigger in here drops a full-width control from the
+              stack without losing discoverability (PRIN-2). */}
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-9 rounded-xl pl-8 text-sm"
+              className="h-9 rounded-xl pl-8 pr-12 text-sm"
               placeholder={t("searchPlaceholder")}
               value={sidebarQuery}
               onChange={(e) => setSidebarQuery(e.target.value)}
               aria-label={t("searchAria")}
             />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md border border-border bg-muted px-1.5 py-0.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={t("commandPaletteAria")}
+                  onClick={openPalette}
+                >
+                  {t("cmdK")}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{t("commandPaletteTooltip")}</TooltipContent>
+            </Tooltip>
           </div>
         </div>
         <Separator />
