@@ -70,6 +70,21 @@ For a Task started in-session, the Chat renders the **live** message list from `
 
 This slice ships **no real transport** — a local fake drives the stream (see ADR-0011). The "remote streaming updates" stickiness rule above still applies to the simulated stream.
 
+### Pending question (ask_user)
+
+When the live task is `awaiting_input`, the chat renders an `AnswerPrompt` card showing the
+`pendingQuestion` payload (`askId`, `text`, `attachments`). The sidecar props `pendingQuestion`
+and `onAnswer(text: string)` are passed to `WorkbenchChat` directly from `workbench-app.tsx` —
+they are **not** carried by the adapted `Conversation` (which maps `awaiting_input` →
+`running`; see ADR-0015 on `mapTaskStatus` lossiness). Submitting the prompt calls
+`onAnswer(text)`, which routes to `provider.answer(taskId, text)` → `POST /v1/tasks/{id}/answers
+{ask_id, answer}` (202). The input clears and disables optimistically while the answer is in
+flight; normal composition restores on the `turn_resumed` event delivered on the same open stream.
+Accessibility: focus moves to the prompt on appearance; an `aria-live` region announces the
+question text. Visual tokens follow `docs/design-guidelines.md` (no rogue palette literals; ADR-0013/0014).
+
+See ADR-0015 for the full decision record on interactive execution.
+
 ## Animations (GSAP)
 
 Message entrance, thinking-state pulse, and composer micro-interactions are powered by GSAP (not CSS transitions). All animations respect `prefers-reduced-motion` via `gsap.matchMedia()` — when the user has reduced motion enabled, elements appear in their final state without animation. Animation foundation lives in `apps/web/src/lib/animations/`.
