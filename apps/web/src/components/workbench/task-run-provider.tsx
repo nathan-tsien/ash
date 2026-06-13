@@ -32,6 +32,8 @@ interface TaskRunContextValue {
   answer(taskId: string, text: string): Promise<void>;
   /** Re-attach a task's stream: catch up via /history, then re-subscribe. */
   attach(taskId: string): Promise<void>;
+  /** Seed a task fetched on the server (deep-link cold load) into session state. */
+  seedTask(task: Task): void;
 }
 
 const TaskRunContext = createContext<TaskRunContextValue | null>(null);
@@ -239,6 +241,13 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     [historyLabels, upsert, runStream],
   );
 
+  // Seed a server-fetched task into session state for deep-link cold loads.
+  // Upserts without clobbering an already-present live run (first write wins).
+  const seedTask = useCallback((task: Task) => {
+    setRuns((prev) => (prev[task.id] ? prev : { ...prev, [task.id]: task }));
+    setOrder((prev) => (prev.includes(task.id) ? prev : [task.id, ...prev]));
+  }, []);
+
   const value = useMemo<TaskRunContextValue>(
     () => ({
       runs: order.map((id) => runs[id]).filter(Boolean) as Task[],
@@ -246,8 +255,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       startTask,
       answer,
       attach,
+      seedTask,
     }),
-    [order, runs, startTask, answer, attach],
+    [order, runs, startTask, answer, attach, seedTask],
   );
 
   return <TaskRunContext.Provider value={value}>{children}</TaskRunContext.Provider>;
@@ -293,4 +303,14 @@ export function useReattachOnView(taskId: string | undefined): void {
   useEffect(() => {
     if (taskId) void attach(taskId);
   }, [taskId, attach]);
+}
+
+/**
+ * Returns the `seedTask` function for seeding a server-fetched task into the
+ * provider on deep-link cold loads. Must be used within a TaskRunProvider.
+ */
+export function useSeedTask(): (task: Task) => void {
+  const ctx = useContext(TaskRunContext);
+  if (!ctx) throw new Error("useSeedTask must be used within TaskRunProvider");
+  return ctx.seedTask;
 }
