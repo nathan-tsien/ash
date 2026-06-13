@@ -33,7 +33,10 @@ export async function forwardToPraxis(request: Request, segments: string[]): Pro
   }
 
   const isSse = segments[segments.length - 1] === "events";
-  const url = `${PRAXIS_BASE_URL}/v1/${segments.join("/")}`;
+  // Preserve the query string (e.g. /history's ?cursor=...): the catch-all route
+  // captures path segments only, so the search must be carried over explicitly.
+  const search = new URL(request.url).search;
+  const url = `${PRAXIS_BASE_URL}/v1/${segments.join("/")}${search}`;
   const headers: Record<string, string> = { authorization: `Bearer ${token}` };
   const init: RequestInit = { method: request.method, headers, signal: request.signal };
 
