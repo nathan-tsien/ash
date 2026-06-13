@@ -7,6 +7,7 @@
         "draft",
         "running",
         "paused",
+        "awaiting_input",
         "completed",
         "failed",
         "cancelled"
@@ -49,7 +50,11 @@
       "type": "object",
       "description": "Body for starting a task's first turn.",
       "properties": {
-        "user_input": { "type": "string" }
+        "user_input": { "type": "string" },
+        "skill_hint": {
+          "type": "string",
+          "description": "Optional name of a registered skill to prefer for this task. A hint, not a lock: the model may still select a different skill. Unregistered hints are ignored."
+        }
       },
       "required": ["user_input"],
       "additionalProperties": false
@@ -61,6 +66,16 @@
         "text": { "type": "string" }
       },
       "required": ["text"],
+      "additionalProperties": false
+    },
+    "AnswerRequest": {
+      "type": "object",
+      "description": "Body for answering a pending message_ask_user question.",
+      "properties": {
+        "ask_id": { "type": "string" },
+        "answer": { "type": "string" }
+      },
+      "required": ["ask_id", "answer"],
       "additionalProperties": false
     },
     "CreateProjectRequest": {
@@ -125,17 +140,35 @@
       ],
       "additionalProperties": false
     },
+    "TaskList": {
+      "type": "object",
+      "description": "A page of tasks. `next_cursor` is an opaque cursor for the next page; null/absent means no more pages.",
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/TaskSummary" } },
+        "next_cursor": { "type": ["string", "null"] }
+      },
+      "required": ["items"],
+      "additionalProperties": false
+    },
+    "ProjectList": {
+      "type": "object",
+      "description": "A page of projects. `next_cursor` is an opaque cursor for the next page; null/absent means no more pages.",
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/ProjectSummary" } },
+        "next_cursor": { "type": ["string", "null"] }
+      },
+      "required": ["items"],
+      "additionalProperties": false
+    },
     "ErrorBody": {
       "type": "object",
-      "description": "Uniform error response body.",
+      "description": "Uniform error response body. `code` is a stable, machine-dispatchable string (open set; consumers must tolerate unknown codes). `message` is human-readable and not stable.",
       "properties": {
-        "error": {
-          "type": "string"
-        }
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "object", "additionalProperties": true }
       },
-      "required": [
-        "error"
-      ],
+      "required": ["code", "message"],
       "additionalProperties": false
     }
   }
