@@ -86,6 +86,16 @@ export function TaskSection({
           </li>
         )}
       </ul>
+      {displayTasks.length > 0 && (
+        <div className="px-3 pb-1 pt-0.5">
+          <Link
+            href={`/${locale}/app/tasks`}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {t("viewAllTasks")}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
