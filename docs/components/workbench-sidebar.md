@@ -75,7 +75,10 @@ Status dot is paired with the relative time string in a flex row (`gap-2`).
 
 ## List limits
 
-Each section displays at most **10 items** (`.slice(0, 10)`). For the full list, users rely on the search box or Command Palette (`Cmd+K`).
+Each section displays at most **10 items** (`.slice(0, 10)`) — the most recent slice of the
+server-backed list. The Tasks section also renders a **"view all" link** (`viewAllTasks` i18n key)
+to `/app/tasks`, the full paginated task list (cursor-based "load more"; empty/error/loading states).
+For ad-hoc lookup users can still use the search box or Command Palette (`Cmd+K`).
 
 ## Section headers
 
@@ -175,4 +178,7 @@ interface WorkbenchSidebarProps {
 }
 ```
 
-In Phase 1, data comes from `@ash/shared` mocks via server-side fetchers. Future API ingestion swaps adapter internals only.
+Tasks are now sourced from praxis: `server/tasks.ts` `listTasks(locale)` calls `GET /v1/tasks`
+(server-to-server, direct) and projects each `TaskSummary` to a card `Task` via `summaryToTask`
+(see ADR-0016). Projects still come from `@ash/shared` mocks pending Phase 2. Future ingestion swaps
+adapter internals only — the `WorkbenchSidebarProps` shape is unchanged.

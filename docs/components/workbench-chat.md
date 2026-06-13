@@ -91,10 +91,30 @@ follow `docs/design-guidelines.md` (no rogue palette literals; ADR-0013/0014).
 `useReattachOnView(taskId)`. Streams persist across in-session navigation, so this is guarded
 (`provider.attach`): it no-ops for unknown/terminal tasks and ones already streaming, acting only
 when a non-terminal stream has actually ended — catching up via `GET /v1/tasks/{id}/history` then
-re-subscribing (recovering the live `ask_id`). Full reload / deep-link reconnect remains deferred
-(ADR-0015).
+re-subscribing (recovering the live `ask_id`).
 
-See ADR-0015 for the full decision record on interactive execution.
+**Deep-link cold load (ADR-0016).** Full reload / direct navigation to `/app/task/[id]` now hydrates
+(previously deferred). The server component fetches the task (`getActiveTask` → `GET /v1/tasks/{id}`)
+and a `TaskSeeder` seeds it into `TaskRunProvider` via `seedTask` on mount; `useReattachOnView` then
+runs history catch-up + re-subscribe. The seed↔reattach ordering on a cold mount is made
+deterministic by mirroring `runsRef` with `useLayoutEffect` (runs before child effects) and gating
+reattach on run presence, so `attach` always sees the seeded task.
+
+**Cancel.** When the active task is cancellable (`running`, or `awaiting_input` via the
+`pendingQuestion` prop), the chat header shows a **cancel button** (`cancelTask` i18n key). It calls
+`provider.cancelTask(id)` → `POST /v1/tasks/{id}/cancel`, aborts the live stream controller, and
+flips the task to a terminal state.
+
+**Multi-turn follow-up (ADR-0016).** On an existing task (including a completed one) the composer
+sends a free follow-up instead of an answer: `workbench-app.tsx` passes `onFollowUp` to the chat for
+task views, which routes to `provider.sendFollowUp(id, text)` → optimistic user message appended to
+the provider task + `POST /v1/tasks/{id}/messages`, then the same `runStream` mechanism re-subscribes
+for the assistant turn. The provider task is the single source of truth for the follow-up message
+(no local `extraMessages` append for task views, avoiding duplication). The `awaiting_input` answer
+path is unchanged and takes precedence when a `pendingQuestion` is present.
+
+See ADR-0015 (interactive execution) and ADR-0016 (contract-first codegen + transport) for the full
+decision records.
 
 ## Animations (GSAP)
 
