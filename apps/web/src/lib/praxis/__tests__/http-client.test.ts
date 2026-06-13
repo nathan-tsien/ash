@@ -176,4 +176,19 @@ describe("httpPraxisClient", () => {
 
     await expect(httpPraxisClient.history("t1")).rejects.toThrow(/task_not_found/);
   });
+
+  it("throws a PraxisError carrying status + code", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      new Response('{"code":"not_pending","message":"x"}', {
+        status: 409,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    await expect(httpPraxisClient.answer("t1", "q1", "y")).rejects.toMatchObject({
+      name: "PraxisError",
+      status: 409,
+      code: "not_pending",
+    });
+  });
 });

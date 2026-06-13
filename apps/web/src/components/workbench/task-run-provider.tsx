@@ -13,6 +13,7 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 import { getPraxisClient } from "@/lib/praxis/client";
+import { PraxisError } from "@/lib/praxis/errors";
 import {
   initialTaskRunState,
   runtimeEventReducer,
@@ -168,8 +169,14 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       upsert({ ...rest, status: "running" });
       try {
         await clientRef.current.answer(taskId, askId, text);
-      } catch {
-        upsert(current); // restore the question so the user can retry
+      } catch (err) {
+        const status = err instanceof PraxisError ? err.status : 0;
+        if (status === 409) return; // already resolved server-side: keep cleared, trust the stream
+        if (status === 404) {
+          upsert({ ...rest, status: "failed" }); // unanswerable: surface as failure
+          return;
+        }
+        upsert(current); // transient/unknown error: restore the question so the user can retry
       }
     },
     [runs, upsert],

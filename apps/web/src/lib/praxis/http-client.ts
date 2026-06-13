@@ -1,5 +1,6 @@
 import type { PraxisTaskClient } from "./client";
 import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskSummary } from "./runtime-events";
+import { PraxisError } from "./errors";
 import { SseParser } from "./sse";
 
 /**
@@ -12,7 +13,7 @@ import { SseParser } from "./sse";
  */
 const BASE = "/api/praxis/tasks";
 
-async function readError(res: Response, method: string, url: string): Promise<Error> {
+async function readError(res: Response, method: string, url: string): Promise<PraxisError> {
   let code = "";
   try {
     const body = (await res.json()) as { code?: string };
@@ -21,7 +22,7 @@ async function readError(res: Response, method: string, url: string): Promise<Er
     // non-JSON error body; fall through to status-only message
   }
   const suffix = code ? ` (${code})` : "";
-  return new Error(`praxis ${method} ${url} -> ${res.status}${suffix}`);
+  return new PraxisError(`praxis ${method} ${url} -> ${res.status}${suffix}`, res.status, code);
 }
 
 async function postJson<T>(url: string, body?: unknown): Promise<T | undefined> {

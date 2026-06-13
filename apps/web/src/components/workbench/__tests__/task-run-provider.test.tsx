@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useState } from "react";
 import type { PraxisTaskClient } from "@/lib/praxis/client";
-import type { RuntimeEvent } from "@/lib/praxis/runtime-events";
+import type { RuntimeEvent, TaskHistoryPage } from "@/lib/praxis/runtime-events";
 
 // The provider captures getPraxisClient() once via useRef; swap in a per-test client.
 let mockClient: PraxisTaskClient;
@@ -127,5 +127,51 @@ describe("TaskRunProvider", () => {
     });
     renderHarness();
     await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("awaiting_input"));
+  });
+
+  it("attach pages history, rebuilds messages, and recovers the live ask_id", async () => {
+    let streamCall = 0;
+    const historyPages: TaskHistoryPage[] = [
+      {
+        items: [
+          { seq: 2, ts: "2026-06-13T00:00:02.000Z", event: { type: "ask_user", text: "Which audience?", attachments: [] } },
+        ],
+        next_cursor: "p2",
+      },
+      {
+        items: [
+          { seq: 1, ts: "2026-06-13T00:00:01.000Z", event: { type: "assistant_message", text: "earlier reply" } },
+          { seq: 0, ts: "2026-06-13T00:00:00.000Z", event: { type: "user_message", content: "hi" } },
+        ],
+        next_cursor: null,
+      },
+    ];
+    let historyCalls = 0;
+    mockClient = baseClient({
+      async *streamEvents(): AsyncIterable<RuntimeEvent> {
+        streamCall += 1;
+        if (streamCall === 1) {
+          // Initial run parks awaiting input (read-only — no ask_id recovered yet on this path).
+          yield { type: "turn_started" };
+          yield { type: "ask_user", ask_id: "live-initial", text: "Which audience?", attachments: [] };
+          return; // generator ends; provider leaves awaiting_input open
+        }
+        // Re-attach subscription: server re-emits the pending question with its live id.
+        yield { type: "ask_user", ask_id: "recovered-id", text: "Which audience?", attachments: [] };
+      },
+      async history(_id: string, cursor?: string) {
+        historyCalls += 1;
+        return cursor === "p2" ? historyPages[1] : historyPages[0];
+      },
+    });
+
+    renderHarness();
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("awaiting_input"));
+
+    fireEvent.click(screen.getByText("attach"));
+
+    // Both history pages fetched, messages rebuilt from history, live ask_id recovered.
+    await waitFor(() => expect(screen.getByTestId("pq")).toHaveTextContent("Which audience?"));
+    await waitFor(() => expect(historyCalls).toBe(2));
   });
 });
