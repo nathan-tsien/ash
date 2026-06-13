@@ -124,6 +124,21 @@ vi.mock("lucide-react", () => ({
   SquarePlus: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="square-plus" {...props} />
   ),
+  Loader2: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="loader2" {...props} />
+  ),
+  MessageSquare: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="message-square" {...props} />
+  ),
+  PanelRightClose: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="panel-right-close" {...props} />
+  ),
+  PanelRightOpen: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="panel-right-open" {...props} />
+  ),
+  Sparkles: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="sparkles" {...props} />
+  ),
 }));
 
 // Mock highlight.js CSS import

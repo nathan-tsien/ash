@@ -52,7 +52,10 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const [runs, setRuns] = useState<Record<string, Task>>({});
   const [order, setOrder] = useState<string[]>([]);
   const clientRef = useRef(getPraxisClient());
-  const controllersRef = useRef<Set<AbortController>>(new Set());
+  // Live stream AbortControllers keyed by taskId. At most one stream per task is
+  // ever active (guarded by activeStreamsRef), so a taskId-keyed map lets cancel
+  // abort exactly one task's stream instead of every open stream.
+  const controllersRef = useRef<Map<string, AbortController>>(new Map());
   // Task ids with a currently-live stream. Set when a stream starts (startTask /
   // attach), cleared when its loop ends (runStream's finally). Lets `attach`
   // avoid double-subscribing a task whose stream is still open.
@@ -90,7 +93,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const controllers = controllersRef.current;
     return () => {
-      for (const controller of controllers) controller.abort();
+      for (const controller of controllers.values()) controller.abort();
       controllers.clear();
     };
   }, []);
@@ -137,7 +140,11 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
           upsert({ ...state.task, status: "failed" });
         }
       } finally {
-        controllersRef.current.delete(controller);
+        // Only clear the controller if it is still the one registered for this
+        // task — a cancel may have already replaced/removed it.
+        if (controllersRef.current.get(taskId) === controller) {
+          controllersRef.current.delete(taskId);
+        }
         activeStreamsRef.current.delete(taskId);
       }
     },
@@ -170,7 +177,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       setOrder((prev) => [summary.id, ...prev.filter((x) => x !== summary.id)]);
 
       const controller = new AbortController();
-      controllersRef.current.add(controller);
+      controllersRef.current.set(summary.id, controller);
       // Mark active synchronously, before navigation can mount the task view and
       // trigger a re-attach — the guard there must see the live stream.
       activeStreamsRef.current.add(summary.id);
@@ -181,7 +188,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
           await runStream(summary.id, { ...seeded, status: "running" }, controller);
         } catch {
           // startTask failed before runStream took over cleanup.
-          controllersRef.current.delete(controller);
+          if (controllersRef.current.get(summary.id) === controller) {
+            controllersRef.current.delete(summary.id);
+          }
           activeStreamsRef.current.delete(summary.id);
           if (!controller.signal.aborted) upsert({ ...seeded, status: "failed" });
         }
@@ -229,7 +238,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       if (activeStreamsRef.current.has(taskId)) return; // a stream is already running
       activeStreamsRef.current.add(taskId);
       const controller = new AbortController();
-      controllersRef.current.add(controller);
+      controllersRef.current.set(taskId, controller);
       try {
         const items: Awaited<ReturnType<typeof client.history>>["items"] = [];
         let cursor: string | undefined;
@@ -243,7 +252,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         await runStream(taskId, rebuilt, controller); // its finally clears active + controller
       } catch {
         // History fetch failed before runStream took over cleanup.
-        controllersRef.current.delete(controller);
+        if (controllersRef.current.get(taskId) === controller) {
+          controllersRef.current.delete(taskId);
+        }
         activeStreamsRef.current.delete(taskId);
         upsert({ ...existing, status: "failed" });
       }
@@ -263,14 +274,13 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   // termination immediately — the stream's finally block will no-op on abort.
   const cancelTask = useCallback(async (taskId: string) => {
     await clientRef.current.cancel(taskId);
-    // Abort the live stream for this task, if one is running.
-    // controllersRef holds all active AbortControllers; we abort all of them
-    // that correspond to this task by aborting each and letting runStream's
-    // finally handler clean them from the set.
-    for (const controller of controllersRef.current) {
+    // Abort only THIS task's live stream (if any). Other tasks' streams keep
+    // running. runStream's finally no-ops on an already-removed entry.
+    const controller = controllersRef.current.get(taskId);
+    if (controller) {
       controller.abort();
+      controllersRef.current.delete(taskId);
     }
-    controllersRef.current.clear();
     activeStreamsRef.current.delete(taskId);
     setRuns((prev) =>
       prev[taskId] ? { ...prev, [taskId]: { ...prev[taskId], status: "failed" } } : prev,
@@ -298,14 +308,16 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       // so controllers and activeStreams are properly tracked and cleaned up.
       if (activeStreamsRef.current.has(taskId)) return; // already streaming, bail
       const controller = new AbortController();
-      controllersRef.current.add(controller);
+      controllersRef.current.set(taskId, controller);
       activeStreamsRef.current.add(taskId);
       void (async () => {
         try {
           await runStream(taskId, next, controller);
         } catch {
           // runStream itself handles cleanup in finally; this catch is a safety net.
-          controllersRef.current.delete(controller);
+          if (controllersRef.current.get(taskId) === controller) {
+            controllersRef.current.delete(taskId);
+          }
           activeStreamsRef.current.delete(taskId);
         }
       })();

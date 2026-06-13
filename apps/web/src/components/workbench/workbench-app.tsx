@@ -6,7 +6,7 @@ import { WorkbenchChat } from "./chat/workbench-chat";
 import { TaskWorkspace } from "./workspace/task-workspace";
 import { ProjectWorkspace } from "./workspace/project-workspace";
 import { WorkbenchHome } from "./workbench-home";
-import { useAnswerTask, useReattachOnView, useSendFollowUp, useTaskRun, useTaskRuns } from "./task-run-provider";
+import { useAnswerTask, useCancelTask, useReattachOnView, useSendFollowUp, useTaskRun, useTaskRuns } from "./task-run-provider";
 import { CommandPalette } from "@/components/command-palette/command-palette";
 import { useCallback, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
@@ -46,6 +46,7 @@ export function WorkbenchApp({
   const sessionRuns = useTaskRuns();
   const answerTask = useAnswerTask();
   const sendFollowUp = useSendFollowUp();
+  const cancelTask = useCancelTask();
   const resolvedTaskId = activeTask?.id ?? taskId;
   const liveTask = useTaskRun(resolvedTaskId) ?? activeTask;
   // Navigate-back trigger: re-attach the viewed task's stream (guarded — no-ops
@@ -117,6 +118,7 @@ export function WorkbenchApp({
           pendingQuestion={liveTask.pendingQuestion}
           onAnswer={(text) => void answerTask(liveTask.id, text)}
           onFollowUp={(text) => sendFollowUp(liveTask.id, text)}
+          onCancel={() => void cancelTask(liveTask.id)}
         />
       ) : activeProject ? (
         <WorkbenchChat
