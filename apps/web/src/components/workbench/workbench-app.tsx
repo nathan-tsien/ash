@@ -6,7 +6,7 @@ import { WorkbenchChat } from "./chat/workbench-chat";
 import { TaskWorkspace } from "./workspace/task-workspace";
 import { ProjectWorkspace } from "./workspace/project-workspace";
 import { WorkbenchHome } from "./workbench-home";
-import { useTaskRun, useTaskRuns } from "./task-run-provider";
+import { useAnswerTask, useTaskRun, useTaskRuns } from "./task-run-provider";
 import { CommandPalette } from "@/components/command-palette/command-palette";
 import { useCallback, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
@@ -44,6 +44,7 @@ export function WorkbenchApp({
 
   // Live runs created this session override / extend server-hydrated tasks.
   const sessionRuns = useTaskRuns();
+  const answerTask = useAnswerTask();
   const resolvedTaskId = activeTask?.id ?? taskId;
   const liveTask = useTaskRun(resolvedTaskId) ?? activeTask;
   const mergedTasks = [
@@ -109,6 +110,8 @@ export function WorkbenchApp({
             artifacts: liveTask.artifacts,
           }}
           workspace={{ collapsed: workspaceCollapsed, onToggle }}
+          pendingQuestion={liveTask.pendingQuestion}
+          onAnswer={(text) => void answerTask(liveTask.id, text)}
         />
       ) : activeProject ? (
         <WorkbenchChat

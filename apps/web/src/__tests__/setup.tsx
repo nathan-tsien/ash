@@ -2,9 +2,27 @@
 import "@testing-library/jest-dom/vitest";
 
 // Mock next-intl
+// useTranslations returns "Namespace.key" by default (no provider), but when
+// NextIntlClientProvider supplies messages the context overrides the stub so
+// that tests using the real provider get real translated strings.
+let _intlMessages: Record<string, Record<string, string>> = {};
+
 vi.mock("next-intl", () => ({
-  useTranslations: (namespace: string) => (key: string) =>
-    `${namespace}.${key}`,
+  NextIntlClientProvider: ({
+    messages,
+    children,
+  }: {
+    locale?: string;
+    messages?: Record<string, Record<string, string>>;
+    children: React.ReactNode;
+  }) => {
+    if (messages) _intlMessages = messages;
+    return <>{children}</>;
+  },
+  useTranslations: (namespace: string) => (key: string) => {
+    const ns = _intlMessages[namespace];
+    return ns?.[key] ?? `${namespace}.${key}`;
+  },
 }));
 
 // Mock next-intl/navigation
