@@ -11,6 +11,8 @@ const labels: ReducerLabels = {
   deckFallbackTitle: "Presentation",
   deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
+  notifyMessage: (text) => text,
+  truncationNotice: "Response was truncated.",
 };
 
 /**

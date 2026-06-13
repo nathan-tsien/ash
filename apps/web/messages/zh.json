@@ -376,7 +376,8 @@
     "sidebarItemsAria": "任务与项目列表",
     "runtimeDeckFallbackTitle": "演示文稿",
     "runtimeDeckPreview": "由智能体生成的演示文稿（占位）。",
-    "runtimeFailureNotice": "任务执行失败：{reason}"
+    "runtimeFailureNotice": "任务执行失败：{reason}",
+    "runtimeTruncationNotice": "回复因达到长度上限被截断。"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
