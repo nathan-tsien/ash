@@ -48,7 +48,7 @@ function foldHistoryEvent(
 ): Task {
   switch (event.type) {
     case "user_message":
-      return pushMessage(task, makeMessage("user", String(event.content ?? ""), ts, task));
+      return pushMessage(task, makeMessage("user", extractText(event.content), ts, task));
 
     case "assistant_message":
       return pushMessage(task, makeMessage("assistant", event.text, ts, task));
@@ -101,11 +101,15 @@ function foldHistoryEvent(
       };
 
     case "turn_completed":
+      // A task has at most ONE synthesized deck. A multi-turn history carries
+      // several turn_completed events; appending a fixed-id artifact each time
+      // produces duplicate React keys. Upsert so the deck stays single and its
+      // timestamp tracks the latest turn.
       return {
         ...task,
         status: "completed",
         completedAt: ts,
-        artifacts: [...task.artifacts, synthesizeArtifact(task, ts, labels)],
+        artifacts: upsertArtifact(task.artifacts, synthesizeArtifact(task, ts, labels)),
       };
 
     case "turn_failed":
@@ -115,6 +119,33 @@ function foldHistoryEvent(
       // Tolerate unknown variants — the union only grows.
       return task;
   }
+}
+
+/**
+ * Flatten a praxis `user_message.content` into plain text. praxis sends content
+ * as a list of typed blocks (`[{ type: "text", data: { text } }]`), not a bare
+ * string. Tolerates a legacy bare-string payload and unknown block shapes.
+ */
+function extractText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((block) => {
+        const data = (block as { data?: { text?: unknown } })?.data;
+        return typeof data?.text === "string" ? data.text : "";
+      })
+      .join("");
+  }
+  return "";
+}
+
+/** Replace an artifact with the same id, else append. Keeps deck ids unique. */
+function upsertArtifact(artifacts: Artifact[], next: Artifact): Artifact[] {
+  const i = artifacts.findIndex((a) => a.id === next.id);
+  if (i === -1) return [...artifacts, next];
+  const copy = [...artifacts];
+  copy[i] = next;
+  return copy;
 }
 
 function makeMessage(role: Message["role"], content: string, ts: string, task: Task): Message {

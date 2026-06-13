@@ -74,14 +74,20 @@ export const httpPraxisClient: PraxisTaskClient = {
 
   async sendMessage(id: string, text: string): Promise<void> {
     unwrap(
-      await api.POST("/v1/tasks/{id}/messages", { params: { path: { id } }, body: { text } }),
+      // These accept-and-return-nothing endpoints answer 202 with an EMPTY body.
+      // openapi-fetch only short-circuits parsing for 204 / HEAD / Content-Length:0,
+      // so a bodiless 202 would otherwise hit response.json() and throw
+      // "Unexpected end of JSON input". parseAs:"text" reads the (empty) body
+      // instead of JSON-parsing it; the error path is unaffected (openapi-fetch
+      // always decodes errors via text + safe JSON.parse, independent of parseAs).
+      await api.POST("/v1/tasks/{id}/messages", { params: { path: { id } }, body: { text }, parseAs: "text" }),
       "sendMessage",
     );
   },
 
   async answer(id: string, askId: string, answer: string): Promise<void> {
     unwrap(
-      await api.POST("/v1/tasks/{id}/answers", { params: { path: { id } }, body: { ask_id: askId, answer } }),
+      await api.POST("/v1/tasks/{id}/answers", { params: { path: { id } }, body: { ask_id: askId, answer }, parseAs: "text" }),
       "answer",
     );
   },
@@ -95,14 +101,14 @@ export const httpPraxisClient: PraxisTaskClient = {
 
   async complete(id: string): Promise<void> {
     unwrap(
-      await api.POST("/v1/tasks/{id}/complete", { params: { path: { id } } }),
+      await api.POST("/v1/tasks/{id}/complete", { params: { path: { id } }, parseAs: "text" }),
       "complete",
     );
   },
 
   async cancel(id: string): Promise<void> {
     unwrap(
-      await api.POST("/v1/tasks/{id}/cancel", { params: { path: { id } } }),
+      await api.POST("/v1/tasks/{id}/cancel", { params: { path: { id } }, parseAs: "text" }),
       "cancel",
     );
   },

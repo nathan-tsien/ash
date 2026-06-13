@@ -171,6 +171,27 @@ describe("httpPraxisClient", () => {
     expect(body).toEqual({ ask_id: "q1", answer: "marketers" });
   });
 
+  it("sendMessage tolerates a bodiless 202 with no Content-Length (real praxis shape)", async () => {
+    const fetchFn = stubFetch();
+    // praxis answers /messages with 202 Accepted and an empty body, and the BFF
+    // forwards it WITHOUT a Content-Length: 0 header. openapi-fetch must not try
+    // to JSON-parse the empty body (regression: "Unexpected end of JSON input").
+    fetchFn.mockResolvedValue(new Response(null, { status: 202 }));
+
+    await expect(httpPraxisClient.sendMessage("t1", "hi")).resolves.toBeUndefined();
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/messages");
+    const body = await extractBody(fetchFn);
+    expect(body).toEqual({ text: "hi" });
+  });
+
+  it("answer tolerates a bodiless 202 with no Content-Length", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(new Response(null, { status: 202 }));
+
+    await expect(httpPraxisClient.answer("t1", "q1", "marketers")).resolves.toBeUndefined();
+  });
+
   it("history GETs the history endpoint and returns the page", async () => {
     const fetchFn = stubFetch();
     fetchFn.mockResolvedValue(

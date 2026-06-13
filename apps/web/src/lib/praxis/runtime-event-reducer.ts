@@ -146,7 +146,10 @@ export function runtimeEventReducer(
         task: {
           ...task,
           messages,
-          artifacts: [...task.artifacts, artifact],
+          // Upsert the single synthesized deck: a multi-turn task (follow-ups)
+          // sees several turn_completed events; appending the fixed-id artifact
+          // each time produces duplicate React keys. See history-projection.ts.
+          artifacts: upsertArtifact(task.artifacts, artifact),
           status: "completed",
           completedAt: iso(nowMs),
           updatedAt: iso(nowMs),
@@ -234,6 +237,15 @@ export function runtimeEventReducer(
     default:
       return state;
   }
+}
+
+/** Replace an artifact with the same id, else append. Keeps deck ids unique. */
+function upsertArtifact(artifacts: Artifact[], next: Artifact): Artifact[] {
+  const i = artifacts.findIndex((a) => a.id === next.id);
+  if (i === -1) return [...artifacts, next];
+  const copy = [...artifacts];
+  copy[i] = next;
+  return copy;
 }
 
 function patch(state: TaskRunState, fields: Partial<Task>): TaskRunState {
