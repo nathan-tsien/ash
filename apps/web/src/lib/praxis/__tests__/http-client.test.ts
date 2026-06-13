@@ -18,12 +18,34 @@ function sseResponse(...frames: string[]): Response {
   return new Response(body, { status: 200 });
 }
 
+/**
+ * openapi-fetch passes a Request object to the fetch function. Helper to
+ * extract the pathname from a Request or plain string so assertions are
+ * transport-agnostic.
+ */
+function extractUrl(arg: Request | string): URL {
+  const urlStr = typeof arg === "string" ? arg : (arg as Request).url;
+  return new URL(urlStr, "http://x");
+}
+
+/**
+ * Reads the body of the first fetch call, supporting both the old
+ * (string + init) and new (Request) calling conventions.
+ */
+async function extractBody(spy: ReturnType<typeof vi.fn>): Promise<unknown> {
+  const arg = spy.mock.calls[0][0] as Request | string;
+  if (typeof arg === "string") {
+    return JSON.parse(spy.mock.calls[0][1].body as string);
+  }
+  return JSON.parse(await (arg as Request).text());
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("httpPraxisClient", () => {
-  it("createTask POSTs to /api/praxis/tasks and returns the summary", async () => {
+  it("createTask POSTs to /api/praxis/v1/tasks and returns the summary", async () => {
     const fetchFn = stubFetch();
     fetchFn.mockResolvedValue(
       new Response('{"id":"t1","status":"draft"}', {
@@ -35,10 +57,10 @@ describe("httpPraxisClient", () => {
     const summary = await httpPraxisClient.createTask({ user_input: "hi", title: "hi" });
 
     expect(summary).toEqual({ id: "t1", status: "draft" });
-    const [url, init] = fetchFn.mock.calls[0];
-    expect(url).toBe("/api/praxis/tasks");
-    expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body)).toEqual({ user_input: "hi", title: "hi" });
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks");
+    const body = await extractBody(fetchFn);
+    expect(body).toEqual({ user_input: "hi", title: "hi" });
   });
 
   it("startTask POSTs user_input to the start endpoint", async () => {
@@ -53,9 +75,10 @@ describe("httpPraxisClient", () => {
     const summary = await httpPraxisClient.startTask("t1", "do it");
 
     expect(summary.status).toBe("running");
-    const [url, init] = fetchFn.mock.calls[0];
-    expect(url).toBe("/api/praxis/tasks/t1/start");
-    expect(JSON.parse(init.body)).toEqual({ user_input: "do it" });
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/start");
+    const body = await extractBody(fetchFn);
+    expect(body).toEqual({ user_input: "do it" });
   });
 
   it("complete POSTs and tolerates a 204 with no body", async () => {
@@ -63,7 +86,8 @@ describe("httpPraxisClient", () => {
     fetchFn.mockResolvedValue(new Response(null, { status: 204 }));
 
     await expect(httpPraxisClient.complete("t1")).resolves.toBeUndefined();
-    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/complete");
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/complete");
   });
 
   it("streamEvents parses the SSE body into RuntimeEvents", async () => {
@@ -84,7 +108,8 @@ describe("httpPraxisClient", () => {
       { type: "text_delta", chunk: "hi" },
       { type: "turn_completed" },
     ]);
-    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/events");
+    // SSE still uses the hand-written fetch path: plain string URL.
+    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/v1/tasks/t1/events");
   });
 
   it("yields a final frame that arrives without a trailing blank line", async () => {
@@ -133,13 +158,17 @@ describe("httpPraxisClient", () => {
 
   it("answer POSTs ask_id + answer to the answers endpoint and tolerates 202", async () => {
     const fetchFn = stubFetch();
-    fetchFn.mockResolvedValue(new Response(null, { status: 202 }));
+    // 202 Accepted: openapi-fetch parses the body; supply Content-Length: 0 to
+    // short-circuit body parsing (the void return means the body is irrelevant).
+    fetchFn.mockResolvedValue(new Response(null, { status: 202, headers: { "Content-Length": "0" } }));
 
     await expect(httpPraxisClient.answer("t1", "q1", "marketers")).resolves.toBeUndefined();
-    const [url, init] = fetchFn.mock.calls[0];
-    expect(url).toBe("/api/praxis/tasks/t1/answers");
-    expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body)).toEqual({ ask_id: "q1", answer: "marketers" });
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/answers");
+    const arg = fetchFn.mock.calls[0][0] as Request | string;
+    expect(typeof arg === "string" ? "POST" : (arg as Request).method).toBe("POST");
+    const body = await extractBody(fetchFn);
+    expect(body).toEqual({ ask_id: "q1", answer: "marketers" });
   });
 
   it("history GETs the history endpoint and returns the page", async () => {
@@ -154,7 +183,8 @@ describe("httpPraxisClient", () => {
     const page = await httpPraxisClient.history("t1");
     expect(page.items).toHaveLength(1);
     expect(page.next_cursor).toBeNull();
-    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/history");
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/history");
   });
 
   it("history forwards cursor as a query param", async () => {
@@ -162,7 +192,9 @@ describe("httpPraxisClient", () => {
     fetchFn.mockResolvedValue(new Response('{"items":[]}', { status: 200, headers: { "content-type": "application/json" } }));
 
     await httpPraxisClient.history("t1", "abc");
-    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/history?cursor=abc");
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/history");
+    expect(url.searchParams.get("cursor")).toBe("abc");
   });
 
   it("surfaces ErrorBody.code in the thrown error", async () => {
@@ -190,5 +222,38 @@ describe("httpPraxisClient", () => {
       status: 409,
       code: "not_pending",
     });
+  });
+});
+
+describe("httpPraxisClient.listTasks/getTask", () => {
+  it("GETs /api/praxis/v1/tasks with paging params", async () => {
+    const spy = vi.fn<(input: Request | string, init?: RequestInit) => Promise<Response>>(async () =>
+      new Response(JSON.stringify({ items: [{ id: "a", status: "running" }], next_cursor: "c2" }), {
+        status: 200, headers: { "content-type": "application/json" },
+      }),
+    );
+    globalThis.fetch = spy as unknown as typeof fetch;
+    const page = await httpPraxisClient.listTasks({ limit: 20, cursor: "c1" });
+    expect(page.items).toHaveLength(1);
+    expect(page.next_cursor).toBe("c2");
+    const arg = spy.mock.calls[0][0] as Request | string;
+    const urlStr = typeof arg === "string" ? arg : (arg as Request).url;
+    const url = new URL(urlStr, "http://x");
+    expect(url.pathname).toBe("/api/praxis/v1/tasks");
+  });
+
+  it("GETs /api/praxis/v1/tasks/{id} for getTask", async () => {
+    const spy = vi.fn<(input: Request | string, init?: RequestInit) => Promise<Response>>(async () =>
+      new Response(JSON.stringify({ id: "t1", status: "completed" }), {
+        status: 200, headers: { "content-type": "application/json" },
+      }),
+    );
+    globalThis.fetch = spy as unknown as typeof fetch;
+    const summary = await httpPraxisClient.getTask("t1");
+    expect(summary.id).toBe("t1");
+    const arg = spy.mock.calls[0][0] as Request | string;
+    const urlStr = typeof arg === "string" ? arg : (arg as Request).url;
+    const url = new URL(urlStr, "http://x");
+    expect(url.pathname).toBe("/api/praxis/v1/tasks/t1");
   });
 });
