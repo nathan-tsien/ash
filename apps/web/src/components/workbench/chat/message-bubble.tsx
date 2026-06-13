@@ -59,16 +59,20 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
         <div
           className={cn(
             "relative",
-            isUser ? "max-w-[90%]" : "max-w-[90%]",
-            isUser ? "items-end text-right" : "items-start",
+            // User turns are bounded interjections (filled chip); assistant turns
+            // are the primary content and take the full reading measure. Hierarchy
+            // comes from structure, not a near-identical bubble pair (PRIN-4).
+            isUser ? "max-w-[80%] text-right" : "w-full",
           )}
         >
           <div
             className={cn(
-              "rounded-xl px-3.5 py-2.5 text-sm leading-relaxed",
+              "text-sm leading-relaxed",
               isUser
-                ? "bg-secondary text-secondary-foreground"
-                : "border border-border bg-card",
+                // User: filled chip, distinct from the canvas.
+                ? "rounded-xl bg-secondary px-3.5 py-2.5 text-secondary-foreground"
+                // Assistant: borderless prose directly on the canvas, no card chrome.
+                : "text-foreground",
             )}
           >
             {isUser ? (
@@ -124,7 +128,10 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
               {copied ? t("copiedMessage") : t("copyMessage")}
             </TooltipContent>
           </Tooltip>
-          <p className="mt-1 text-label font-normal text-muted-foreground">
+          {/* Timestamp is secondary provenance: kept in the DOM (screen readers,
+              layout reserved) but revealed on hover/focus so it does not clutter
+              every turn at rest (PRIN-2). */}
+          <p className="mt-1 text-label font-normal text-muted-foreground opacity-0 transition-opacity group-hover/bubble:opacity-100 group-focus-within/bubble:opacity-100">
             {formatRelativeTime(message.createdAt, locale)}
           </p>
         </div>

@@ -10,9 +10,13 @@ Ascending sort by ISO `createdAt`. Roles:
 
 | `role` | Layout |
 |--------|--------|
-| `user` | Right-aligned “pill” — plain text with `whitespace-pre-wrap` |
-| `assistant` | Left card w/ bordered surface — **markdown rendered** via `react-markdown` + `rehype-highlight` + `remark-gfm` |
+| `user` | Right-aligned filled chip (`bg-secondary`, `max-w-[80%]`) — plain text with `whitespace-pre-wrap` |
+| `assistant` | Left-aligned **borderless prose on the canvas** (`w-full`, no card/border) — **markdown rendered** via `react-markdown` + `rehype-highlight` + `remark-gfm` |
 | `system` | Not shown as bubbly transcript (debug overlays future-gated — default hidden) |
+
+Role hierarchy comes from structure, not a near-identical bubble pair (PRIN-4): the
+assistant turn is the primary content (full reading measure, no chrome) while the user
+turn is a bounded interjection chip. Only the user role carries a filled surface.
 
 ### Markdown rendering (assistant messages)
 
@@ -39,7 +43,13 @@ If `isStreaming`:
 
 Thinking indicator localized copy example: **Agent 正在思考…** (zh-CN surfaced string; docs remain English explanatory).
 
-Assistant secondary metadata (relative absolute hybrid) permissible bottom-right subdued.
+### Timestamps
+
+Each turn carries a relative timestamp (`formatRelativeTime`) as secondary provenance. It is
+kept in the DOM (screen readers, reserved layout) but **revealed on hover/focus** of the turn
+(`opacity-0` → `group-hover/bubble:opacity-100` / `group-focus-within/bubble:opacity-100`) so it
+does not clutter every turn at rest (PRIN-2). Trade-off: at-a-glance provenance costs one hover;
+the authoritative audit trail (tool/artifact timestamps) lives in the Workspace.
 
 ### Scroll + stickiness rules
 
@@ -53,7 +63,8 @@ Floating pill button appears when user scrolls > 200px from bottom of the `Scrol
 
 ### Composer
 
-- Minimal height `min-h-[72px]`, auto-grows on content via `useEffect` resetting `height` to `auto` then capping at `scrollHeight` (`max-h-[168px]`).
+- Rests at ~2 rows (`min-h-[48px]`), auto-grows on content via `useEffect` resetting `height` to `auto` then capping at `scrollHeight` (`max-h-[168px]`).
+- Focus is signalled by the container `focus-within` ring only; the prior GSAP `scale: 1.01` on the full-bleed bar was removed (it nudged sub-pixel layout — MOTION-6, decorative motion avoided in panes).
 - `Enter` sends; `Shift+Enter` inserts newline. Send button with GSAP press animation also available.
 - Shortcut hint updated to **Enter 发送 · Shift+Enter 换行** (i18n `Workbench.shortcutHint`).
 - Attachment icon visible but disabled with tooltip (**即将推出**) until roadmap unlocks ingestion.

@@ -14,7 +14,6 @@ export interface ComposerProps {
 
 export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   const t = useTranslations("Workbench");
-  const containerRef = useRef<HTMLDivElement>(null);
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -27,31 +26,8 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 168)}px`;
   }, [draft]);
 
-  // Focus animation on textarea
-  useEffect(() => {
-    const container = containerRef.current;
-    const textarea = container?.querySelector("textarea");
-    if (!container || !textarea) return;
-
-    const ctx = gsap.context(() => {
-      const onFocus = () => {
-        gsap.to(container, { scale: 1.01, duration: 0.2, ease: "power2.out" });
-      };
-      const onBlur = () => {
-        gsap.to(container, { scale: 1, duration: 0.2, ease: "power2.out" });
-      };
-
-      textarea.addEventListener("focus", onFocus);
-      textarea.addEventListener("blur", onBlur);
-
-      return () => {
-        textarea.removeEventListener("focus", onFocus);
-        textarea.removeEventListener("blur", onBlur);
-      };
-    }, container);
-
-    return () => ctx.revert();
-  }, []);
+  // Focus is signalled by the container's focus-within ring (no GSAP scale on the
+  // full-bleed bar — scaling a centered element nudges sub-pixel layout, MOTION-6).
 
   // Send button press animation
   const handleSendPress = useCallback(() => {
@@ -74,13 +50,12 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
     <div className="shrink-0 border-t border-border bg-background px-4 py-3">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
         <div
-          ref={containerRef}
           className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background"
         >
-          {/* Composer grows from roughly 3 to 7 text rows (72px-168px at the 14px/1.625 line-height, both 4px-grid multiples) before scrolling (SPACE-1 documented off-scale values) */}
+          {/* Composer rests at ~2 rows and grows to ~7 (48px-168px at the 14px/1.625 line-height, both 4px-grid multiples) before scrolling (SPACE-1 documented off-scale values) */}
           <textarea
             ref={textareaRef}
-            className="max-h-[168px] min-h-[72px] w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none"
+            className="max-h-[168px] min-h-[48px] w-full resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none"
             placeholder={t("textareaPlaceholder")}
             value={draft}
             aria-label={t("textareaAria")}
