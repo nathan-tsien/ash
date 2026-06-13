@@ -138,7 +138,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
 
           {/* Quick composer when no pending prompt but user wants to type */}
           {!pendingPrompt && (
-            <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+            <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
               <input
                 type="text"
                 value={draft}

@@ -6,6 +6,11 @@ import type { CreateTaskRequest, RuntimeEvent, TaskSummary } from "./runtime-eve
  * PPT" script, with timing so the UI streams believably. No network. This is a
  * fixture, not a contract — when the real transport lands, swap in the http
  * client (see `getPraxisClient`).
+ *
+ * The zh-CN chunks below are simulated *agent output* (mock model reply content),
+ * not app UI chrome, so they intentionally stay out of the next-intl catalogs
+ * (IMPL-3 governs UI copy; see deviation D-12). Real model output is whatever the
+ * live transport streams.
  */
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 

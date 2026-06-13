@@ -10,12 +10,26 @@ import type { RuntimeEvent } from "./runtime-events";
  *
  * This is the single place the praxis wire shape meets the UI model. When praxis
  * revises the contract, change the reducer (and `runtime-events.ts`) only.
+ *
+ * App-authored, user-facing copy (artifact placeholders, failure notices) is
+ * injected via `ReducerLabels` rather than hardcoded, so the reducer stays pure
+ * and i18n-clean (IMPL-3). The provider resolves these from next-intl catalogs.
  */
 export interface TaskRunState {
   task: Task;
   currentAssistantId: string | null;
   toolStartMs: Record<string, number>;
   seq: number;
+}
+
+/** User-facing strings the reducer renders, resolved by the caller from i18n. */
+export interface ReducerLabels {
+  /** Fallback deck title when the task has none (artifact filename base). */
+  deckFallbackTitle: string;
+  /** Placeholder preview text for the synthesized deck artifact. */
+  deckPreview: string;
+  /** Builds the user-facing failure notice from the praxis reason. */
+  failureNotice: (reason: string) => string;
 }
 
 export function initialTaskRunState(task: Task): TaskRunState {
@@ -27,13 +41,13 @@ const iso = (ms: number): string => new Date(ms).toISOString();
 // TODO(ash): replace synthesized artifact with praxis task_outputs mapping when
 // praxis Sprint 3d ships output artifacts. praxis currently emits no artifact
 // event, so ash synthesizes a placeholder deck on turn completion.
-function synthesizePptArtifact(task: Task, nowMs: number): Artifact {
-  const base = (task.title || "演示文稿").replace(/\.pptx$/i, "");
+function synthesizePptArtifact(task: Task, nowMs: number, labels: ReducerLabels): Artifact {
+  const base = (task.title || labels.deckFallbackTitle).replace(/\.pptx$/i, "");
   return {
     id: `artifact-${task.id}-deck`,
     kind: "document",
     title: `${base}.pptx`,
-    preview: "由智能体生成的演示文稿（占位）。",
+    preview: labels.deckPreview,
     updatedAt: iso(nowMs),
   };
 }
@@ -42,6 +56,7 @@ export function runtimeEventReducer(
   state: TaskRunState,
   event: RuntimeEvent,
   nowMs: number,
+  labels: ReducerLabels,
 ): TaskRunState {
   const task = state.task;
   switch (event.type) {
@@ -107,7 +122,7 @@ export function runtimeEventReducer(
 
     case "turn_completed": {
       const messages = finalizeStreaming(task.messages, state.currentAssistantId);
-      const artifact = synthesizePptArtifact(task, nowMs);
+      const artifact = synthesizePptArtifact(task, nowMs, labels);
       return {
         ...state,
         currentAssistantId: null,
@@ -128,7 +143,7 @@ export function runtimeEventReducer(
       const notice: Message = {
         id: `assistant-${task.id}-fail-${state.seq}`,
         role: "assistant",
-        content: `任务执行失败：${event.reason}`,
+        content: labels.failureNotice(event.reason),
         createdAt: iso(nowMs),
       };
       return {

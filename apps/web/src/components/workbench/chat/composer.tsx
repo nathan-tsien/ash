@@ -75,7 +75,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
         <div
           ref={containerRef}
-          className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm"
+          className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background"
         >
           {/* Composer grows from roughly 3 to 7 text rows (72px-168px at the 14px/1.625 line-height, both 4px-grid multiples) before scrolling (SPACE-1 documented off-scale values) */}
           <textarea

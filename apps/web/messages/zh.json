@@ -372,7 +372,10 @@
     "projectDescription": "描述",
     "connectors": "连接器",
     "projectSpaceTitle": "项目空间",
-    "sidebarItemsAria": "任务与项目列表"
+    "sidebarItemsAria": "任务与项目列表",
+    "runtimeDeckFallbackTitle": "演示文稿",
+    "runtimeDeckPreview": "由智能体生成的演示文稿（占位）。",
+    "runtimeFailureNotice": "任务执行失败：{reason}"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
