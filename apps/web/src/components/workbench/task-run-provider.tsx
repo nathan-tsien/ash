@@ -46,6 +46,16 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const [order, setOrder] = useState<string[]>([]);
   const clientRef = useRef(getPraxisClient());
   const controllersRef = useRef<Set<AbortController>>(new Set());
+  // Task ids with a currently-live stream. Set when a stream starts (startTask /
+  // attach), cleared when its loop ends (runStream's finally). Lets `attach`
+  // avoid double-subscribing a task whose stream is still open.
+  const activeStreamsRef = useRef<Set<string>>(new Set());
+  // Latest `runs` mirrored into a ref so answer/attach can read the current task
+  // without listing `runs` in their deps — keeping their identity stable so the
+  // navigate-back effect (useReattachOnView) does not re-fire on every upsert.
+  // (A task is always committed to `runs` before its view mounts, so the ref is
+  // current by the time attach/answer read it.)
+  const runsRef = useRef(runs);
 
   // App-authored runtime copy, resolved from i18n catalogs (IMPL-3) and passed
   // into the (pure) reducer. A run captures the locale active at its start;
@@ -77,6 +87,10 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       controllers.clear();
     };
   }, []);
+
+  useEffect(() => {
+    runsRef.current = runs;
+  }, [runs]);
 
   const upsert = useCallback((task: Task) => {
     setRuns((prev) => ({ ...prev, [task.id]: task }));
@@ -112,6 +126,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         controllersRef.current.delete(controller);
+        activeStreamsRef.current.delete(taskId);
       }
     },
     [labels, upsert],
@@ -144,12 +159,18 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
 
       const controller = new AbortController();
       controllersRef.current.add(controller);
+      // Mark active synchronously, before navigation can mount the task view and
+      // trigger a re-attach — the guard there must see the live stream.
+      activeStreamsRef.current.add(summary.id);
       void (async () => {
         try {
           await clientRef.current.startTask(summary.id, directive);
           upsert({ ...seeded, status: "running" });
           await runStream(summary.id, { ...seeded, status: "running" }, controller);
         } catch {
+          // startTask failed before runStream took over cleanup.
+          controllersRef.current.delete(controller);
+          activeStreamsRef.current.delete(summary.id);
           if (!controller.signal.aborted) upsert({ ...seeded, status: "failed" });
         }
       })();
@@ -161,7 +182,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
 
   const answer = useCallback(
     async (taskId: string, text: string): Promise<void> => {
-      const current = runs[taskId];
+      const current = runsRef.current[taskId];
       const askId = current?.pendingQuestion?.askId;
       if (!askId) return; // no live question (or recovered read-only); nothing to send
       // Optimistic: clear the prompt and show running; the live turn_resumed confirms.
@@ -179,14 +200,24 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         upsert(current); // transient/unknown error: restore the question so the user can retry
       }
     },
-    [runs, upsert],
+    [upsert],
   );
 
+  // Re-attach a task's stream: catch up via /history, then re-subscribe. Guarded
+  // so it is safe to call on every task-view mount (the navigate-back trigger):
+  // it no-ops for unknown/terminal tasks and for tasks whose stream is still live,
+  // acting only when a non-terminal stream has actually ended (e.g. a drop, or a
+  // task left awaiting input whose connection closed).
   const attach = useCallback(
     async (taskId: string): Promise<void> => {
       const client = clientRef.current;
-      const existing = runs[taskId];
-      if (!existing) return;
+      const existing = runsRef.current[taskId];
+      if (!existing) return; // not a live session run
+      if (existing.status === "completed" || existing.status === "failed") return; // terminal
+      if (activeStreamsRef.current.has(taskId)) return; // a stream is already running
+      activeStreamsRef.current.add(taskId);
+      const controller = new AbortController();
+      controllersRef.current.add(controller);
       try {
         const items: Awaited<ReturnType<typeof client.history>>["items"] = [];
         let cursor: string | undefined;
@@ -197,14 +228,15 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         } while (cursor);
         const rebuilt = historyToTask(existing, items, historyLabels);
         upsert(rebuilt);
-        const controller = new AbortController();
-        controllersRef.current.add(controller);
-        await runStream(taskId, rebuilt, controller);
+        await runStream(taskId, rebuilt, controller); // its finally clears active + controller
       } catch {
+        // History fetch failed before runStream took over cleanup.
+        controllersRef.current.delete(controller);
+        activeStreamsRef.current.delete(taskId);
         upsert({ ...existing, status: "failed" });
       }
     },
-    [runs, historyLabels, upsert, runStream],
+    [historyLabels, upsert, runStream],
   );
 
   const value = useMemo<TaskRunContextValue>(
@@ -246,4 +278,19 @@ export function useAnswerTask(): (taskId: string, text: string) => Promise<void>
 
 export function useAttachTask(): (taskId: string) => Promise<void> {
   return useTaskRunContext().attach;
+}
+
+/**
+ * Re-attach a task's stream when its detail view is (re)opened — the navigate-back
+ * trigger. Fires whenever `taskId` changes; `attach` is internally guarded, so it
+ * no-ops for unknown/terminal tasks and ones already streaming. On a task left
+ * awaiting input whose stream has since closed, this catches up via `/history` and
+ * re-subscribes, recovering the live `ask_id`. Pass `undefined` to disable (e.g.
+ * when not on a task view).
+ */
+export function useReattachOnView(taskId: string | undefined): void {
+  const { attach } = useTaskRunContext();
+  useEffect(() => {
+    if (taskId) void attach(taskId);
+  }, [taskId, attach]);
 }

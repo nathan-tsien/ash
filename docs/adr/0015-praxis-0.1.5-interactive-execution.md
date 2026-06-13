@@ -92,11 +92,18 @@ OpenAPI and can be generated.
     (completed blocks vs. live deltas), but the precise boundary at re-attach (a turn in flight
     when the stream dropped) should be verified against the fake client and, eventually, real
     praxis.
-  - **`mapTaskStatus` lossiness:** `awaiting_input` is collapsed to `running` in the
-    `Conversation` adapter in `workbench-app.tsx` (the `ConversationStatus` type has no waiting
-    state). The actionable affordance travels via sidecar `pendingQuestion`/`onAnswer` props on
-    `WorkbenchChat` rather than through the adapted `Conversation`. If more of the UI later reads
-    task status through `Conversation`, this adapter gap should be revisited.
+  - **`mapTaskStatus` lossiness:** the `ConversationStatus` type has no waiting state, so the
+    `Conversation` adapter in `workbench-app.tsx` maps `awaiting_input` → `idle` (deliberately not
+    `running`: while waiting on the user the agent is not "thinking", so the chat shows the
+    `AnswerPrompt` rather than the thinking indicator). The sidebar dot uses a separate mapping in
+    `lib/task-status.ts` where `awaiting_input` → `running` to read as active. The actionable
+    affordance travels via sidecar `pendingQuestion`/`onAnswer` props on `WorkbenchChat` rather than
+    through the adapted `Conversation`. If more of the UI later reads task status through
+    `Conversation`, this adapter gap should be revisited.
+  - **Same-session re-attach is wired** via `useReattachOnView(taskId)` in `workbench-app.tsx` (the
+    navigate-back trigger). Because streams persist across in-session navigation, `attach` is guarded
+    (no-op for unknown/terminal/already-streaming tasks); it acts only when a non-terminal stream has
+    ended. Full reload / deep-link reconnect remains deferred.
 
 ## Related
 

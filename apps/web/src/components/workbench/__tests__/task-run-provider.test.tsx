@@ -174,4 +174,52 @@ describe("TaskRunProvider", () => {
     await waitFor(() => expect(screen.getByTestId("pq")).toHaveTextContent("Which audience?"));
     await waitFor(() => expect(historyCalls).toBe(2));
   });
+
+  it("attach is a no-op while a stream is still live (no double subscription)", async () => {
+    let historyCalls = 0;
+    mockClient = baseClient({
+      async *streamEvents(_id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent> {
+        yield { type: "turn_started" };
+        yield { type: "ask_user", ask_id: "q1", text: "?", attachments: [] };
+        // Stay open (as praxis does while awaiting an answer) until aborted.
+        await new Promise<void>((resolve) => {
+          if (signal?.aborted) resolve();
+          else signal?.addEventListener("abort", () => resolve());
+        });
+      },
+      async history() {
+        historyCalls += 1;
+        return { items: [] };
+      },
+    });
+
+    renderHarness();
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("awaiting_input"));
+
+    fireEvent.click(screen.getByText("attach"));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(historyCalls).toBe(0); // guard skipped: the live stream is still open
+  });
+
+  it("attach is a no-op for a terminal task", async () => {
+    let historyCalls = 0;
+    mockClient = baseClient({
+      async *streamEvents(): AsyncIterable<RuntimeEvent> {
+        yield { type: "turn_started" };
+        yield { type: "turn_completed" };
+        yield { type: "stream_end", task_status: "completed" };
+      },
+      async history() {
+        historyCalls += 1;
+        return { items: [] };
+      },
+    });
+
+    renderHarness();
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("completed"));
+
+    fireEvent.click(screen.getByText("attach"));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(historyCalls).toBe(0); // guard skipped: task is terminal
+  });
 });
