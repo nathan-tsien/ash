@@ -345,6 +345,7 @@
     "emptyProjects": "暂无项目",
     "newProject": "新建项目",
     "running": "进行中",
+    "awaitingInput": "等待你的回复",
     "completed": "已完成",
     "failed": "失败",
     "pending": "待处理",

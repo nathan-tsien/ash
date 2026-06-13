@@ -345,6 +345,7 @@
     "emptyProjects": "No projects yet",
     "newProject": "New Project",
     "running": "running",
+    "awaitingInput": "Waiting for you",
     "completed": "completed",
     "failed": "failed",
     "pending": "pending",
