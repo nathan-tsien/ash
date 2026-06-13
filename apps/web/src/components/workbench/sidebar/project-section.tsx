@@ -3,6 +3,11 @@
 import type { AshLocale, Project } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@ash/ui/tooltip";
 import { Folder, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -30,15 +35,20 @@ export function ProjectSection({
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {t("projectsSection")}
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6"
-          onClick={onNewProject}
-          aria-label={t("newProject")}
-        >
-          <Plus className="size-3.5" aria-hidden />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={onNewProject}
+              aria-label={t("newProject")}
+            >
+              <Plus className="size-3.5" aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("newProject")}</TooltipContent>
+        </Tooltip>
       </div>
       <ul role="list" className="flex flex-col gap-0.5 px-1">
         {displayProjects.map((project) => {
@@ -64,10 +74,10 @@ export function ProjectSection({
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium leading-snug">
+                  <p className="truncate text-body-sm font-medium">
                     {project.name}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 text-label font-normal text-muted-foreground">
                     {runningTasks > 0 && `${runningTasks} ${t("running")} · `}
                     {completedTasks} {t("completed")}
                   </p>

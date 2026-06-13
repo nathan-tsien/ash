@@ -18,7 +18,7 @@ ash does NOT embed cogito inside the browser, and does NOT treat `packages/share
 types as the server source of truth (they are scaffolding until API contracts lock).
 
 Normative UX + layering: **`docs/components/`**, approved scope **`docs/superpowers/specs/2026-05-23-ash-startup-design.md`**.  
-Normative visuals + chroma discipline: **`docs/visual-language-and-theme.md`** + **ADR-0005**.
+Normative visuals + chroma discipline: **`docs/design-guidelines.md`** + **ADR-0013**.
 
 See also `ARCHITECTURE.md`, `README.md`.
 
@@ -75,13 +75,13 @@ Per the approved Phase 1 spec:
 - **No unsanctioned hex / rgb** in `apps/web` for branded surfaces — deviations require English `TODO(ash-visual)` + review.
 - **Dark theme** ships per **ADR-0010** (`:root.dark` inverted Manus neutrals in `globals.css`, ThemeProvider in `@ash/ui`). Future theme variants (high-contrast, accent colors) remain deferred.
 
-Details: **`docs/visual-language-and-theme.md`**.
+Details: **`docs/design-guidelines.md`**.
 
 ## Coding standards
 
 - **Language:** TypeScript `strict`; avoid `any` (prefer `unknown` + narrowing).
 - **React:** Prefer Server Components; use `"use client"` only where the browser APIs or interaction model require it — keep boundaries small.
-- **Styling:** Tailwind + semantic tokens defined in **`packages/ui/src/globals.css`** (**`docs/visual-language-and-theme.md`**, ADR-0005). Arbitrary HEX / rgb brand literals in pages are forbidden without documented escape.
+- **Styling:** Tailwind + semantic tokens defined in **`packages/ui/src/globals.css`** (**`docs/design-guidelines.md`**, ADR-0013). Arbitrary HEX / rgb brand literals in pages are forbidden without documented escape.
 - **Logs:** Messages in **English**. Never log secrets, cookies, bearer tokens.
 - **Errors:** Prefer typed results or narrowed errors up the adapter layer — no naked `alert()` in reusable components.
 - **Imports:** Respect workspace aliases; no deep imports that bypass exported package surfaces.

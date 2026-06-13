@@ -55,8 +55,8 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="border-b border-border bg-background px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <p className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">{t("kicker")}</p>
-        <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <p className="text-body-sm font-semibold uppercase tracking-wider text-ember">{t("kicker")}</p>
+        <h1 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {t("title")}
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t("subtitle")}</p>
@@ -75,7 +75,7 @@ export default async function ProductPage({ params }: Props) {
               <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-background text-foreground">
                 {p.icon}
               </div>
-              <h2 className="mt-5 text-[16px] font-semibold tracking-tight text-foreground">{p.title}</h2>
+              <h2 className="mt-5 text-base font-semibold tracking-tight text-foreground">{p.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
             </div>
           ))}

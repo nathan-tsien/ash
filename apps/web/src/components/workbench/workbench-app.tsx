@@ -13,6 +13,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
 import { fadeOut, fadeIn } from "@/lib/animations/presets";
+import { PANE_WIDTH } from "@/lib/layout-constants";
 import { PanelRightOpen } from "lucide-react";
 import { Button } from "@ash/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
@@ -60,13 +61,21 @@ export function WorkbenchApp({
       if (!ws || !fab) return;
 
       if (workspaceCollapsed) {
+        // Width collapses alongside the slide so chat reclaims the gutter (IA-2).
         const tl = gsap.timeline();
-        tl.to(ws, { xPercent: 100, ...fadeOut() })
-          .from(fab, { scale: 0.8, autoAlpha: 0, duration: 0.2, ease: "power2.out" }, "<0.1");
+        tl.to(ws, { xPercent: 100, width: 0, ...fadeOut() })
+          // fromTo, not from: the expand branch leaves the FAB at autoAlpha 0,
+          // which .from() would capture as the end value (FAB stuck invisible)
+          .fromTo(
+            fab,
+            { scale: 0.8, autoAlpha: 0 },
+            { scale: 1, autoAlpha: 1, duration: 0.2, ease: "power2.out" },
+            "<0.1",
+          );
       } else {
         const tl = gsap.timeline();
         tl.to(fab, fadeOut(0.1))
-          .to(ws, { xPercent: 0, ...fadeIn(0.35) }, "<0.05");
+          .to(ws, { xPercent: 0, width: PANE_WIDTH.workspace, ...fadeIn(0.35) }, "<0.05");
       }
     },
     { dependencies: [workspaceCollapsed] },
@@ -133,8 +142,8 @@ export function WorkbenchApp({
       {viewMode !== "home" && (liveTask || activeProject) && (
         <div
           ref={workspaceRef}
-          className="flex shrink-0 flex-col"
-          style={{ width: 380 }}
+          className="flex shrink-0 flex-col overflow-hidden"
+          style={{ width: PANE_WIDTH.workspace }}
         >
           {liveTask ? (
             <TaskWorkspace locale={locale} task={liveTask} />

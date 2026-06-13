@@ -1,11 +1,12 @@
 "use client";
 
 import type { Task } from "@ash/shared";
-import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
+import { StatusDot } from "@ash/ui/status-dot";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { taskStatusDotVariant, taskStatusLabelKey } from "@/lib/task-status";
 import { taskHref } from "@/lib/workbench-href";
 
 export interface ProjectTasksCardProps {
@@ -24,30 +25,26 @@ export function ProjectTasksCard({ tasks }: ProjectTasksCardProps) {
           {t("newTask")}
         </Button>
       </div>
-      <ul className="space-y-1">
-        {tasks.map((task) => (
-          <li key={task.id}>
-            <Link
-              href={taskHref(task.id)}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-accent"
-            >
-              <span
-                className={cn(
-                  "size-2 rounded-full",
-                  task.status === "completed"
-                    ? "bg-emerald-500"
-                    : task.status === "running"
-                      ? "animate-pulse bg-blue-500"
-                      : task.status === "failed"
-                        ? "bg-destructive"
-                        : "border border-muted-foreground/40",
-                )}
-              />
-              <span className="truncate">{task.title}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {tasks.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{t("emptyTasks")}</p>
+      ) : (
+        <ul className="space-y-1">
+          {tasks.map((task) => (
+            <li key={task.id}>
+              <Link
+                href={taskHref(task.id)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+              >
+                <StatusDot
+                  status={taskStatusDotVariant(task.status)}
+                  label={t(taskStatusLabelKey(task.status))}
+                />
+                <span className="truncate">{task.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

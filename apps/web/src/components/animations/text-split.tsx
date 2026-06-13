@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import "@/lib/animations/gsap-setup";
 
 type Props = {
   children: string;

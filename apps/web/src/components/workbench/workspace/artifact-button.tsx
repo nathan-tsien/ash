@@ -28,11 +28,11 @@ export function ArtifactButton({ artifact, updatedAtLabel }: ArtifactButtonProps
       <div className="flex items-start gap-2">
         <ArtifactIcon kind={artifact.kind} />
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-medium leading-tight">{artifact.title}</p>
-          <p className="mt-1 line-clamp-3 text-[12px] text-muted-foreground">
+          <p className="text-body-sm font-medium leading-tight">{artifact.title}</p>
+          <p className="mt-1 line-clamp-3 text-label font-normal text-muted-foreground">
             {artifact.preview}
           </p>
-          <p className="mt-2 text-[11px] text-muted-foreground">{updatedAtLabel}</p>
+          <p className="mt-2 text-label font-normal text-muted-foreground">{updatedAtLabel}</p>
         </div>
       </div>
     </button>

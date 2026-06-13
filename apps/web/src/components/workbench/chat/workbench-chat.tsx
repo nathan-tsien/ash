@@ -99,7 +99,7 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
         <div className="flex min-w-0 items-center gap-2">
           <MessageSquare className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <div className="min-w-0">
-            <h1 className="truncate text-[15px] font-semibold leading-tight">{active.title}</h1>
+            <h1 className="truncate text-body-lg font-semibold leading-tight">{active.title}</h1>
             <p className="truncate text-xs text-muted-foreground">{active.preview}</p>
           </div>
         </div>
@@ -147,7 +147,7 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
                 <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card">
                   <Sparkles className="size-6 text-muted-foreground" aria-hidden />
                 </div>
-                <h2 className="text-[15px] font-semibold text-foreground">{t("emptyChatTitle")}</h2>
+                <h2 className="text-body-lg font-semibold text-foreground">{t("emptyChatTitle")}</h2>
                 <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
               </div>
             ) : (

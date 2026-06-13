@@ -114,7 +114,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
                 onClick={handleCopy}
               >
                 {copied ? (
-                  <Check className="size-3.5 text-green-600" />
+                  <Check className="size-3.5 text-status-success-foreground" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}
@@ -124,7 +124,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
               {copied ? t("copiedMessage") : t("copyMessage")}
             </TooltipContent>
           </Tooltip>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-label font-normal text-muted-foreground">
             {formatRelativeTime(message.createdAt, locale)}
           </p>
         </div>

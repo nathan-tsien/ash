@@ -47,13 +47,13 @@ export default async function MarketingHomePage({ params }: Props) {
         <HeroTimeline className="relative mx-auto max-w-6xl">
           <p
             data-anim="kicker"
-            className="text-center text-[13px] font-medium uppercase tracking-widest text-muted-foreground"
+            className="text-center text-body-sm font-medium uppercase tracking-widest text-ember"
           >
             {t("heroKicker")}
           </p>
           <h1
             data-anim="title"
-            className="mx-auto mt-4 max-w-3xl text-balance text-center text-4xl font-semibold tracking-tight text-foreground sm:text-5xl"
+            className="mx-auto mt-4 max-w-3xl text-balance text-center font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl"
           >
             <span className="split-line block">{t("heroTitleLine1")}</span>
             <span className="split-line block">{t("heroTitleLine2")}</span>
@@ -66,7 +66,7 @@ export default async function MarketingHomePage({ params }: Props) {
           </p>
           <div data-anim="cta">
             <QuickStartDialog />
-            <p className="mx-auto mt-3 text-center text-[12px] text-muted-foreground/70">
+            <p className="mx-auto mt-3 text-center text-label text-muted-foreground/70">
               {t("quickStartHint")}
             </p>
           </div>
@@ -78,10 +78,10 @@ export default async function MarketingHomePage({ params }: Props) {
         <div className="mx-auto max-w-6xl">
           <ScrollReveal>
             <div className="text-center">
-              <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("previewEyebrow")}
               </p>
-              <h2 className="mx-auto mt-2 max-w-2xl text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="mx-auto mt-2 max-w-2xl text-balance font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 {t("previewTitle")}
               </h2>
             </div>
@@ -171,7 +171,7 @@ export default async function MarketingHomePage({ params }: Props) {
       <section className="bg-primary px-4 py-16 text-primary-foreground sm:px-6 sm:py-20">
         <ScrollReveal>
           <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center">
-            <h2 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">{t("bottomTitle")}</h2>
+            <h2 className="text-balance font-display text-2xl font-semibold tracking-tight sm:text-3xl">{t("bottomTitle")}</h2>
             <p className="max-w-lg text-sm leading-relaxed text-primary-foreground/85">{t("bottomBody")}</p>
             <Button
               variant="pill"
@@ -199,8 +199,8 @@ function SectionTitle({
 }) {
   return (
     <div className="text-center sm:text-left">
-      <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">{eyebrow}</p>
-      <h2 className="mt-2 text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h2>
+      <p className="text-label font-semibold uppercase tracking-wider text-muted-foreground">{eyebrow}</p>
+      <h2 className="mt-2 text-balance font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
     </div>
   );
@@ -219,12 +219,13 @@ function TeaserTile({
 }) {
   return (
     <HoverScale className="group flex flex-col rounded-2xl border border-border bg-card p-6">
-      <span className="w-fit rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      {/* Tag badge is Latin-only (Research/Growth/Soon untranslated product nouns), so caption (11px) is legal; switch to label (12px) per the TYPE-2 CJK floor if these ever localize */}
+      <span className="w-fit rounded-full border border-border bg-muted px-2.5 py-0.5 text-caption font-medium uppercase tracking-wide text-muted-foreground">
         {tag}
       </span>
-      <h3 className="mt-4 text-[17px] font-semibold tracking-tight text-foreground">{title}</h3>
+      <h3 className="mt-4 text-lg font-semibold tracking-tight text-foreground">{title}</h3>
       <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{copy}</p>
-      <span className="mt-6 text-[13px] font-medium text-foreground underline-offset-4 group-hover:underline">
+      <span className="mt-6 text-body-sm font-medium text-foreground underline-offset-4 group-hover:underline">
         <Link href="/showcase" className="inline-flex items-center gap-1 hover:underline">
           {teaserLinkLabel}
           <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" aria-hidden />

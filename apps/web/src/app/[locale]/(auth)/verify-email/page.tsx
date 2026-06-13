@@ -21,7 +21,7 @@ export default async function VerifyEmailPage({ params }: Props) {
 
   return (
     <div>
-      <h2 className="mb-1 text-lg font-semibold">{t("verifyEmailTitle")}</h2>
+      <h2 className="mb-1 font-display text-lg font-semibold">{t("verifyEmailTitle")}</h2>
       <Suspense>
         <VerifyEmailForm />
       </Suspense>

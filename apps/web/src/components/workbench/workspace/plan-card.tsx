@@ -8,37 +8,42 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
 
   return (
     <div className="space-y-2">
-      <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
         {t("planHeading")}
       </h2>
-      <ol className="space-y-1 rounded-lg bg-muted/30 p-2">
-        {steps.map((step, i) => (
-          <li
-            key={step.id}
-            className={cn(
-              "flex gap-2 rounded-md px-2 py-1.5 text-sm leading-snug",
-              i % 2 === 0 && "bg-muted/40",
-            )}
-          >
-            <PlanStatusIcon status={step.status} />
-            <span
+      {steps.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{t("emptyPlanSteps")}</p>
+      ) : (
+        <ol className="space-y-1 rounded-lg bg-muted/30 p-2">
+          {steps.map((step, i) => (
+            <li
+              key={step.id}
               className={cn(
-                "flex-1",
-                step.status === "running" && "border-l-2 border-primary pl-3 -ml-[2px]",
+                "flex gap-2 rounded-md px-2 py-1.5 text-sm leading-snug",
+                i % 2 === 0 && "bg-muted/40",
               )}
             >
-              {step.label}
-            </span>
-          </li>
-        ))}
-      </ol>
+              <PlanStatusIcon status={step.status} />
+              <span
+                className={cn(
+                  "flex-1",
+                  // -2px optical alignment against the border-l-2 timeline rail (SPACE-1 documented)
+                  step.status === "running" && "border-l-2 border-primary pl-3 -ml-[2px]",
+                )}
+              >
+                {step.label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
 
 function PlanStatusIcon({ status }: { status: PlanStep["status"] }) {
   if (status === "done") {
-    return <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />;
+    return <CheckCircle2 className="size-4 shrink-0 text-status-success-foreground" />;
   }
   if (status === "failed") {
     return <AlertCircle className="size-4 shrink-0 text-destructive" />;

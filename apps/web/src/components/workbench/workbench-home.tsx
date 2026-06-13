@@ -3,6 +3,11 @@
 import type { AshLocale, Task, Project } from "@ash/shared";
 import { ScrollArea } from "@ash/ui/scroll-area";
 import { Button } from "@ash/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@ash/ui/tooltip";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -102,13 +107,18 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
                   <p className="text-xs text-muted-foreground">{t("pendingPromptLabel")}</p>
                   <p className="mt-1 truncate text-sm font-medium text-foreground">{pendingPrompt}</p>
                 </div>
-                <button
-                  onClick={handleDismiss}
-                  className="shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  aria-label={t("dismissPromptAria")}
-                >
-                  <X className="size-4" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleDismiss}
+                      className="shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      aria-label={t("dismissPromptAria")}
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t("dismissPromptAria")}</TooltipContent>
+                </Tooltip>
               </div>
               <Button onClick={() => void handleStart()} size="sm" className="mt-3 gap-1.5" disabled={starting}>
                 {t("startTask")}

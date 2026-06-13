@@ -72,7 +72,10 @@ export function QuickStartDialog() {
       </form>
 
       <Dialog open={showLogin} onOpenChange={setShowLogin}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          closeAriaLabel={t("loginDialogCloseAria")}
+        >
           <DialogHeader>
             <DialogTitle>{t("loginDialogTitle")}</DialogTitle>
             <DialogDescription>{t("loginDialogBody")}</DialogDescription>

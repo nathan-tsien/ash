@@ -3,18 +3,22 @@
 /*
  * Canonical design tokens + Tailwind theme bridge for ash.
  *
- * Phase 1 palette anchored on Manus public brand colors (white / gray / black):
- *   https://manus.im/brand
+ * Identity: "Ash & Ember" (ADR-0014).
  *
- * Trio (marketing foundation):
- *   --manus-black:  #34322D  primary ink + solid fills
- *   --manus-gray:   #F8F8F8  canvas / subtle trays
- *   --manus-white:  #FFFFFF  elevated surfaces + text on fills
+ * Ash — warm mineral neutrals:
+ *   charcoal ink  #2A2825  primary ink + solid fills
+ *   ash paper     #F7F6F4  canvas / subtle trays
+ *   white sheets  #FFFFFF  elevated surfaces + text on fills
+ * All other neutrals interpolate on the same warm axis; dark mode mirrors the
+ * tonal relationships on a smoke series anchored at #191817.
  *
- * Secondary neutral referenced in Manus collateral: #BABABA (muted lines / tertiary only).
+ * Ember — single brand accent #B8441F (COLOR-10): wordmark + marketing only,
+ * never workbench chrome or status semantics.
  *
- * Specification: docs/visual-language-and-theme.md
- * ADR:          docs/adr/0005-design-tokens-and-visual-discipline-phase-1.md
+ * Specification: docs/design-guidelines.md
+ * ADR:          docs/adr/0014-ash-native-identity.md
+ *
+ * Provenance: v0.x palettes bootstrapped on the public Manus brand trio; retired by ADR-0014.
  *
  * Consumers use semantic Tailwind tokens (bg-background, text-foreground, …).
  */
@@ -45,95 +49,162 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-workspace: var(--workspace);
+  --color-status-running: var(--status-running);
+  --color-status-running-soft: var(--status-running-soft);
+  --color-status-running-foreground: var(--status-running-foreground);
+  --color-status-success: var(--status-success);
+  --color-status-success-soft: var(--status-success-soft);
+  --color-status-success-foreground: var(--status-success-foreground);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-soft: var(--status-warning-soft);
+  --color-status-warning-foreground: var(--status-warning-foreground);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-overlay: var(--overlay);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Named interface type scale (TYPE-2): size + line-height pairs */
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1rem;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--font-weight: 500;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.125rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-body-lg: 0.9375rem;
+  --text-body-lg--line-height: 1.375rem;
+  /* Pane geometry (SPACE-4): enables w-sidebar / w-rail / w-workspace */
+  --spacing-sidebar: 260px;
+  --spacing-rail: 56px;
+  --spacing-workspace: 380px;
+  /* Skeleton pulse (UX-11) */
+  --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
   --font-sans: var(--font-dm-sans), var(--font-noto-sc), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-bricolage), var(--font-dm-sans), var(--font-noto-sc), ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
- * Derived semantic roles (same names as before — values now literal Manus-anchored hex).
+ * Derived semantic roles — light theme, ash series (charcoal ink on ash paper).
  */
 :root {
   --radius: 0.75rem;
 
-  --background: #f8f8f8;
-  --foreground: #34322d;
+  --background: #f7f6f4;
+  --foreground: #2a2825;
   --card: #ffffff;
-  --card-foreground: #34322d;
+  --card-foreground: #2a2825;
   --popover: #ffffff;
-  --popover-foreground: #34322d;
+  --popover-foreground: #2a2825;
 
   /* Solid CTA inversion: ink fill on white canvas */
-  --primary: #34322d;
+  --primary: #2a2825;
   --primary-foreground: #ffffff;
 
-  --secondary: #ebeae8;
-  --secondary-foreground: #34322d;
+  --secondary: #eceae6;
+  --secondary-foreground: #2a2825;
 
-  --muted: #f0efed;
-  /* Darker than #bababa body text — keeps zh-CN captions readable */
-  --muted-foreground: #706e69;
+  --muted: #f0eeea;
+  /* Dark enough on canvas (~5.0:1) — keeps zh-CN captions readable */
+  --muted-foreground: #6e6a63;
 
-  --accent: #eae9e7;
-  --accent-foreground: #34322d;
+  --accent: #eae7e2;
+  --accent-foreground: #2a2825;
 
   --destructive: #c53030;
-  --border: #e4e4e1;
-  --input: #e4e4e1;
-  --ring: rgba(52, 50, 45, 0.28);
+  --border: #e3e1dc;
+  --input: #e3e1dc;
+  --ring: rgba(42, 40, 37, 0.55);
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #34322d;
-  --sidebar-border: #ecebe9;
-  --sidebar-accent: #f4f3f2;
+  --sidebar-foreground: #2a2825;
+  --sidebar-border: #eae8e4;
+  --sidebar-accent: #f2f0ec;
 
-  --workspace: #fafafa;
+  --workspace: #faf9f7;
+
+  /* Brand accent (COLOR-10): marketing + wordmark only */
+  --ember: #b8441f;
+  --ember-soft: #f8e8e0;
+
+  /* Status pigments (COLOR-3): base / soft wash / text-on-wash */
+  --status-running: #3b82f6;
+  --status-running-soft: #eff6ff;
+  --status-running-foreground: #1d4ed8;
+  --status-success: #10b981;
+  --status-success-soft: #ecfdf5;
+  --status-success-foreground: #047857;
+  --status-warning: #f59e0b;
+  --status-warning-soft: #fffbeb;
+  --status-warning-foreground: #b45309;
+
+  /* Modal/backdrop scrim (COLOR-2) */
+  --overlay: rgba(42, 40, 37, 0.45);
 }
 
 /*
- * Dark palette — inverted Manus neutrals.
+ * Dark palette — smoke series anchored at #191817, mirrored tonal relationships.
  * Applied via .dark class on <html>, toggled by ThemeProvider.
  * See: docs/adr/0010-dark-mode-theme-toggle.md
  */
 :root.dark {
-  --background: #1a1918;
-  --foreground: #f0efed;
-  --card: #252423;
-  --card-foreground: #f0efed;
-  --popover: #252423;
-  --popover-foreground: #f0efed;
+  --background: #191817;
+  --foreground: #efedea;
+  --card: #232220;
+  --card-foreground: #efedea;
+  --popover: #232220;
+  --popover-foreground: #efedea;
 
-  --primary: #f0efed;
-  --primary-foreground: #1a1918;
+  --primary: #efedea;
+  --primary-foreground: #191817;
 
-  --secondary: #2a2928;
-  --secondary-foreground: #f0efed;
+  --secondary: #2b2a27;
+  --secondary-foreground: #efedea;
 
-  --muted: #252423;
-  --muted-foreground: #a09e9a;
+  --muted: #232220;
+  --muted-foreground: #a39f99;
 
-  --accent: #2a2928;
-  --accent-foreground: #f0efed;
+  --accent: #2b2a27;
+  --accent-foreground: #efedea;
 
   --destructive: #e55050;
-  --border: #333230;
-  --input: #333230;
-  --ring: rgba(240, 239, 237, 0.28);
+  --border: #343230;
+  --input: #343230;
+  --ring: rgba(239, 237, 234, 0.55);
 
-  --sidebar: #1e1d1c;
-  --sidebar-foreground: #f0efed;
-  --sidebar-border: #2a2928;
-  --sidebar-accent: #2a2928;
+  --sidebar: #1d1c1b;
+  --sidebar-foreground: #efedea;
+  --sidebar-border: #2b2a27;
+  --sidebar-accent: #2b2a27;
 
-  --workspace: #201f1e;
+  --workspace: #1f1e1c;
+
+  /* Brand accent (COLOR-10): marketing + wordmark only */
+  --ember: #e07b52;
+  --ember-soft: #36211a;
+
+  --status-running: #60a5fa;
+  --status-running-soft: #1c2940;
+  --status-running-foreground: #93c5fd;
+  --status-success: #34d399;
+  --status-success-soft: #122b22;
+  --status-success-foreground: #6ee7b7;
+  --status-warning: #fbbf24;
+  --status-warning-soft: #2e2510;
+  --status-warning-foreground: #fcd34d;
+
+  /* Modal/backdrop scrim (COLOR-2) */
+  --overlay: rgba(12, 11, 10, 0.6);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* ring alpha lives in the --ring token (D-8) — no opacity modifiers on consumers */
+    @apply border-border outline-ring;
   }
 
   body {
@@ -151,44 +222,6 @@
 }
 
 /* -- Entrance animations -- */
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }

@@ -6,7 +6,7 @@ Normative layering references:
 
 1. Accepted charter `docs/superpowers/specs/2026-05-23-ash-startup-design.md`
 3. ADR-0004 — triple-pane UX freeze  
-4. ADR-0005 + **`docs/visual-language-and-theme.md`** — tokens, chroma posture, review gates
+4. ADR-0013 + **`docs/design-guidelines.md`** — tokens, chroma posture, review gates
 
 Update these docs **together** whenever shipped behavior diverges (`AGENTS.md` finish checklist mirrors cogito’s “touch component docs if harness behavior changed.”)
 

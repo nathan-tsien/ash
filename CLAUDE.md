@@ -12,7 +12,7 @@ This repo copies **cogito documentation discipline**:
 3. **`ROADMAP.md`** — What is in-flight versus deferred gates.
 4. **`docs/superpowers/specs/2026-05-23-ash-startup-design.md`** — Approved Phase 1 slice.
 5. **`docs/components/*.md`** — Per-pane UX + payload contracts (**update alongside code changes**).
-6. **`docs/visual-language-and-theme.md`** + **ADR-0005** — Colors, typography rhythm, elevation, motion discipline, dark-mode gate.
+6. **`docs/design-guidelines.md`** + **ADR-0013** — Single normative design authority: rule IDs (PRIN/COLOR/TYPE/SPACE/MOTION/IA/UX/IMPL/REV), tokens, motion, review protocol, deviation register.
 7. **`docs/adr/README.md` + numbered ADRs** — Record/supersede decisions like cogito’s ADR corpus.
 
 Upstream runtime lives in **[github.com/nathan-tsien/cogito](https://github.com/nathan-tsien/cogito)** outside this repo.
@@ -34,7 +34,7 @@ ADR-0002 documents coupling strategy (server-only cogito linkage later).
 2. Respect package layering analogous to cogito crates (UI vs shapes vs compositions).
 3. Triple-pane UX semantics fixed per ADR-0004 unless superseded.
 4. Respect Phase gates (no SSE/auth/server crates until roadmap + specs say so).
-5. Token + visual discipline per **`docs/visual-language-and-theme.md`** / ADR-0005 (no rogue palette literals).
+5. Token + visual discipline per **`docs/design-guidelines.md`** / ADR-0013 + ADR-0014 (no rogue palette literals).
 
 ## Commands
 

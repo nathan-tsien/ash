@@ -37,7 +37,7 @@ export function LocaleSwitcher() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 px-2 text-[12px] font-medium"
+          className="h-8 gap-1.5 px-2 text-label"
           aria-label={t("ariaLabel")}
         >
           <Globe className="size-3.5" aria-hidden />

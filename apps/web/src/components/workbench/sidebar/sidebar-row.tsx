@@ -24,14 +24,14 @@ export function SidebarRow({
       >
         <p
           className={cn(
-            "truncate text-[13px] leading-snug",
+            "truncate text-body-sm",
             c.unread ? "font-semibold" : "font-medium",
           )}
         >
           {c.title}
         </p>
         <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{c.preview}</p>
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-label font-normal text-muted-foreground">
           {formatRelativeTime(c.updatedAt, locale)}
         </p>
       </Link>
