@@ -6,7 +6,7 @@ import { getAccessTokenWithRefresh } from "./auth";
 const PRAXIS_BASE_URL = process.env.PRAXIS_BASE_URL ?? "http://localhost:8091";
 
 /** Only `/v1/tasks/**` is proxied. Keeps this from being an open proxy. */
-const ALLOWED_ROOT = "tasks";
+const ALLOWED = (segments: string[]) => segments[0] === "v1" && segments[1] === "tasks";
 
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -23,7 +23,7 @@ function json(body: unknown, status: number): Response {
  * Speaks HTTP only — does not import cogito or any praxis Rust crate.
  */
 export async function forwardToPraxis(request: Request, segments: string[]): Promise<Response> {
-  if (segments[0] !== ALLOWED_ROOT) {
+  if (!ALLOWED(segments)) {
     return json({ error: "not_found" }, 404);
   }
 
@@ -36,7 +36,9 @@ export async function forwardToPraxis(request: Request, segments: string[]): Pro
   // Preserve the query string (e.g. /history's ?cursor=...): the catch-all route
   // captures path segments only, so the search must be carried over explicitly.
   const search = new URL(request.url).search;
-  const url = `${PRAXIS_BASE_URL}/v1/${segments.join("/")}${search}`;
+  // Segments already include "v1" (e.g. ["v1","tasks","t1"]); forward transparently
+  // so the browser client's contract paths reach praxis without double-prefixing.
+  const url = `${PRAXIS_BASE_URL}/${segments.join("/")}${search}`;
   const headers: Record<string, string> = { authorization: `Bearer ${token}` };
   const init: RequestInit = { method: request.method, headers, signal: request.signal };
 
