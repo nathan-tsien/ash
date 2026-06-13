@@ -16,6 +16,7 @@ import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
 import { messageEntrance, messageStagger } from "@/lib/animations/presets";
 import type { WorkspaceToggleProps } from "../workbench-types";
+import { useCancelTask } from "../task-run-provider";
 import { AnswerPrompt } from "./answer-prompt";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
@@ -34,6 +35,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
   const [draft, setDraft] = useState("");
   const [extraMessages, setExtraMessages] = useState<Message[]>([]);
   const t = useTranslations("Workbench");
+  const cancelTask = useCancelTask();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -107,6 +109,16 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {(active.status === "running" || Boolean(pendingQuestion)) ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={() => void cancelTask(active.id)}
+            >
+              {t("cancelTask")}
+            </Button>
+          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

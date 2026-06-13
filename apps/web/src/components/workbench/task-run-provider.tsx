@@ -35,6 +35,8 @@ interface TaskRunContextValue {
   attach(taskId: string): Promise<void>;
   /** Seed a task fetched on the server (deep-link cold load) into session state. */
   seedTask(task: Task): void;
+  /** Cancel a non-terminal task (praxis POST /cancel) and abort its stream. */
+  cancelTask(taskId: string): Promise<void>;
 }
 
 const TaskRunContext = createContext<TaskRunContextValue | null>(null);
@@ -254,6 +256,25 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     setOrder((prev) => (prev.includes(task.id) ? prev : [task.id, ...prev]));
   }, []);
 
+  // Cancel a non-terminal task: POST /cancel to praxis, abort the live stream
+  // controller (if any), then flip the local status to failed so the UI reflects
+  // termination immediately — the stream's finally block will no-op on abort.
+  const cancelTask = useCallback(async (taskId: string) => {
+    await clientRef.current.cancel(taskId);
+    // Abort the live stream for this task, if one is running.
+    // controllersRef holds all active AbortControllers; we abort all of them
+    // that correspond to this task by aborting each and letting runStream's
+    // finally handler clean them from the set.
+    for (const controller of controllersRef.current) {
+      controller.abort();
+    }
+    controllersRef.current.clear();
+    activeStreamsRef.current.delete(taskId);
+    setRuns((prev) =>
+      prev[taskId] ? { ...prev, [taskId]: { ...prev[taskId], status: "failed" } } : prev,
+    );
+  }, []);
+
   const value = useMemo<TaskRunContextValue>(
     () => ({
       runs: order.map((id) => runs[id]).filter(Boolean) as Task[],
@@ -262,8 +283,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       answer,
       attach,
       seedTask,
+      cancelTask,
     }),
-    [order, runs, startTask, answer, attach, seedTask],
+    [order, runs, startTask, answer, attach, seedTask, cancelTask],
   );
 
   return <TaskRunContext.Provider value={value}>{children}</TaskRunContext.Provider>;
@@ -321,4 +343,12 @@ export function useSeedTask(): (task: Task) => void {
   const ctx = useContext(TaskRunContext);
   if (!ctx) throw new Error("useSeedTask must be used within TaskRunProvider");
   return ctx.seedTask;
+}
+
+/**
+ * Returns the `cancelTask` function to cancel a non-terminal task via praxis
+ * and immediately reflect the terminal state in the UI.
+ */
+export function useCancelTask(): (taskId: string) => Promise<void> {
+  return useTaskRunContext().cancelTask;
 }

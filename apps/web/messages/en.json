@@ -385,7 +385,8 @@
     "loadMore": "Load more",
     "tasksEmpty": "No tasks yet",
     "tasksError": "Failed to load, click to retry",
-    "viewAllTasks": "View all tasks"
+    "viewAllTasks": "View all tasks",
+    "cancelTask": "Cancel task"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

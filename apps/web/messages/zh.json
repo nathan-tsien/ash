@@ -385,7 +385,8 @@
     "loadMore": "加载更多",
     "tasksEmpty": "还没有任务",
     "tasksError": "加载失败，点击重试",
-    "viewAllTasks": "查看全部任务"
+    "viewAllTasks": "查看全部任务",
+    "cancelTask": "取消任务"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
