@@ -28,7 +28,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List the caller's tasks. */
+        /** List the caller's tasks (single page; pagination deferred). */
         get: operations["listTasks"];
         put?: never;
         /** Create a task. */
@@ -46,7 +46,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List the caller's projects. */
+        /** List the caller's projects (single page; pagination deferred). */
         get: operations["listProjects"];
         put?: never;
         /** Create a project. */
@@ -115,8 +115,51 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Server-sent event stream of a task's runtime events. */
+        /**
+         * Server-sent event stream of a task's runtime events.
+         * @description SSE stream (text/event-stream). Each event's `data` is a JSON RuntimeEvent (tagged union, discriminator `type`; see components.schemas.RuntimeEvent).
+         *     Stream semantics (v0.1.0, stable): 1. This is a READ-ONLY window onto the server-side session driver. Closing the
+         *        stream (tab close, network drop) does NOT stop or affect task execution —
+         *        the driver runs server-side, maintained by the session lease and recovered
+         *        by the eager-recovery sweeper, and can progress with no inbound request.
+         *     2. Closing the stream is NOT a cancel. Termination is only POST /v1/tasks/{id}/cancel. 3. The stream is LIVE-ONLY: it delivers events from the moment of subscription.
+         *        There is no event id, no Last-Event-ID, and no replay; events emitted while a
+         *        client is disconnected are not redelivered. The reconnect/catch-up story
+         *        (a session snapshot read endpoint, then re-subscribe) is a planned 0.1.x
+         *        additive item and is intentionally not part of v0.1.0.
+         *     4. The stream always TERMINATES (0.1.4): the server emits a final
+         *        `stream_end{task_status}` frame and closes the connection. It is sent
+         *        immediately when subscribing to a task already in a terminal status
+         *        (without reviving its session), after a `turn_failed`/`turn_cancelled`
+         *        is delivered, or on server-side session teardown (complete, cancel,
+         *        lease loss). A client may treat `stream_end` as authoritative
+         *        end-of-stream; reconnect only if `task_status` is non-terminal.
+         *        Comment-line keep-alive frames are sent on idle streams.
+         *
+         *     On subscribe, the server re-emits any currently-pending `ask_user` events (questions awaiting an answer) ahead of the live stream, so a reconnecting client recovers their `ask_id`. Clients MUST dedup `ask_user` by `ask_id`.
+         *     The event union is marked beta (x-praxis-stability): variant fields may change while cogito is pre-1.0; the set of variants only grows (consumers MUST ignore unknown `type`).
+         */
         get: operations["taskEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tasks/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A page of a task's historical conversation events (newest first).
+         * @description Returns persisted conversation events projected into the HistoryEvent union, newest-first, paginated by an opaque seq cursor. This is the catch-up half of the reconnect story: a client renders history here, then subscribes to GET /v1/tasks/{id}/events for the live stream. History carries completed blocks (assistant_message, thinking, tool_use, tool_result, notify_user, ask_user, user_message, turn_completed, turn_failed); the live stream carries deltas and turn boundaries. The two do not overlap. A historical ask_user carries no ask_id (the live correlation id is delivered only over the event stream, re-emitted on subscribe for still-pending questions). A task with no session yet (draft) returns an empty page.
+         */
+        get: operations["taskHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -159,15 +202,151 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tasks/{id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer a pending message_ask_user question. */
+        post: operations["answerQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Praxis-owned mirror of cogito's session stream events, delivered as SSE data frames. Internally tagged by `type` (snake_case). The real type lives in praxis-protocol. */
+        RuntimeEvent: {
+            /** @constant */
+            type: "turn_started";
+        } | {
+            /** @constant */
+            type: "turn_paused";
+        } | {
+            /** @constant */
+            type: "turn_resumed";
+        } | {
+            /** @constant */
+            type: "turn_cancelled";
+        } | {
+            /** @constant */
+            type: "turn_completed";
+            /** @description Final model call's stop reason (snake_case open set: end_turn, tool_use, max_tokens, stop_sequence). max_tokens flags a truncated turn presented as completed. Absent on legacy/replay-reconstructed events (live-only signal). Consumers tolerate unknown values. */
+            stop_reason?: string;
+        } | {
+            /** @constant */
+            type: "turn_failed";
+            reason: string;
+        } | {
+            /** @constant */
+            type: "text_delta";
+            chunk: string;
+        } | {
+            /** @constant */
+            type: "thinking_delta";
+            chunk: string;
+        } | {
+            /** @constant */
+            type: "skill_activation_requested";
+            skill_name: string;
+        } | {
+            /** @constant */
+            type: "tool_dispatch_started";
+            call_id: string;
+            tool_name: string;
+            args: unknown;
+        } | {
+            /** @constant */
+            type: "tool_dispatch_ended";
+            call_id: string;
+            ok: boolean;
+            error_message?: string | null;
+        } | {
+            /** @constant */
+            type: "notify_user";
+            text: string;
+            attachments?: string[];
+        } | {
+            /** @constant */
+            type: "ask_user";
+            ask_id: string;
+            text: string;
+            attachments?: string[];
+        } | {
+            /** @constant */
+            type: "stream_end";
+            task_status: components["schemas"]["TaskStatus"];
+        };
+        /** @description A projected historical conversation event, internally tagged by `type` (snake_case). Historical sibling of RuntimeEvent: completed blocks rather than deltas. The set of variants only grows; consumers MUST ignore unknown `type`. */
+        HistoryEvent: {
+            /** @constant */
+            type: "user_message";
+            content: unknown;
+        } | {
+            /** @constant */
+            type: "assistant_message";
+            text: string;
+        } | {
+            /** @constant */
+            type: "thinking";
+            text: string;
+        } | {
+            /** @constant */
+            type: "tool_use";
+            call_id: string;
+            tool_name: string;
+            args: unknown;
+        } | {
+            /** @constant */
+            type: "tool_result";
+            call_id: string;
+            ok: boolean;
+            output?: unknown;
+            error_message?: string;
+        } | {
+            /** @constant */
+            type: "notify_user";
+            text: string;
+            attachments: string[];
+        } | {
+            /** @constant */
+            type: "ask_user";
+            text: string;
+            attachments: string[];
+        } | {
+            /** @constant */
+            type: "turn_completed";
+        } | {
+            /** @constant */
+            type: "turn_failed";
+            reason: unknown;
+        };
+        HistoryItem: {
+            /** Format: int64 */
+            seq: number;
+            turn_id?: string;
+            /** Format: date-time */
+            ts: string;
+            event: components["schemas"]["HistoryEvent"];
+        };
+        /** @description A page of history, newest-first. `next_cursor` (opaque) fetches the next older page; null/absent means the log is exhausted. */
+        TaskHistoryPage: {
+            items: components["schemas"]["HistoryItem"][];
+            next_cursor?: string | null;
+        };
         /**
          * @description Lifecycle states for a praxis task.
          * @enum {string}
          */
-        TaskStatus: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled";
+        TaskStatus: "draft" | "running" | "paused" | "awaiting_input" | "completed" | "failed" | "cancelled";
         /** @description Summary of a task returned by create/get/list. */
         TaskSummary: {
             /** Format: uuid */
@@ -177,9 +356,18 @@ export interface components {
             /** Format: uuid */
             project_id?: string | null;
         };
-        /** @description Uniform error response body. */
+        /** @description A page of tasks. `next_cursor` is an opaque cursor for the next page; null/absent means no more pages. */
+        TaskList: {
+            items: components["schemas"]["TaskSummary"][];
+            next_cursor?: string | null;
+        };
+        /** @description Uniform error response body. `code` is a stable, machine-dispatchable string (open set; consumers must tolerate unknown codes). `message` is human-readable and not stable. */
         ErrorBody: {
-            error: string;
+            code: string;
+            message: string;
+            details?: {
+                [key: string]: unknown;
+            };
         };
         /** @description Inbound payload for creating a task. */
         CreateTaskRequest: {
@@ -195,6 +383,11 @@ export interface components {
             id: string;
             title: string;
         };
+        /** @description A page of projects. `next_cursor` is an opaque cursor for the next page; null/absent means no more pages. */
+        ProjectList: {
+            items: components["schemas"]["ProjectSummary"][];
+            next_cursor?: string | null;
+        };
         /** @description Inbound payload for creating a project. */
         CreateProjectRequest: {
             title: string;
@@ -202,10 +395,17 @@ export interface components {
         /** @description Body for starting a task's first turn. */
         StartTaskRequest: {
             user_input: string;
+            /** @description Optional name of a registered skill to prefer for this task. A hint, not a lock: the model may still select a different skill. Unregistered hints are ignored. */
+            skill_hint?: string;
         };
         /** @description Body for sending a follow-up user message into a running task. */
         SendMessageRequest: {
             text: string;
+        };
+        /** @description Body for answering a pending message_ask_user question. */
+        AnswerRequest: {
+            ask_id: string;
+            answer: string;
         };
     };
     responses: {
@@ -218,8 +418,24 @@ export interface components {
                 "application/json": components["schemas"]["ErrorBody"];
             };
         };
+        /** @description Retryable error. The Retry-After header advises a wait (seconds) before retrying. */
+        RetryableError: {
+            headers: {
+                /** @description Seconds to wait before retrying. */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorBody"];
+            };
+        };
     };
-    parameters: never;
+    parameters: {
+        /** @description Max items per page. Server returns a single page in v0.1.0; pagination logic is deferred. */
+        Limit: number;
+        /** @description Opaque pagination cursor from a prior response's next_cursor. Ignored until pagination ships. */
+        Cursor: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -246,20 +462,25 @@ export interface operations {
     };
     listTasks: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Max items per page. Server returns a single page in v0.1.0; pagination logic is deferred. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque pagination cursor from a prior response's next_cursor. Ignored until pagination ships. */
+                cursor?: components["parameters"]["Cursor"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Task list. */
+            /** @description A page of tasks. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskSummary"][];
+                    "application/json": components["schemas"]["TaskList"];
                 };
             };
             401: components["responses"]["Error"];
@@ -292,20 +513,25 @@ export interface operations {
     };
     listProjects: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Max items per page. Server returns a single page in v0.1.0; pagination logic is deferred. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque pagination cursor from a prior response's next_cursor. Ignored until pagination ships. */
+                cursor?: components["parameters"]["Cursor"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Project list. */
+            /** @description A page of projects. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProjectSummary"][];
+                    "application/json": components["schemas"]["ProjectList"];
                 };
             };
             401: components["responses"]["Error"];
@@ -387,6 +613,8 @@ export interface operations {
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+            429: components["responses"]["RetryableError"];
+            503: components["responses"]["RetryableError"];
         };
     };
     sendTaskMessage: {
@@ -414,6 +642,7 @@ export interface operations {
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+            503: components["responses"]["RetryableError"];
         };
     };
     taskEvents: {
@@ -427,15 +656,46 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description SSE stream. Each event's data is a JSON RuntimeEvent (tagged union, field "type"); the full variant set is documented in ADR-0008. */
+            /** @description SSE stream of RuntimeEvent frames. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": string;
+                    "text/event-stream": components["schemas"]["RuntimeEvent"];
                 };
             };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["RetryableError"];
+        };
+    };
+    taskHistory: {
+        parameters: {
+            query?: {
+                /** @description Max items per page. Server returns a single page in v0.1.0; pagination logic is deferred. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque pagination cursor from a prior response's next_cursor. Ignored until pagination ships. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of history, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskHistoryPage"];
+                };
+            };
+            400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };
@@ -476,6 +736,33 @@ export interface operations {
         responses: {
             /** @description Task completed. */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    answerQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Answer accepted; turn resumes asynchronously. */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

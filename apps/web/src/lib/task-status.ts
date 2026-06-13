@@ -9,6 +9,7 @@ export function taskStatusDotVariant(
 ): NonNullable<StatusDotProps["status"]> {
   switch (status) {
     case "running":
+    case "awaiting_input":
       return "running";
     case "completed":
       return "success";
@@ -23,10 +24,12 @@ export function taskStatusDotVariant(
 // (decorative) dot, since the dot is the only status carrier in those rows.
 export function taskStatusLabelKey(
   status: TaskStatus,
-): "running" | "completed" | "failed" | "pending" {
+): "running" | "awaitingInput" | "completed" | "failed" | "pending" {
   switch (status) {
     case "running":
       return "running";
+    case "awaiting_input":
+      return "awaitingInput";
     case "completed":
       return "completed";
     case "failed":

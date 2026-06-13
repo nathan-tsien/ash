@@ -52,7 +52,23 @@ export interface Artifact {
   updatedAt: string;
 }
 
-export type TaskStatus = "pending" | "running" | "completed" | "failed";
+export type TaskStatus =
+  | "pending"
+  | "running"
+  | "awaiting_input"
+  | "completed"
+  | "failed";
+
+/** A question the agent is waiting on (praxis `ask_user`). */
+export interface PendingQuestion {
+  /** Live correlation id; required to POST an answer. Empty when recovered
+   *  from history before the live stream re-emits it (read-only). */
+  askId: string;
+  /** Question text shown to the user. */
+  text: string;
+  /** Workspace-relative attachment refs; [] when none. */
+  attachments: string[];
+}
 
 export interface Task {
   id: string;
@@ -66,6 +82,8 @@ export interface Task {
   messages: Message[];
   artifacts: Artifact[];
   toolTraces: ToolTrace[];
+  /** Present iff status === "awaiting_input". */
+  pendingQuestion?: PendingQuestion;
 }
 
 export type ProjectStatus = "active" | "paused" | "completed" | "archived";

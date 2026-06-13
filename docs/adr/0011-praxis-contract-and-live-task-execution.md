@@ -4,6 +4,8 @@
 
 Accepted (2026-06-03)
 
+Partially superseded by ADR-0015 (2026-06-13): §1 (RuntimeEvent now generated, not hand-mirrored), §5-6 (awaiting_input is non-terminal; a task is not auto-completed while awaiting input), §7 (same-session /history catch-up, still no ash-side persistence).
+
 ## Context
 
 Phase 1 shipped the workbench shell on mocks. The first move toward live execution needs a data pipeline

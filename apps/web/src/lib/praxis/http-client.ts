@@ -1,5 +1,6 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskSummary } from "./runtime-events";
+import { PraxisError } from "./errors";
 import { SseParser } from "./sse";
 
 /**
@@ -12,16 +13,34 @@ import { SseParser } from "./sse";
  */
 const BASE = "/api/praxis/tasks";
 
+async function readError(res: Response, method: string, url: string): Promise<PraxisError> {
+  let code = "";
+  try {
+    const body = (await res.json()) as { code?: string };
+    code = body?.code ?? "";
+  } catch {
+    // non-JSON error body; fall through to status-only message
+  }
+  const suffix = code ? ` (${code})` : "";
+  return new PraxisError(`praxis ${method} ${url} -> ${res.status}${suffix}`, res.status, code);
+}
+
 async function postJson<T>(url: string, body?: unknown): Promise<T | undefined> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`praxis POST ${url} -> ${res.status}`);
+  if (!res.ok) throw await readError(res, "POST", url);
   if (res.status === 204) return undefined;
   const text = await res.text();
   return text ? (JSON.parse(text) as T) : undefined;
+}
+
+async function getJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: { accept: "application/json" } });
+  if (!res.ok) throw await readError(res, "GET", url);
+  return (await res.json()) as T;
 }
 
 export const httpPraxisClient: PraxisTaskClient = {
@@ -71,6 +90,15 @@ export const httpPraxisClient: PraxisTaskClient = {
 
   async sendMessage(id: string, text: string): Promise<void> {
     await postJson(`${BASE}/${id}/messages`, { text });
+  },
+
+  async answer(id: string, askId: string, answer: string): Promise<void> {
+    await postJson(`${BASE}/${id}/answers`, { ask_id: askId, answer });
+  },
+
+  async history(id: string, cursor?: string): Promise<TaskHistoryPage> {
+    const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    return getJson<TaskHistoryPage>(`${BASE}/${id}/history${qs}`);
   },
 
   async complete(id: string): Promise<void> {

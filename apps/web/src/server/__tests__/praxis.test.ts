@@ -90,7 +90,11 @@ describe("forwardToPraxis", () => {
     fetchFn.mockRejectedValue(new DOMException("aborted", "AbortError"));
     // jsdom's Request rejects undici's AbortSignal instance; fetch is mocked, so
     // a minimal GET stand-in exercises the aborted-signal branch faithfully.
-    const req = { method: "GET", signal: { aborted: true } } as unknown as Request;
+    const req = {
+      method: "GET",
+      url: "http://localhost/api/praxis/tasks/t1/events",
+      signal: { aborted: true },
+    } as unknown as Request;
 
     const res = await forwardToPraxis(req, ["tasks", "t1", "events"]);
 
@@ -105,6 +109,21 @@ describe("forwardToPraxis", () => {
     const res = await forwardToPraxis(req, ["tasks"]);
 
     expect(res.status).toBe(502);
+  });
+
+  it("forwards the query string (e.g. history cursor) to praxis", async () => {
+    const fetchFn = fetchMock();
+    fetchFn.mockResolvedValue(
+      new Response('{"items":[]}', { status: 200, headers: { "content-type": "application/json" } }),
+    );
+    const req = new Request("http://localhost/api/praxis/tasks/t1/history?cursor=abc&limit=50", {
+      method: "GET",
+    });
+
+    const res = await forwardToPraxis(req, ["tasks", "t1", "history"]);
+
+    expect(res.status).toBe(200);
+    expect(fetchFn.mock.calls[0][0]).toBe("http://localhost:8091/v1/tasks/t1/history?cursor=abc&limit=50");
   });
 
   it("streams an events GET through as text/event-stream", async () => {

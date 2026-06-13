@@ -1,8 +1,24 @@
 openapi: 3.1.0
 info:
   title: praxis API
-  version: 0.1.0
-  description: praxis HTTP API. Source of truth for the wire contract (design-first; see ADR-0007).
+  version: 0.1.5
+  description: >-
+    praxis HTTP API. Source of truth for the wire contract (design-first; see ADR-0007).
+    Stability: this is a stable, additive contract within 0.1.x (see openapi/VERSIONING.md) —
+    no breaking change to an existing shape without a version bump. The `/v1` path is the
+    major-compatibility axis; `info.version` is the document semver. Tagged-union consumers
+    MUST ignore unknown `type`/`code` values so additions stay backward-compatible.
+  x-praxis-error-codes:
+    description: >-
+      Open set of machine-dispatchable error `code` values (ErrorBody.code). New codes may
+      be added; consumers must tolerate unknown codes.
+    codes:
+      unauthorized: 401 — auth missing or invalid (no detail leaked).
+      not_found: 404 — task/project/session does not exist or is not owned by the caller.
+      conflict: 409 — illegal state-machine transition or closed session.
+      owned_elsewhere: 503 — session is leased on another node; retry (see Retry-After).
+      quota_exceeded: 429 — admission/backpressure limit hit (shape only in v0.1.0; admission impl is separate).
+      internal: 500 — unexpected server error (no detail leaked).
 servers:
   - url: /
 paths:
@@ -35,16 +51,17 @@ paths:
           $ref: "#/components/responses/Error"
     get:
       operationId: listTasks
-      summary: List the caller's tasks.
+      summary: List the caller's tasks (single page; pagination deferred).
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
       responses:
         "200":
-          description: Task list.
+          description: A page of tasks.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./schemas.json#/$defs/TaskSummary"
+                $ref: "./schemas.json#/$defs/TaskList"
         "401":
           $ref: "#/components/responses/Error"
   /v1/projects:
@@ -68,16 +85,17 @@ paths:
           $ref: "#/components/responses/Error"
     get:
       operationId: listProjects
-      summary: List the caller's projects.
+      summary: List the caller's projects (single page; pagination deferred).
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
       responses:
         "200":
-          description: Project list.
+          description: A page of projects.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./schemas.json#/$defs/ProjectSummary"
+                $ref: "./schemas.json#/$defs/ProjectList"
         "401":
           $ref: "#/components/responses/Error"
   /v1/tasks/{id}:
@@ -88,9 +106,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
       responses:
         "200":
           description: The task.
@@ -98,9 +114,9 @@ paths:
             application/json:
               schema:
                 $ref: "./schemas.json#/$defs/TaskSummary"
-        "404":
-          $ref: "#/components/responses/Error"
         "401":
+          $ref: "#/components/responses/Error"
+        "404":
           $ref: "#/components/responses/Error"
   /v1/tasks/{id}/start:
     post:
@@ -110,9 +126,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
@@ -132,6 +146,10 @@ paths:
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/RetryableError"
+        "503":
+          $ref: "#/components/responses/RetryableError"
   /v1/tasks/{id}/messages:
     post:
       operationId: sendTaskMessage
@@ -140,9 +158,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
@@ -158,10 +174,43 @@ paths:
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/RetryableError"
   /v1/tasks/{id}/events:
     get:
       operationId: taskEvents
       summary: Server-sent event stream of a task's runtime events.
+      description: >-
+        SSE stream (text/event-stream). Each event's `data` is a JSON RuntimeEvent
+        (tagged union, discriminator `type`; see components.schemas.RuntimeEvent).
+
+        Stream semantics (v0.1.0, stable):
+        1. This is a READ-ONLY window onto the server-side session driver. Closing the
+           stream (tab close, network drop) does NOT stop or affect task execution —
+           the driver runs server-side, maintained by the session lease and recovered
+           by the eager-recovery sweeper, and can progress with no inbound request.
+        2. Closing the stream is NOT a cancel. Termination is only POST /v1/tasks/{id}/cancel.
+        3. The stream is LIVE-ONLY: it delivers events from the moment of subscription.
+           There is no event id, no Last-Event-ID, and no replay; events emitted while a
+           client is disconnected are not redelivered. The reconnect/catch-up story
+           (a session snapshot read endpoint, then re-subscribe) is a planned 0.1.x
+           additive item and is intentionally not part of v0.1.0.
+        4. The stream always TERMINATES (0.1.4): the server emits a final
+           `stream_end{task_status}` frame and closes the connection. It is sent
+           immediately when subscribing to a task already in a terminal status
+           (without reviving its session), after a `turn_failed`/`turn_cancelled`
+           is delivered, or on server-side session teardown (complete, cancel,
+           lease loss). A client may treat `stream_end` as authoritative
+           end-of-stream; reconnect only if `task_status` is non-terminal.
+           Comment-line keep-alive frames are sent on idle streams.
+
+        On subscribe, the server re-emits any currently-pending `ask_user` events
+        (questions awaiting an answer) ahead of the live stream, so a reconnecting
+        client recovers their `ask_id`. Clients MUST dedup `ask_user` by `ask_id`.
+
+        The event union is marked beta (x-praxis-stability): variant fields may change
+        while cogito is pre-1.0; the set of variants only grows (consumers MUST ignore
+        unknown `type`).
       parameters:
         - name: id
           in: path
@@ -169,13 +218,48 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "200":
-          description: >-
-            SSE stream. Each event's data is a JSON RuntimeEvent (tagged union,
-            field "type"); the full variant set is documented in ADR-0008.
+          description: SSE stream of RuntimeEvent frames.
           content:
             text/event-stream:
               schema:
-                type: string
+                $ref: "#/components/schemas/RuntimeEvent"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/RetryableError"
+  /v1/tasks/{id}/history:
+    get:
+      operationId: taskHistory
+      summary: A page of a task's historical conversation events (newest first).
+      description: >-
+        Returns persisted conversation events projected into the HistoryEvent union,
+        newest-first, paginated by an opaque seq cursor. This is the catch-up half of
+        the reconnect story: a client renders history here, then subscribes to
+        GET /v1/tasks/{id}/events for the live stream. History carries completed blocks
+        (assistant_message, thinking, tool_use, tool_result, notify_user, ask_user,
+        user_message, turn_completed, turn_failed); the live stream carries deltas and
+        turn boundaries. The two do not overlap. A historical ask_user carries no ask_id
+        (the live correlation id is delivered only over the event stream, re-emitted on
+        subscribe for still-pending questions). A task with no session yet (draft) returns
+        an empty page.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: A page of history, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskHistoryPage"
+        "400":
+          $ref: "#/components/responses/Error"
         "401":
           $ref: "#/components/responses/Error"
         "404":
@@ -216,7 +300,44 @@ paths:
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
+  /v1/tasks/{id}/answers:
+    post:
+      operationId: answerQuestion
+      summary: Answer a pending message_ask_user question.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas.json#/$defs/AnswerRequest"
+      responses:
+        "202":
+          description: Answer accepted; turn resumes asynchronously.
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
 components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Max items per page. Server returns a single page in v0.1.0; pagination logic is deferred.
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque pagination cursor from a prior response's next_cursor. Ignored until pagination ships.
+      schema: { type: string }
   responses:
     Error:
       description: Error response.
@@ -224,6 +345,145 @@ components:
         application/json:
           schema:
             $ref: "./schemas.json#/$defs/ErrorBody"
+    RetryableError:
+      description: Retryable error. The Retry-After header advises a wait (seconds) before retrying.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema: { type: integer, minimum: 0 }
+      content:
+        application/json:
+          schema:
+            $ref: "./schemas.json#/$defs/ErrorBody"
+  schemas:
+    RuntimeEvent:
+      description: >-
+        Praxis-owned mirror of cogito's session stream events, delivered as SSE data frames.
+        Internally tagged by `type` (snake_case). The real type lives in praxis-protocol.
+      x-praxis-stability: beta
+      oneOf:
+        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_started } } }
+        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_paused } } }
+        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_resumed } } }
+        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_cancelled } } }
+        - type: object
+          required: [type]
+          additionalProperties: false
+          properties:
+            type: { const: turn_completed }
+            stop_reason:
+              type: string
+              description: >-
+                Final model call's stop reason (snake_case open set: end_turn, tool_use,
+                max_tokens, stop_sequence). max_tokens flags a truncated turn presented as
+                completed. Absent on legacy/replay-reconstructed events (live-only signal).
+                Consumers tolerate unknown values.
+        - type: object
+          required: [type, reason]
+          additionalProperties: false
+          properties:
+            type: { const: turn_failed }
+            reason: { type: string }
+        - type: object
+          required: [type, chunk]
+          additionalProperties: false
+          properties:
+            type: { const: text_delta }
+            chunk: { type: string }
+        - type: object
+          required: [type, chunk]
+          additionalProperties: false
+          properties:
+            type: { const: thinking_delta }
+            chunk: { type: string }
+        - type: object
+          required: [type, skill_name]
+          additionalProperties: false
+          properties:
+            type: { const: skill_activation_requested }
+            skill_name: { type: string }
+        - type: object
+          required: [type, call_id, tool_name, args]
+          additionalProperties: false
+          properties:
+            type: { const: tool_dispatch_started }
+            call_id: { type: string }
+            tool_name: { type: string }
+            args: {}
+        - type: object
+          required: [type, call_id, ok]
+          additionalProperties: false
+          properties:
+            type: { const: tool_dispatch_ended }
+            call_id: { type: string }
+            ok: { type: boolean }
+            error_message: { type: ["string", "null"] }
+        - type: object
+          required: [type, text, ask_id]
+          additionalProperties: false
+          properties:
+            type: { const: notify_user }
+            text: { type: string }
+            attachments:
+              type: array
+              items: { type: string }
+        - type: object
+          required: [type, ask_id, text]
+          additionalProperties: false
+          properties:
+            type: { const: ask_user }
+            ask_id: { type: string }
+            text: { type: string }
+            attachments:
+              type: array
+              items: { type: string }
+        - type: object
+          required: [type, task_status]
+          additionalProperties: false
+          description: >-
+            Praxis-originated end-of-stream marker (0.1.4): the LAST frame
+            before the server closes the stream, carrying the task's terminal
+            (or last known) status. Sent immediately when subscribing to an
+            already-terminal task.
+          properties:
+            type: { const: stream_end }
+            task_status:
+              $ref: "./schemas.json#/$defs/TaskStatus"
+      discriminator:
+        propertyName: type
+    HistoryEvent:
+      description: >-
+        A projected historical conversation event, internally tagged by `type`
+        (snake_case). Historical sibling of RuntimeEvent: completed blocks rather than
+        deltas. The set of variants only grows; consumers MUST ignore unknown `type`.
+      x-praxis-stability: beta
+      oneOf:
+        - { type: object, required: [type, content], additionalProperties: false, properties: { type: { const: user_message }, content: {} } }
+        - { type: object, required: [type, text], additionalProperties: false, properties: { type: { const: assistant_message }, text: { type: string } } }
+        - { type: object, required: [type, text], additionalProperties: false, properties: { type: { const: thinking }, text: { type: string } } }
+        - { type: object, required: [type, call_id, tool_name, args], additionalProperties: false, properties: { type: { const: tool_use }, call_id: { type: string }, tool_name: { type: string }, args: {} } }
+        - { type: object, required: [type, call_id, ok], additionalProperties: false, properties: { type: { const: tool_result }, call_id: { type: string }, ok: { type: boolean }, output: {}, error_message: { type: string } } }
+        - { type: object, required: [type, text, attachments], additionalProperties: false, properties: { type: { const: notify_user }, text: { type: string }, attachments: { type: array, items: { type: string } } } }
+        - { type: object, required: [type, text, attachments], additionalProperties: false, properties: { type: { const: ask_user }, text: { type: string }, attachments: { type: array, items: { type: string } } } }
+        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_completed } } }
+        - { type: object, required: [type, reason], additionalProperties: false, properties: { type: { const: turn_failed }, reason: {} } }
+    HistoryItem:
+      type: object
+      additionalProperties: false
+      required: [seq, ts, event]
+      properties:
+        seq: { type: integer, format: int64, minimum: 0 }
+        turn_id: { type: string }
+        ts: { type: string, format: date-time }
+        event: { $ref: "#/components/schemas/HistoryEvent" }
+    TaskHistoryPage:
+      type: object
+      additionalProperties: false
+      description: A page of history, newest-first. `next_cursor` (opaque) fetches the next older page; null/absent means the log is exhausted.
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/HistoryItem" } }
+        next_cursor: { type: [string, "null"] }
   securitySchemes:
     bearerAuth:
       type: http

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AshLocale, Conversation, Message } from "@ash/shared";
+import type { AshLocale, Conversation, Message, PendingQuestion } from "@ash/shared";
 import { Button } from "@ash/ui/button";
 import { ScrollArea } from "@ash/ui/scroll-area";
 import {
@@ -16,6 +16,7 @@ import gsap from "gsap";
 import "@/lib/animations/gsap-setup";
 import { messageEntrance, messageStagger } from "@/lib/animations/presets";
 import type { WorkspaceToggleProps } from "../workbench-types";
+import { AnswerPrompt } from "./answer-prompt";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
 import { ScrollToBottom } from "./scroll-to-bottom";
@@ -25,9 +26,11 @@ export interface WorkbenchChatProps {
   active: Conversation;
   workspace: WorkspaceToggleProps;
   banner?: ReactNode;
+  pendingQuestion?: PendingQuestion;
+  onAnswer?: (text: string) => void;
 }
 
-export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchChatProps) {
+export function WorkbenchChat({ locale, active, workspace, banner, pendingQuestion, onAnswer }: WorkbenchChatProps) {
   const [draft, setDraft] = useState("");
   const [extraMessages, setExtraMessages] = useState<Message[]>([]);
   const t = useTranslations("Workbench");
@@ -156,6 +159,11 @@ export function WorkbenchChat({ locale, active, workspace, banner }: WorkbenchCh
                   <MessageBubble locale={locale} message={m} />
                 </div>
               ))
+            )}
+            {pendingQuestion && onAnswer && (
+              <div className="message-bubble">
+                <AnswerPrompt question={pendingQuestion} onAnswer={onAnswer} />
+              </div>
             )}
             {active.status === "running" && (
               <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">

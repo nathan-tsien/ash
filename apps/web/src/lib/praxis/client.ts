@@ -1,4 +1,4 @@
-import type { CreateTaskRequest, RuntimeEvent, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskSummary } from "./runtime-events";
 import { fakePraxisClient } from "./fake-client";
 import { httpPraxisClient } from "./http-client";
 
@@ -16,6 +16,10 @@ export interface PraxisTaskClient {
   streamEvents(id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent>;
   /** POST /v1/tasks/{id}/messages */
   sendMessage(id: string, text: string): Promise<void>;
+  /** POST /v1/tasks/{id}/answers — answer a pending ask_user question. */
+  answer(id: string, askId: string, answer: string): Promise<void>;
+  /** GET /v1/tasks/{id}/history — one page of historical events, newest-first. */
+  history(id: string, cursor?: string): Promise<TaskHistoryPage>;
   /** POST /v1/tasks/{id}/complete */
   complete(id: string): Promise<void>;
   /** POST /v1/tasks/{id}/cancel */

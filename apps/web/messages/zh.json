@@ -345,6 +345,7 @@
     "emptyProjects": "暂无项目",
     "newProject": "新建项目",
     "running": "进行中",
+    "awaitingInput": "等待你的回复",
     "completed": "已完成",
     "failed": "失败",
     "pending": "待处理",
@@ -375,7 +376,11 @@
     "sidebarItemsAria": "任务与项目列表",
     "runtimeDeckFallbackTitle": "演示文稿",
     "runtimeDeckPreview": "由智能体生成的演示文稿（占位）。",
-    "runtimeFailureNotice": "任务执行失败：{reason}"
+    "runtimeFailureNotice": "任务执行失败：{reason}",
+    "runtimeTruncationNotice": "回复因达到长度上限被截断。",
+    "answerPlaceholder": "输入你的回复…",
+    "answerSubmit": "发送",
+    "answerLabel": "回复问题"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
