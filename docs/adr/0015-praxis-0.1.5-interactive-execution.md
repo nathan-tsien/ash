@@ -71,6 +71,8 @@ OpenAPI and can be generated.
 6. **Deferred (documented, not dropped):**
    - Full reload / deep-link reconnect: task addressable by URL, rebuilt from `GET /v1/tasks/{id}`
      + `/history` on cold load. Needs task routing + a from-history bootstrap path.
+
+     > Superseded by ADR-0016 (2026-06-13): deep-link cold load is now implemented (server seed via `GET /v1/tasks/{id}` + `seedTask` + `useReattachOnView` history catch-up).
    - User-initiated multi-turn (`POST /messages` as free follow-up chat): remains deferred to the
      Project conversation line per ADR-0011.
    - Retry/backoff for 429/503 + `Retry-After`: errors surface, no automatic retry this slice.

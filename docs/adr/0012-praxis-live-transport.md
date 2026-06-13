@@ -26,6 +26,8 @@ called out, but the control-plane POSTs too.
    path whose first segment is not `tasks`, so it is not an open proxy. Logic lives in `server/praxis.ts`
    (`forwardToPraxis`, `PRAXIS_BASE_URL` default `http://localhost:8091`); the route file stays thin.
 
+   > Revised by ADR-0016 (2026-06-13): the BFF is now a transparent `/v1/tasks` forwarder; contract paths line up 1:1. The allowlist is rekeyed to `segments[0]==="v1" && segments[1]==="tasks"` (was `segments[0]==="tasks"`); the former implicit path-rewriting (adding `/v1` prefix) is replaced by verbatim forwarding.
+
 3. **Pipe the SSE body through; parse on the client.** For `/events` the route returns the upstream
    `text/event-stream` body unbuffered. `httpPraxisClient` parses frames with an incremental `SseParser`
    (fetch + ReadableStream, not `EventSource` — abortable, no auto-reconnect, fits the `AsyncIterable`).
