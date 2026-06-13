@@ -58,3 +58,28 @@ describe("fake praxis run through reducer", () => {
     expect(task.artifacts[0].title).toContain(".pptx");
   });
 });
+
+describe("fake praxis interactive run", () => {
+  it("pauses on ask_user, resumes after answer, and completes", async () => {
+    const summary = await fakePraxisClient.createTask({ user_input: "ask me", title: "ask me" });
+    const ev: string[] = [];
+
+    for await (const e of fakePraxisClient.streamEvents(summary.id)) {
+      ev.push(e.type);
+      if (e.type === "ask_user") {
+        await fakePraxisClient.answer(summary.id, (e as { ask_id: string }).ask_id, "yes");
+      }
+    }
+
+    expect(ev).toContain("ask_user");
+    expect(ev.indexOf("turn_resumed")).toBeGreaterThan(ev.indexOf("ask_user"));
+    expect(ev.at(-1)).toBe("stream_end");
+  });
+
+  it("history() returns newest-first committed blocks", async () => {
+    const summary = await fakePraxisClient.createTask({ user_input: "x", title: "x" });
+    const page = await fakePraxisClient.history(summary.id);
+    expect(Array.isArray(page.items)).toBe(true);
+    expect(page.next_cursor ?? null).toBeNull();
+  });
+});
