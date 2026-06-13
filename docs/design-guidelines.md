@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v1.0.1 |
+| Version | v1.1.0 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -155,7 +155,9 @@ in `globals.css`:
 CJK floor: text that renders Han characters MUST be 12px or larger; `caption` is reserved
 for pure Latin/numeric strings. The scale is deliberately compressed (11–15px) for
 workbench density — hierarchy within it comes from weight and `--muted-foreground` color,
-not from size jumps. Weights in the table are delivered by the tokens where Tailwind supports
+not from size jumps. `text-sm` (14px/20px) is the stock equivalent of `body` and remains
+acceptable; `text-xs` (12px/16px/400) is acceptable where label semantics (weight 500) do
+not apply. Weights in the table are delivered by the tokens where Tailwind supports
 it (`--text-label--font-weight`); otherwise apply `font-medium` explicitly alongside the size
 utility. Sizes above `body-lg` use the standard Tailwind heading scale
 (`text-base` and up) and stay light-weight (PRIN-2).
@@ -182,8 +184,9 @@ spacing values require a comment justifying them.
 
 **SPACE-3 (MUST)** Elevation is borders-first: hairline `border-border` (and `border-sidebar-border`)
 separates surfaces. Shadows (`shadow-xs`/`shadow-sm`) appear only where affordance parity demands
-lift (primary pill CTA, floating overlays). Never rely on opacity-only separation between panes
-(color-blind readability).
+lift (primary pill CTA, floating overlays). Marketing surfaces MAY use `shadow-lg`/`shadow-xl`
+for hero mockups and emphasized pricing tiers; workbench surfaces stay on the xs/sm budget.
+Never rely on opacity-only separation between panes (color-blind readability).
 
 In dark mode, borders carry more of the elevation load (shadows read poorly on dark
 canvas); surface lightening (`--card` one step above `--background`) is the secondary
@@ -212,8 +215,9 @@ tokens in `globals.css` (class usage) and `PANE_WIDTH` in `apps/web/src/lib/layo
   focus rings, simple reveals (`transition-colors`, `transition-opacity`).
 - GSAP: spatial movement, multi-element orchestration, anything needing a timeline —
   pane collapse/expand, composer focus scaling, palette entrance, press bounces.
-- CSS keyframes: ambient, non-interactive texture only (grain overlay), plus entrance
-  keyframes consumed by GSAP utilities.
+- CSS keyframes: ambient, non-interactive texture (grain overlay), looping status
+  indication (`animate-pulse` dots, `animate-spin` loaders), and skeleton pulses
+  (`pulse-subtle`).
 
 Never drive the same property of the same element with both a CSS transition and a GSAP
 tween.
@@ -223,17 +227,21 @@ tween.
 | Name | Duration | Use |
 |------|----------|-----|
 | `fast` | 100–150ms | Micro-interactions: press, copy bounce, hover affordances |
-| `base` | 200–260ms | Pane collapse/expand, overlay entrance, focus scaling |
-| `slow` | 350–450ms | Pane re-expansion, marketing entrances |
+| `base` | 200–300ms | Pane collapse/expand, overlay entrance, focus scaling, message entrances |
+| `slow` | 350–500ms | Pane re-expansion, marketing entrances |
 
-Anything longer than 700ms is marketing-only and scroll-driven.
+Anything longer than 700ms is marketing-only and scroll-triggered (cap 800ms). Ambient
+loops (grain, status pulses, spinners) are exempt from the cap. Radix-primitive overlays
+(dialog, dropdown, tooltip) MAY run symmetric enter/exit durations.
 
 Exits run at 30–70% of the corresponding entrance duration (as-built precedent: workspace
 fade-out 150ms vs fade-in 350ms, about 43%).
 
-**MOTION-3 (MUST)** Easing language: entrances decelerate with `power3.out`; hover/press
-interactions use `power2.out`; playful press feedback MAY use `back.out`. Linear easing only for
-scroll-scrubbed parallax.
+**MOTION-3 (MUST)** Easing language: workbench entrances decelerate with `power2.out`
+(subtle, in-product); marketing entrances use `power3.out` (expressive). Hover/press
+interactions use `power2.out`; playful press feedback MAY use `back.out`. Exits MAY use
+`power2.in`; looping pulses MAY use `power1.inOut`. Linear easing only for scroll-scrubbed
+parallax and spinner rotation.
 
 **MOTION-4 (MUST)** All motion honors `prefers-reduced-motion`, via `gsap.matchMedia()` for GSAP
 and the global reduced-motion CSS rule in `globals.css` for keyframes.
@@ -260,7 +268,9 @@ register tabs/panels inside Workspace chrome.
 overlays (popover/dropdown/tooltip), global shells (command palette, dialogs, future drawers).
 
 Numeric scale: shell tint `z-0`, pane scrollports `z-10`, local overlays `z-40`, global
-shells `z-50`. No other z-index values in application code.
+shells `z-50`. No other z-index values in application code. A local overlay portaled above
+a global shell (for example a tooltip inside a dialog) matches the shell's layer with an
+adjacent comment.
 
 **IA-4 (MUST)** Settings is a global modal (no dedicated route), triggered from the Sidebar
 account footer. The command palette opens on `Meta+K` / `Ctrl+K`.
@@ -302,9 +312,11 @@ the Badge variants or a shared status-dot primitive — not ad hoc colored divs.
 **UX-8 (SHOULD)** Optimistic or streamed content (chat tokens, tool traces) appears with `message-in`
 style entrance at `fast`/`base` durations; no layout jank on stream (reserve space before fill).
 
-**UX-9 (MUST)** Icon scale: 16px (dense rails, inline), 18px (default chrome), 20px
-(headers, emphasis). lucide `strokeWidth` stays at the default 2. No other icon sizes
-without a SPACE-1-style justification comment.
+**UX-9 (MUST)** Icon scale: 14px (`size-3.5`, inline affordances and chips), 16px
+(`size-4`, dense rails and list rows), 18px (default chrome), 20px (`size-5`, headers and
+emphasis). 12px is permitted only inside mono chips and dense trace rows; 24–28px only as
+empty-state hero glyphs. lucide `strokeWidth` stays at the default 2. Other sizes need a
+SPACE-1-style justification comment.
 
 **UX-10 (MUST)** Interaction state matrix for interactive rows/controls:
 
@@ -388,11 +400,14 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 | D-3 | SPACE-4 | `workbench-sidebar.tsx`, `workbench-workspace.tsx`, `workbench-chrome.tsx` | Pane widths as inline magic numbers (`w-[260px]`, `w-[380px]`, `style={{width:380}}`); shell doc fixed under D-7 | closed(fe4451e) |
 | D-4 | SPACE-1 | `apps/web/src/components/workbench/chat/composer.tsx` | `max-h-[168px] min-h-[72px]` magic heights, undocumented; rationale comment added | closed(fe4451e) |
 | D-5 | UX-4 | `apps/web/src/components/marketing/marketing-header.tsx` | Mobile menu uses native `<details>` instead of Radix primitives | closed(e93128c) |
-| D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open |
+| D-6 | IA-6 | workbench shell | Responsive/mobile IA absent (known deferral; needs its own ADR before shipping small-screen) | open — owner: post-v1 responsive charter (ADR reserved) |
 | D-7 | (doc) | `docs/components/agent-workbench-shell.md` | Stale 360px Workspace width figure (superseded by SPACE-4) | closed(e93128c) |
 | D-8 | COLOR-8 | `globals.css` (`--ring`) | Focus ring contrast: alpha raised 0.28 -> 0.55 (~3.2:1 light / ~3.4:1 dark vs canvas), WCAG 2.4.11 pass (ADR-0014); consumer opacity modifiers removed so the token alpha is effective | closed(a25b67d) |
-| D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays use `z-50` (scale says `z-40`); sticky marketing header at `z-50` fits no layer | open |
-| D-10 | UX-9 | widespread (`apps/web`) | As-built icon sizes 12/14px (`size-3`, `size-3.5`) outside the 16/18/20 scale; 18px unused | open |
+| D-9 | IA-3 | `packages/ui/src/components/tooltip.tsx`, `dropdown-menu.tsx`, `apps/web/src/components/marketing/marketing-header.tsx` | Local overlays used `z-50`; remediated to `z-40` | closed(0af0130) |
+| D-10 | UX-9 | widespread (`apps/web`) | Original 16/18/20 scale mismatched as-built reality (14px x9, 12px x1, 24-28px heroes; 18px later adopted in chrome) | closed(v1.1.0 rule amendment, REV-4) |
+| D-11 | UX-4/MOTION-2 | `apps/web/src/components/command-palette/command-palette.tsx` | Hand-rolled overlay: no focus trap or focus return, no exit animation; rebuild on the Dialog primitive (or cmdk `Command.Dialog`) | open — owner: post-v1 a11y pass |
+| D-12 | IMPL-3 | `apps/web/src/lib/praxis/runtime-event-reducer.ts`, `fake-client.ts` | Runtime-generated zh-CN UI copy outside next-intl catalogs (reducer failure text, demo stream chunks) | open — owner: Phase 2 transport/i18n pass |
+| D-13 | UX-3 | `composer.tsx`, `command-palette.tsx`, `workbench-home.tsx` | Text inputs use `focus:outline-none` without a visible ring substitute (caret-only focus) | open — owner: post-v1 a11y pass |
 
 ## Appendix B. Revision protocol and changelog
 
@@ -420,6 +435,7 @@ Changelog:
 | v0.2.2 | 2026-06-13 | I2 review fixes: tailwind-merge taught the named type scale (cn() was dropping text-label), dropdown content height cap, font-normal on 12px body sites, status icon contrast to -foreground tier, register wording |
 | v1.0.0 | 2026-06-13 | MAJOR — ash-native identity "Ash & Ember" (ADR-0014): PRIN-3 rewritten on ash foundation trio, ember accent + COLOR-10, display face + TYPE-6, PRIN-6 registry extended, palette re-derived (Appendix C), ring alpha 0.55 (D-8 path) |
 | v1.0.1 | 2026-06-13 | I4 landed: palette/fonts/wordmark implemented; D-8 closed |
+| v1.1.0 | 2026-06-13 | REV-3 audit outcomes: MOTION-1/2/3 codify as-built conventions (status keyframes, 200-300ms base, 350-500ms slow, power2/power3 dichotomy, symmetric overlay exits), SPACE-3 marketing shadow carve-out, UX-9 scale rewrite (closes D-10 via REV-4), IA-3 portal note, TYPE-2 stock-utility equivalence, --overlay token, D-9 closed, D-11/12/13 registered |
 
 ## Appendix C. Token reference snapshot
 
