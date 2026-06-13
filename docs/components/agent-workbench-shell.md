@@ -59,7 +59,7 @@ Implementation layout under **`apps/web/src/components/workbench/`**:
 |--------|------|
 | `workbench-shell.tsx` | Server entry composing chrome + workspace panel |
 | `workbench-chrome.tsx` | Client orchestrator (workspace collapse + FAB + command palette wiring) |
-| `command-palette/` | cmdk-based command palette (provider + component) |
+| `command-palette/` | cmdk-based command palette (provider + component); built on cmdk `Command.Dialog` (Radix Dialog) for focus trap, focus return, and Escape/outside dismissal |
 | `sidebar/` | Left inventory rail |
 | `chat/` | Center conversation column |
 | `workspace/` | Right audit rail (Plan / Tools / Artifacts) |

@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 import type { Task } from "@ash/shared";
 import { fakePraxisClient } from "../fake-client";
-import { initialTaskRunState, runtimeEventReducer } from "../runtime-event-reducer";
+import {
+  initialTaskRunState,
+  runtimeEventReducer,
+  type ReducerLabels,
+} from "../runtime-event-reducer";
+
+const labels: ReducerLabels = {
+  deckFallbackTitle: "Presentation",
+  deckPreview: "preview",
+  failureNotice: (reason) => `Task failed: ${reason}`,
+};
 
 /**
  * Integration check: drive the fake client's event stream through the reducer
@@ -29,7 +39,7 @@ describe("fake praxis run through reducer", () => {
     let now = 1000;
     for await (const event of fakePraxisClient.streamEvents(summary.id)) {
       now += 100;
-      state = runtimeEventReducer(state, event, now);
+      state = runtimeEventReducer(state, event, now, labels);
     }
 
     const { task } = state;

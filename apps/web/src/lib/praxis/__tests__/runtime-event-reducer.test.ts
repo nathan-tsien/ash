@@ -3,9 +3,16 @@ import type { Task } from "@ash/shared";
 import {
   initialTaskRunState,
   runtimeEventReducer,
+  type ReducerLabels,
   type TaskRunState,
 } from "../runtime-event-reducer";
 import type { RuntimeEvent } from "../runtime-events";
+
+const labels: ReducerLabels = {
+  deckFallbackTitle: "Presentation",
+  deckPreview: "preview",
+  failureNotice: (reason) => `Task failed: ${reason}`,
+};
 
 function seed(): TaskRunState {
   const task: Task = {
@@ -25,7 +32,7 @@ function seed(): TaskRunState {
 }
 
 const run = (s: TaskRunState, evs: RuntimeEvent[], now = 1000): TaskRunState =>
-  evs.reduce((acc, ev) => runtimeEventReducer(acc, ev, now), s);
+  evs.reduce((acc, ev) => runtimeEventReducer(acc, ev, now, labels), s);
 
 describe("runtimeEventReducer", () => {
   it("turn_started marks the task running", () => {
@@ -49,8 +56,9 @@ describe("runtimeEventReducer", () => {
       seed(),
       { type: "tool_dispatch_started", call_id: "c1", tool_name: "slides.render", args: { theme: "minimal" } },
       1000,
+      labels,
     );
-    s = runtimeEventReducer(s, { type: "tool_dispatch_ended", call_id: "c1", ok: true }, 1500);
+    s = runtimeEventReducer(s, { type: "tool_dispatch_ended", call_id: "c1", ok: true }, 1500, labels);
     const tr = s.task.toolTraces.at(-1)!;
     expect(tr.toolName).toBe("slides.render");
     expect(tr.status).toBe("success");
@@ -63,11 +71,13 @@ describe("runtimeEventReducer", () => {
       seed(),
       { type: "tool_dispatch_started", call_id: "c1", tool_name: "x", args: {} },
       1000,
+      labels,
     );
     s = runtimeEventReducer(
       s,
       { type: "tool_dispatch_ended", call_id: "c1", ok: false, error_message: "boom" },
       1100,
+      labels,
     );
     const tr = s.task.toolTraces.at(-1)!;
     expect(tr.status).toBe("error");
@@ -86,6 +96,14 @@ describe("runtimeEventReducer", () => {
     expect(s.task.artifacts).toHaveLength(1);
     expect(s.task.artifacts[0].kind).toBe("document");
     expect(s.task.artifacts[0].title).toContain(".pptx");
+    // Injected i18n labels render rather than hardcoded copy (IMPL-3).
+    expect(s.task.artifacts[0].preview).toBe("preview");
+  });
+
+  it("falls back to the injected deck title when the task has none", () => {
+    let s = initialTaskRunState({ ...seed().task, title: "" });
+    s = run(s, [{ type: "turn_started" }, { type: "turn_completed" }]);
+    expect(s.task.artifacts[0].title).toBe("Presentation.pptx");
   });
 
   it("turn_failed surfaces the reason and does not synthesize an artifact", () => {
@@ -99,8 +117,8 @@ describe("runtimeEventReducer", () => {
     // The partial assistant message is finalized (no longer streaming).
     const partial = s.task.messages.find((m) => m.content === "partial");
     expect(partial?.isStreaming).toBe(false);
-    // The failure reason is surfaced to the user.
-    expect(s.task.messages.at(-1)!.content).toContain("model timeout");
+    // The failure reason is surfaced to the user via the injected label (IMPL-3).
+    expect(s.task.messages.at(-1)!.content).toBe("Task failed: model timeout");
   });
 
   it("turn_cancelled maps to failed", () => {

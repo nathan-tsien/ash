@@ -11,8 +11,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 import { getPraxisClient } from "@/lib/praxis/client";
-import { initialTaskRunState, runtimeEventReducer } from "@/lib/praxis/runtime-event-reducer";
+import {
+  initialTaskRunState,
+  runtimeEventReducer,
+  type ReducerLabels,
+} from "@/lib/praxis/runtime-event-reducer";
 
 interface TaskRunContextValue {
   /** Session runs, newest first. */
@@ -34,6 +39,19 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const [order, setOrder] = useState<string[]>([]);
   const clientRef = useRef(getPraxisClient());
   const controllersRef = useRef<Set<AbortController>>(new Set());
+
+  // App-authored runtime copy, resolved from i18n catalogs (IMPL-3) and passed
+  // into the (pure) reducer. A run captures the locale active at its start;
+  // switching locale mid-stream does not retranslate an in-flight run.
+  const t = useTranslations("Workbench");
+  const labels = useMemo<ReducerLabels>(
+    () => ({
+      deckFallbackTitle: t("runtimeDeckFallbackTitle"),
+      deckPreview: t("runtimeDeckPreview"),
+      failureNotice: (reason: string) => t("runtimeFailureNotice", { reason }),
+    }),
+    [t],
+  );
 
   useEffect(() => {
     const controllers = controllersRef.current;
@@ -80,7 +98,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
           await client.startTask(summary.id, directive);
           upsert(state.task);
           for await (const event of client.streamEvents(summary.id, controller.signal)) {
-            state = runtimeEventReducer(state, event, Date.now());
+            state = runtimeEventReducer(state, event, Date.now(), labels);
             upsert(state.task);
           }
           if (state.task.status === "completed" || state.task.status === "failed") {
@@ -111,7 +129,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
 
       return summary.id;
     },
-    [upsert],
+    [upsert, labels],
   );
 
   const value = useMemo<TaskRunContextValue>(

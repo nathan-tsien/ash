@@ -176,6 +176,38 @@ vi.mock("cmdk", () => ({
       Separator: (props: React.HTMLAttributes<HTMLDivElement>) => (
         <div data-cmdk-separator="" {...props} />
       ),
+      // Mirrors cmdk's Command.Dialog (Radix Dialog wrapper): a sibling overlay
+      // plus a role="dialog" content node carrying the inner cmdk-root. Closed
+      // state renders nothing; Escape / overlay click drive onOpenChange(false).
+      Dialog: ({
+        open,
+        onOpenChange,
+        label,
+        filter,
+        children,
+      }: {
+        open?: boolean;
+        onOpenChange?: (open: boolean) => void;
+        label?: string;
+        filter?: (value: string, search: string) => number;
+        children?: React.ReactNode;
+      }) =>
+        open ? (
+          <div>
+            <div {...{ "cmdk-overlay": "" }} onClick={() => onOpenChange?.(false)} />
+            <div
+              role="dialog"
+              aria-label={label}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") onOpenChange?.(false);
+              }}
+            >
+              <div data-cmdk-root="" data-filter={filter ? "custom" : undefined}>
+                {children}
+              </div>
+            </div>
+          </div>
+        ) : null,
     },
   ),
 }));
