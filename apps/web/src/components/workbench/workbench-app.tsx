@@ -64,7 +64,14 @@ export function WorkbenchApp({
         // Width collapses alongside the slide so chat reclaims the gutter (IA-2).
         const tl = gsap.timeline();
         tl.to(ws, { xPercent: 100, width: 0, ...fadeOut() })
-          .from(fab, { scale: 0.8, autoAlpha: 0, duration: 0.2, ease: "power2.out" }, "<0.1");
+          // fromTo, not from: the expand branch leaves the FAB at autoAlpha 0,
+          // which .from() would capture as the end value (FAB stuck invisible)
+          .fromTo(
+            fab,
+            { scale: 0.8, autoAlpha: 0 },
+            { scale: 1, autoAlpha: 1, duration: 0.2, ease: "power2.out" },
+            "<0.1",
+          );
       } else {
         const tl = gsap.timeline();
         tl.to(fab, fadeOut(0.1))

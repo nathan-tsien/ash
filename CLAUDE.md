@@ -34,7 +34,7 @@ ADR-0002 documents coupling strategy (server-only cogito linkage later).
 2. Respect package layering analogous to cogito crates (UI vs shapes vs compositions).
 3. Triple-pane UX semantics fixed per ADR-0004 unless superseded.
 4. Respect Phase gates (no SSE/auth/server crates until roadmap + specs say so).
-5. Token + visual discipline per **`docs/visual-language-and-theme.md`** / ADR-0005 (no rogue palette literals).
+5. Token + visual discipline per **`docs/design-guidelines.md`** / ADR-0013 + ADR-0014 (no rogue palette literals).
 
 ## Commands
 
