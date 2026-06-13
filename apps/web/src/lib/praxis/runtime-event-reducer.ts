@@ -30,6 +30,10 @@ export interface ReducerLabels {
   deckPreview: string;
   /** Builds the user-facing failure notice from the praxis reason. */
   failureNotice: (reason: string) => string;
+  /** Builds an assistant message from a praxis notify_user event. */
+  notifyMessage: (text: string) => string;
+  /** Notice appended when a turn completed with stop_reason "max_tokens". */
+  truncationNotice: string;
 }
 
 export function initialTaskRunState(task: Task): TaskRunState {
@@ -121,11 +125,24 @@ export function runtimeEventReducer(
     }
 
     case "turn_completed": {
-      const messages = finalizeStreaming(task.messages, state.currentAssistantId);
+      const finalized = finalizeStreaming(task.messages, state.currentAssistantId);
       const artifact = synthesizePptArtifact(task, nowMs, labels);
+      const truncated = event.stop_reason === "max_tokens";
+      const messages = truncated
+        ? [
+            ...finalized,
+            {
+              id: `assistant-${task.id}-trunc-${state.seq}`,
+              role: "assistant" as const,
+              content: labels.truncationNotice,
+              createdAt: iso(nowMs),
+            },
+          ]
+        : finalized;
       return {
         ...state,
         currentAssistantId: null,
+        seq: truncated ? state.seq + 1 : state.seq,
         task: {
           ...task,
           messages,
@@ -162,9 +179,57 @@ export function runtimeEventReducer(
     case "turn_cancelled":
       return patch(state, { status: "failed", updatedAt: iso(nowMs) });
 
+    case "ask_user":
+      return {
+        ...state,
+        task: {
+          ...task,
+          status: "awaiting_input",
+          pendingQuestion: {
+            askId: event.ask_id,
+            text: event.text,
+            attachments: event.attachments ?? [],
+          },
+          updatedAt: iso(nowMs),
+        },
+      };
+
+    case "turn_resumed": {
+      const { pendingQuestion: _cleared, ...rest } = task;
+      return { ...state, task: { ...rest, status: "running", updatedAt: iso(nowMs) } };
+    }
+
     case "turn_paused":
-    case "turn_resumed":
       return state;
+
+    case "notify_user": {
+      const notice: Message = {
+        id: `assistant-${task.id}-notify-${state.seq}`,
+        role: "assistant",
+        content: labels.notifyMessage(event.text),
+        createdAt: iso(nowMs),
+      };
+      return {
+        ...state,
+        seq: state.seq + 1,
+        task: { ...task, messages: [...task.messages, notice], updatedAt: iso(nowMs) },
+      };
+    }
+
+    case "stream_end": {
+      const mapped =
+        event.task_status === "completed"
+          ? "completed"
+          : event.task_status === "failed" || event.task_status === "cancelled"
+            ? "failed"
+            : null;
+      if (!mapped) return state; // non-terminal (e.g. awaiting_input): leave as-is
+      return patch(state, {
+        status: mapped,
+        ...(mapped === "completed" ? { completedAt: iso(nowMs) } : {}),
+        updatedAt: iso(nowMs),
+      });
+    }
 
     default:
       return state;

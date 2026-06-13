@@ -12,6 +12,8 @@ const labels: ReducerLabels = {
   deckFallbackTitle: "Presentation",
   deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
+  notifyMessage: (text) => text,
+  truncationNotice: "Response was truncated (max tokens).",
 };
 
 function seed(): TaskRunState {
@@ -142,5 +144,67 @@ describe("runtimeEventReducer", () => {
       { type: "skill_activation_requested", skill_name: "deck" },
     ]);
     expect(s.task.messages.filter((m) => m.role === "assistant")).toHaveLength(0);
+  });
+
+  it("ask_user moves the task to awaiting_input with a pending question", () => {
+    const s = run(seed(), [
+      { type: "turn_started" },
+      { type: "ask_user", ask_id: "q1", text: "Which audience?", attachments: [] },
+    ]);
+    expect(s.task.status).toBe("awaiting_input");
+    expect(s.task.pendingQuestion).toEqual({
+      askId: "q1",
+      text: "Which audience?",
+      attachments: [],
+    });
+  });
+
+  it("turn_resumed clears the pending question and returns to running", () => {
+    const s = run(seed(), [
+      { type: "turn_started" },
+      { type: "ask_user", ask_id: "q1", text: "Which audience?", attachments: [] },
+      { type: "turn_resumed" },
+    ]);
+    expect(s.task.status).toBe("running");
+    expect(s.task.pendingQuestion).toBeUndefined();
+  });
+
+  it("notify_user appends an assistant message", () => {
+    const s = run(seed(), [
+      { type: "turn_started" },
+      { type: "notify_user", text: "Saved draft.pptx", attachments: ["draft.pptx"] },
+    ]);
+    const last = s.task.messages.at(-1)!;
+    expect(last.role).toBe("assistant");
+    expect(last.content).toContain("Saved draft.pptx");
+  });
+
+  it("stream_end with a completed status marks the task completed", () => {
+    const s = run(seed(), [{ type: "turn_started" }, { type: "stream_end", task_status: "completed" }]);
+    expect(s.task.status).toBe("completed");
+  });
+
+  it("stream_end with a failed status marks the task failed", () => {
+    const s = run(seed(), [{ type: "turn_started" }, { type: "stream_end", task_status: "failed" }]);
+    expect(s.task.status).toBe("failed");
+  });
+
+  it("stream_end with a non-terminal status leaves the task as-is", () => {
+    const s = run(seed(), [
+      { type: "turn_started" },
+      { type: "ask_user", ask_id: "q1", text: "?", attachments: [] },
+      { type: "stream_end", task_status: "awaiting_input" },
+    ]);
+    expect(s.task.status).toBe("awaiting_input");
+  });
+
+  it("turn_completed with stop_reason max_tokens appends a truncation notice", () => {
+    const s = run(seed(), [
+      { type: "turn_started" },
+      { type: "text_delta", chunk: "partial answer" },
+      { type: "turn_completed", stop_reason: "max_tokens" },
+    ]);
+    expect(s.task.status).toBe("completed");
+    expect(s.task.messages.some((m) => m.content.includes("truncated"))).toBe(true);
   });
 });
