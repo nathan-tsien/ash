@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -90,7 +91,12 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
+  // Mirror runs into the ref via useLayoutEffect so it is always current before
+  // any useEffect fires in child components.  useLayoutEffect runs synchronously
+  // after the DOM is committed and before browser paint — crucially, it runs
+  // before children's useEffect callbacks, ensuring runsRef is up-to-date by the
+  // time useReattachOnView (or any other consumer effect) reads it.
+  useLayoutEffect(() => {
     runsRef.current = runs;
   }, [runs]);
 
@@ -292,17 +298,19 @@ export function useAttachTask(): (taskId: string) => Promise<void> {
 
 /**
  * Re-attach a task's stream when its detail view is (re)opened — the navigate-back
- * trigger. Fires whenever `taskId` changes; `attach` is internally guarded, so it
- * no-ops for unknown/terminal tasks and ones already streaming. On a task left
- * awaiting input whose stream has since closed, this catches up via `/history` and
- * re-subscribes, recovering the live `ask_id`. Pass `undefined` to disable (e.g.
- * when not on a task view).
+ * trigger. Fires whenever `taskId` changes or the run first becomes present in the
+ * provider (covering the deep-link cold-load case where a seeder and this hook mount
+ * together). `attach` is internally guarded, so it no-ops for unknown/terminal tasks
+ * and ones already streaming. On a task left awaiting input whose stream has since
+ * closed, this catches up via `/history` and re-subscribes, recovering the live
+ * `ask_id`. Pass `undefined` to disable (e.g. when not on a task view).
  */
 export function useReattachOnView(taskId: string | undefined): void {
-  const { attach } = useTaskRunContext();
+  const { attach, getRun } = useTaskRunContext();
+  const present = taskId ? Boolean(getRun(taskId)) : false;
   useEffect(() => {
-    if (taskId) void attach(taskId);
-  }, [taskId, attach]);
+    if (taskId && present) void attach(taskId);
+  }, [taskId, present, attach]);
 }
 
 /**
