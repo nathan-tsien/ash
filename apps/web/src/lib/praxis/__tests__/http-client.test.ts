@@ -130,4 +130,50 @@ describe("httpPraxisClient", () => {
 
     await expect(httpPraxisClient.createTask({ user_input: "x" })).rejects.toThrow();
   });
+
+  it("answer POSTs ask_id + answer to the answers endpoint and tolerates 202", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(new Response(null, { status: 202 }));
+
+    await expect(httpPraxisClient.answer("t1", "q1", "marketers")).resolves.toBeUndefined();
+    const [url, init] = fetchFn.mock.calls[0];
+    expect(url).toBe("/api/praxis/tasks/t1/answers");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual({ ask_id: "q1", answer: "marketers" });
+  });
+
+  it("history GETs the history endpoint and returns the page", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      new Response('{"items":[{"seq":0,"ts":"2026-06-13T00:00:00.000Z","event":{"type":"assistant_message","text":"hi"}}],"next_cursor":null}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const page = await httpPraxisClient.history("t1");
+    expect(page.items).toHaveLength(1);
+    expect(page.next_cursor).toBeNull();
+    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/history");
+  });
+
+  it("history forwards cursor as a query param", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(new Response('{"items":[]}', { status: 200, headers: { "content-type": "application/json" } }));
+
+    await httpPraxisClient.history("t1", "abc");
+    expect(fetchFn.mock.calls[0][0]).toBe("/api/praxis/tasks/t1/history?cursor=abc");
+  });
+
+  it("surfaces ErrorBody.code in the thrown error", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      new Response('{"code":"task_not_found","message":"nope"}', {
+        status: 404,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    await expect(httpPraxisClient.history("t1")).rejects.toThrow(/task_not_found/);
+  });
 });
