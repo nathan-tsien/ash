@@ -183,3 +183,10 @@ Tasks are now sourced from praxis: `server/tasks.ts` `listTasks(locale)` calls `
 (server-to-server, direct) and projects each `TaskSummary` to a card `Task` via `summaryToTask`
 (see ADR-0016). Projects still come from `@ash/shared` mocks pending Phase 2. Future ingestion swaps
 adapter internals only — the `WorkbenchSidebarProps` shape is unchanged.
+
+The SSR list is a seed only. `WorkbenchApp` refreshes it on mount via `useTaskList`
+(`components/workbench/use-task-list.ts`), which calls the browser client's `listTasks` through the
+BFF and replaces the seed with the result. This is why the list auto-refreshes on entering the
+workbench, and it recovers the case where the SSR loader returned empty because its access token had
+expired (the server client is read-only; the BFF refreshes the token). On fetch failure the SSR seed
+is kept rather than blanked.
