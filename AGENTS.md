@@ -77,6 +77,16 @@ Per the approved Phase 1 spec:
 
 Details: **`docs/design-guidelines.md`**.
 
+### 6. Mock clients are unit-test only
+
+The fake/mock praxis client (`fakePraxisClient`) may be used **only in the unit-test
+phase** — imported directly by its own tests, or injected via a `getPraxisClient`
+module mock. Dev and prod **always** talk to the real backend. `getPraxisClient()`
+therefore returns the real `httpPraxisClient` unconditionally and must never select
+a mock from an env flag or `NODE_ENV`; a mock reaching a running app (the old
+`NEXT_PUBLIC_PRAXIS_TRANSPORT=fake` default) silently makes **no** network calls and
+masks integration breakage. This supersedes ADR-0012's fake-default stance.
+
 ## Coding standards
 
 - **Language:** TypeScript `strict`; avoid `any` (prefer `unknown` + narrowing).

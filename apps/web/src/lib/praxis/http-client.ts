@@ -16,7 +16,9 @@ import { createPraxisFetchClient } from "./openapi-fetch-client";
  * text/event-stream, so we read the body with a manual ReadableStream loop
  * exactly as before.
  *
- * Enabled via NEXT_PUBLIC_PRAXIS_TRANSPORT=http (default is the fake client).
+ * This is the only client `getPraxisClient()` returns at runtime — dev and prod
+ * always use the real transport. The fake client is confined to the unit-test
+ * phase (AGENTS.md discipline).
  */
 
 // Browser transport: same-origin BFF carries the httpOnly cookie automatically.

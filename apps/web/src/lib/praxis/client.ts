@@ -1,5 +1,4 @@
 import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
-import { fakePraxisClient } from "./fake-client";
 import { httpPraxisClient } from "./http-client";
 
 /**
@@ -31,11 +30,15 @@ export interface PraxisTaskClient {
 }
 
 /**
- * Returns the active praxis client. Default = fake. Set
- * NEXT_PUBLIC_PRAXIS_TRANSPORT=http to run against a real praxis through the BFF
- * proxy (ADR-0012). The flag is NEXT_PUBLIC_ because the client is constructed
- * in the browser (TaskRunProvider).
+ * Returns the active praxis client. ALWAYS the real transport (browser → BFF →
+ * praxis, ADR-0012).
+ *
+ * Discipline: the fake/mock client (`fakePraxisClient`) may be used ONLY in the
+ * unit-test phase — its tests import it directly, and component tests mock this
+ * module's `getPraxisClient`. It is never selected at runtime and is not
+ * referenced here, so it cannot leak into dev or prod. (This supersedes the
+ * former NEXT_PUBLIC_PRAXIS_TRANSPORT=fake default; see AGENTS.md.)
  */
 export function getPraxisClient(): PraxisTaskClient {
-  return process.env.NEXT_PUBLIC_PRAXIS_TRANSPORT === "http" ? httpPraxisClient : fakePraxisClient;
+  return httpPraxisClient;
 }

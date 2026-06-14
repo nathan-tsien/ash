@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted (2026-06-06)
+Accepted (2026-06-06). **Amended 2026-06-14:** the `NEXT_PUBLIC_PRAXIS_TRANSPORT`
+flag and its fake-by-default are retired. `getPraxisClient()` now always returns the
+real `httpPraxisClient`; the fake client is unit-test only. See AGENTS.md §6 ("Mock
+clients are unit-test only"). The BFF SSE proxy and transport decisions below stand.
 
 ## Context
 
