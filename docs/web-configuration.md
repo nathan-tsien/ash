@@ -17,8 +17,9 @@ browser ──▶ Next.js (apps/web)
 - **praxis** runs tasks and streams `RuntimeEvent`s over SSE. The BFF route attaches
   the iam JWT as a `Bearer` header and forwards to praxis (it never reaches the browser).
 
-The app ships a **fake praxis client by default**, so it runs fully standalone (no
-backends) for demos and local UI work. Switch to the real backends with the env vars below.
+The app **always talks to the real praxis backend**. The fake praxis client is
+**unit-test only** (AGENTS.md discipline) — there is no fake/standalone runtime mode
+and no transport flag. Run iam + praxis (below) and log in to use the app.
 
 ## Prerequisites
 
@@ -45,40 +46,30 @@ The dev server listens on **port 3000** by default (standard Next.js; override w
 
 ## Environment variables
 
-The web app reads exactly four variables. Place them in **`apps/web/.env.local`**
+The web app reads exactly three variables. Place them in **`apps/web/.env.local`**
 (Next.js loads `.env.local` automatically; it is gitignored).
 
 | Variable | Scope | Required | Default | Meaning |
 |---|---|---|---|---|
-| `NEXT_PUBLIC_PRAXIS_TRANSPORT` | Client (browser) | No | `fake` | Selects the praxis client. `fake` = local scripted fixture, no network. `http` = real transport via the BFF. Any other value falls back to `fake`. **`NEXT_PUBLIC_`** ⇒ inlined at build time. |
-| `PRAXIS_BASE_URL` | Server only | Only in `http` mode | `http://localhost:8091` | Base URL of the praxis backend the BFF (`/api/praxis/...`) forwards to. Server-only — never exposed to the browser. |
-| `IAM_BASE_URL` | Server only | Recommended | `http://localhost:8090` | Base URL of the iam auth service. The iam client calls `${IAM_BASE_URL}/v1/apps/ash` (the app is scoped under `apps/ash`). Server-only. |
+| `PRAXIS_BASE_URL` | Server only | Yes | `http://localhost:8091` | Base URL of the praxis backend the BFF (`/api/praxis/...`) forwards to. Server-only — never exposed to the browser. |
+| `IAM_BASE_URL` | Server only | Yes | `http://localhost:8090` | Base URL of the iam auth service. The iam client calls `${IAM_BASE_URL}/v1/apps/ash` (the app is scoped under `apps/ash`). Server-only. |
 | `NODE_ENV` | Both | Set by tooling | `development` (dev) / `production` (build) | Standard Next.js mode. In `production`, auth cookies are marked `secure` (**HTTPS required**). You normally do not set this by hand. |
 
 Notes:
-- **`NEXT_PUBLIC_PRAXIS_TRANSPORT` is build-time.** Next inlines `NEXT_PUBLIC_*`
-  into the client bundle, so change it **before** `build`, and **restart** `dev`
-  after editing it — a hot reload will not pick it up.
+- There is **no praxis transport flag.** `getPraxisClient()` always returns the real
+  transport; the fake client is unit-test only (AGENTS.md discipline). A removed
+  `NEXT_PUBLIC_PRAXIS_TRANSPORT` value in your env is simply ignored.
 - `PRAXIS_BASE_URL` and `IAM_BASE_URL` are read on the server per request, so they
   only need to be present in the server environment (no rebuild required).
 - Defaults target a local setup where iam runs on `8090` and praxis on `8091`.
 
 ## Configuration scenarios
 
-### 1. Default / demo — no backends (fake transport)
-
-Nothing to configure. `pnpm --filter @ash/web dev` runs the full Workbench UI driven
-by the fake praxis client. Auth routes still call iam if exercised, but the task
-flow needs no praxis.
-
-### 2. Live — real praxis + iam
+### 1. Local / live — real praxis + iam
 
 `apps/web/.env.local`:
 
 ```dotenv
-# Use the real praxis transport (default is the fake client)
-NEXT_PUBLIC_PRAXIS_TRANSPORT=http
-
 # Backends the server-side routes forward to
 PRAXIS_BASE_URL=http://localhost:8091
 IAM_BASE_URL=http://localhost:8090
@@ -87,17 +78,16 @@ IAM_BASE_URL=http://localhost:8090
 Then:
 1. Start **iam** (default `:8090`) and **praxis** (default `:8091`) — e.g. praxis ships
    a `docker-compose.yml` that brings up its dependencies.
-2. `pnpm --filter @ash/web dev` (restart if it was already running, because
-   `NEXT_PUBLIC_PRAXIS_TRANSPORT` changed).
+2. `pnpm --filter @ash/web dev`.
 3. **Log in** through the app. The BFF rejects praxis calls with `401` when there is
    no session — a valid iam JWT (held in the httpOnly cookie) is required for every
-   praxis request.
+   praxis request. (The app cannot run without a backend; the fake client is test-only.)
 
-### 3. Production
+### 2. Production
 
-Set `PRAXIS_BASE_URL` / `IAM_BASE_URL` to the deployed service URLs and
-`NEXT_PUBLIC_PRAXIS_TRANSPORT=http` at **build time**. Serve over **HTTPS**: in
-`production`, auth cookies are `secure`, so they will not be set over plain HTTP.
+Set `PRAXIS_BASE_URL` / `IAM_BASE_URL` to the deployed service URLs. Serve over
+**HTTPS**: in `production`, auth cookies are `secure`, so they will not be set over
+plain HTTP.
 
 ## Auth cookies (reference)
 
