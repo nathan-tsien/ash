@@ -47,7 +47,7 @@ Cookie utilities live in `apps/web/src/server/auth.ts`:
 - `setAuthCookies({ accessToken, refreshToken, user })`
 - `clearAuthCookies()`
 - `getAccessToken()` / `getRefreshToken()` / `getAuthUser()`
-- `refreshAccessToken()` — calls IAM `/auth/refresh` and rewrites cookies on success; clears cookies on failure.
+- `refreshAccessToken()` — single-flight call to IAM `/auth/refresh`; rewrites cookies on success, clears them only on a definitive 401, and preserves them on transient failures. See "Token refresh mechanism".
 
 ## API routes
 
@@ -108,20 +108,40 @@ The server-side `/api/auth/me` route also attempts refresh internally, so the cl
 
 When `refreshAccessToken()` is invoked:
 
-1. Reads `ash_refresh_token` from cookies.
-2. Calls IAM `POST /auth/refresh` with `{ refresh_token }`.
-3. On success (200):
-   - Extracts new `access_token`, `refresh_token`, `user_id`, `email`, `role`.
-   - Builds `AuthUser` object.
-   - Calls `setAuthCookies()` to rewrite all three cookies.
-   - Returns the user.
-4. On failure (401/403/error):
-   - Calls `clearAuthCookies()` to remove all auth cookies.
-   - Returns `null`.
+1. Reads `ash_refresh_token` from cookies. If absent, returns `null` without a network call.
+2. **Single-flight by token value**: if a refresh for this exact refresh token is already
+   in flight in this process, the caller joins it instead of issuing a second
+   `POST /auth/refresh`. The IAM **rotates** refresh tokens (each token is redeemable
+   once; reusing a spent token is a 401), so coalescing is what prevents a concurrent
+   refresh stampede — see the failure mode below.
+3. Calls IAM `POST /auth/refresh` with `{ refresh_token }` once for the joined group.
+4. On success (200): rewrites all three cookies via `setAuthCookies()` and returns the user.
+   Coalesced callers each write the same rotated values to their own response (idempotent).
+5. On a **definitive** invalid token (IAM 401): calls `clearAuthCookies()` and returns `null` —
+   the session is genuinely over.
+6. On a **transient** failure (5xx, account-disabled 403, network/abort): leaves all cookies
+   intact and returns `null`. A later request retries. A momentary IAM hiccup must not destroy
+   a 7-day session.
+
+### Failure mode this guards against (regression fixed)
+
+Symptom: "login state unstable — keeps logging out." Root cause: the workbench fans out several
+praxis BFF calls in parallel; when the 15-minute access token expires, each request found no
+access token and independently redeemed the **same** refresh token. With rotation, the first
+won and the rest got 401 — and the old code called `clearAuthCookies()` on *any* failure, wiping
+the freshly-rotated refresh token and the 7-day `ash_user` cookie. A single expiry boundary under
+parallel traffic thus nuked the whole session. The single-flight + transient/definitive split
+above removes both the stampede and the destructive-clear-on-transient-error.
 
 This is used by:
 - `/api/auth/me` — auto-refresh before returning 401.
 - `/api/auth/refresh` — explicit client-triggered refresh.
+- every praxis BFF call via `getAccessTokenWithRefresh()` (`server/praxis.ts`, `server/praxis-client.ts`).
+
+> Note: the single-flight map is per Node process. In a single-instance deployment (current ash
+> posture) it eliminates the race. Under horizontal scaling, instances can still race across the
+> rotation boundary; the transient/definitive split keeps that race from ending the session, but a
+> shared lock or refresh-token grace window would be the durable fix — track if/when ash scales out.
 
 ## Middleware status
 
