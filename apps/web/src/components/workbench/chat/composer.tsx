@@ -16,6 +16,10 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   const t = useTranslations("Workbench");
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Tracks an in-flight IME composition (Chinese/Japanese/Korean). The Enter that
+  // confirms an IME candidate also fires keydown; submitting there would send a
+  // stale/partial draft AND preventDefault would swallow the candidate selection.
+  const composingRef = useRef(false);
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -61,8 +65,20 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
             aria-label={t("textareaAria")}
             aria-multiline="true"
             onChange={(e) => onDraftChange(e.target.value)}
+            onCompositionStart={() => {
+              composingRef.current = true;
+            }}
+            onCompositionEnd={() => {
+              composingRef.current = false;
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              // Skip submit while composing. compositionend can fire before or
+              // after keydown depending on the browser, so combine the ref with
+              // the native isComposing flag and the legacy 229 keyCode for IMEs
+              // that do not surface isComposing on the confirming Enter.
+              const composing =
+                composingRef.current || e.nativeEvent.isComposing || e.keyCode === 229;
+              if (e.key === "Enter" && !e.shiftKey && !composing) {
                 e.preventDefault();
                 onSend();
               }

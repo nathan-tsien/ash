@@ -84,6 +84,32 @@ describe("WorkbenchChat composer routing", () => {
   });
 });
 
+describe("WorkbenchChat composer IME handling", () => {
+  it("does not send while an IME composition is active, but sends once it ends", () => {
+    const onFollowUp = vi.fn(async () => {});
+    render(
+      wrap(
+        <WorkbenchChat
+          locale="zh"
+          active={conversation("completed")}
+          workspace={workspace}
+          onFollowUp={onFollowUp}
+        />,
+      ),
+    );
+    const textarea = screen.getByLabelText("compose-input");
+    fireEvent.change(textarea, { target: { value: "观众" } });
+
+    // The Enter that confirms an IME candidate must NOT submit the message.
+    fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false, isComposing: true });
+    expect(onFollowUp).not.toHaveBeenCalled();
+
+    // A real Enter once composition is over sends as usual.
+    fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
+    expect(onFollowUp).toHaveBeenCalledWith("观众");
+  });
+});
+
 describe("WorkbenchChat cancel control", () => {
   it("shows the cancel button only when onCancel is provided", () => {
     const onCancel = vi.fn();

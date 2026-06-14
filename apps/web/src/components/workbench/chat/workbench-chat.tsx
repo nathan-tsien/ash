@@ -174,7 +174,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
         </div>
       </header>
       {banner}
-      <div ref={scrollAreaRef} className="relative min-h-0 flex-1">
+      <div ref={scrollAreaRef} className="relative flex min-h-0 flex-1 flex-col">
         <ScrollArea className="min-h-0 flex-1">
           <div
             ref={containerRef}
