@@ -17,8 +17,19 @@ interface AuthUser {
   role: "user" | "admin";
 }
 
+/**
+ * - `loading`: the initial /me probe has not resolved yet. Guards must NOT
+ *   redirect on this — the proxy already gated on a refresh-token cookie, so a
+ *   user is almost always present once the probe lands.
+ * - `authenticated` / `unauthenticated`: the probe resolved. `unauthenticated`
+ *   is what lets a route guard catch the revoked/expired-session case the proxy
+ *   cannot detect (a present-but-rejected refresh token).
+ */
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
 interface AuthContextValue {
   user: AuthUser | null;
+  status: AuthStatus;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => void;
@@ -26,33 +37,48 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-
-  async function fetchUser(): Promise<AuthUser | null> {
-    const res = await fetch("/api/auth/me");
-    if (res.ok) {
-      const data = await res.json();
-      return data?.user ?? null;
-    }
-    if (res.status === 401) {
-      const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
-      if (refreshRes.ok) {
-        const retryRes = await fetch("/api/auth/me");
-        if (retryRes.ok) {
-          const data = await retryRes.json();
-          return data?.user ?? null;
-        }
+async function fetchUser(): Promise<AuthUser | null> {
+  const res = await fetch("/api/auth/me");
+  if (res.ok) {
+    const data = await res.json();
+    return data?.user ?? null;
+  }
+  if (res.status === 401) {
+    const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+    if (refreshRes.ok) {
+      const retryRes = await fetch("/api/auth/me");
+      if (retryRes.ok) {
+        const data = await retryRes.json();
+        return data?.user ?? null;
       }
     }
-    return null;
   }
+  return null;
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("loading");
+
+  // Resolve the user, collapsing both "resolved null" and "fetch threw" into
+  // `unauthenticated`. On a protected route either case means we cannot show an
+  // authenticated shell (every API call would 401), so the guard should send the
+  // user to /login rather than render a broken page.
+  const loadUser = useCallback(() => {
+    fetchUser()
+      .then((u) => {
+        setUser(u);
+        setStatus(u ? "authenticated" : "unauthenticated");
+      })
+      .catch(() => {
+        setUser(null);
+        setStatus("unauthenticated");
+      });
+  }, []);
 
   useEffect(() => {
-    fetchUser()
-      .then((u) => setUser(u))
-      .catch(() => {});
-  }, []);
+    loadUser();
+  }, [loadUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch("/api/auth/login", {
@@ -68,22 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { user: u } = await res.json();
     setUser(u);
+    setStatus("authenticated");
   }, []);
 
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
-  }, []);
-
-  const refreshUser = useCallback(() => {
-    fetchUser()
-      .then((u) => setUser(u))
-      .catch(() => {});
+    setStatus("unauthenticated");
   }, []);
 
   const value = useMemo(
-    () => ({ user, login, logout, refreshUser }),
-    [user, login, logout, refreshUser],
+    () => ({ user, status, login, logout, refreshUser: loadUser }),
+    [user, status, login, logout, loadUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
