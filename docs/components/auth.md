@@ -143,9 +143,18 @@ This is used by:
 > rotation boundary; the transient/definitive split keeps that race from ending the session, but a
 > shared lock or refresh-token grace window would be the durable fix — track if/when ash scales out.
 
-## Middleware status
+## Middleware (proxy) status
 
-`apps/web/src/proxy.ts` defines an auth guard but is **not currently wired up** as Next.js middleware (no `middleware.ts` file exists). The app relies on page-level and API-level auth checks instead. If middleware is enabled in the future, its check should look at the refresh token (not just the access token) to avoid redirecting users who can still be silently refreshed.
+`apps/web/src/proxy.ts` is the app's auth guard and **is active**. Next.js 16 renamed the
+middleware convention from `middleware.ts` to `proxy.ts` (exported `proxy` function), so this
+file runs as edge middleware on every non-API/static request per its `config.matcher`.
+
+The guard gates protected routes on the **refresh token** (`ash_refresh_token`, 7-day), not the
+15-minute `ash_access_token`. Gating on the access token bounced still-valid users to `/login`
+the moment it lapsed even though `/me` + silent refresh succeeded; the access token is refreshed
+transparently by the BFF proxy (`getAccessTokenWithRefresh`). The refresh token is set/cleared
+atomically with `ash_user`, so its presence is the renewability signal. Covered by
+`apps/web/src/__tests__/proxy.test.ts`.
 
 ## Client state
 
@@ -178,7 +187,7 @@ apps/web/src/
     verify-email/route.ts
     forgot-password/route.ts
     reset-password/route.ts
-  proxy.ts               # Middleware candidate (not wired up)
+  proxy.ts               # Active Next.js 16 edge middleware (auth guard)
 ```
 
 ## IAM client generation
