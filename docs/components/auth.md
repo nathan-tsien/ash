@@ -156,6 +156,25 @@ transparently by the BFF proxy (`getAccessTokenWithRefresh`). The refresh token 
 atomically with `ash_user`, so its presence is the renewability signal. Covered by
 `apps/web/src/__tests__/proxy.test.ts`.
 
+## Token resolution contexts (refresh vs. read-only)
+
+Refresh rotates the refresh token and **writes cookies**, which Next.js permits only in a Server
+Action or Route Handler — never during a Server Component render. So the two server token getters
+are not interchangeable:
+
+| Getter | Refreshes + writes cookies? | Use from |
+|--------|------|----------|
+| `getAccessTokenWithRefresh()` | Yes | Route handlers only — BFF `forwardToPraxis` (`/api/praxis`), `/api/auth/me`, `/api/auth/refresh` |
+| `getAccessToken()` | No (read-only) | Server Component render — `serverPraxisClient` loaders (`listTasks` / `getActiveTask`) |
+
+`serverPraxisClient` (`apps/web/src/server/praxis-client.ts`) deliberately uses the **read-only**
+getter. Calling the refreshing one during render throws *"Cookies can only be modified in a Server
+Action or Route Handler."* When the SSR access token has expired the loader 401s and falls back to
+empty data; the token is refreshed by the writable paths above and by the client `AuthProvider` on
+mount, so the next BFF call / navigation renders fresh. (Gating the proxy on the refresh token —
+see above — is what now lets a render reach RSC with an expired access token, which is why this
+boundary matters.) Covered by `apps/web/src/server/__tests__/praxis-client.test.ts`.
+
 ## Client state
 
 `AuthContext` (`apps/web/src/context/auth-context.tsx`) exposes:
