@@ -5,6 +5,7 @@ import { Button } from "@ash/ui/button";
 import gsap from "gsap";
 import { useTranslations } from "next-intl";
 import "@/lib/animations/gsap-setup";
+import { useEnterSubmit } from "./use-enter-submit";
 
 export interface ComposerProps {
   draft: string;
@@ -16,6 +17,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   const t = useTranslations("Workbench");
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const enterSubmit = useEnterSubmit<HTMLTextAreaElement>(onSend);
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -61,12 +63,9 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
             aria-label={t("textareaAria")}
             aria-multiline="true"
             onChange={(e) => onDraftChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                onSend();
-              }
-            }}
+            onCompositionStart={enterSubmit.onCompositionStart}
+            onCompositionEnd={enterSubmit.onCompositionEnd}
+            onKeyDown={enterSubmit.onKeyDown}
           />
         </div>
         <div className="flex items-center justify-between gap-3">

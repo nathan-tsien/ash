@@ -4,6 +4,7 @@ import type { PendingQuestion } from "@ash/shared";
 import { Button } from "@ash/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useEnterSubmit } from "./use-enter-submit";
 
 export interface AnswerPromptProps {
   question: PendingQuestion;
@@ -31,6 +32,8 @@ export function AnswerPrompt({ question, onAnswer }: AnswerPromptProps) {
     setValue("");
   };
 
+  const enterSubmit = useEnterSubmit<HTMLInputElement>(submit);
+
   return (
     <section
       aria-live="polite"
@@ -46,12 +49,9 @@ export function AnswerPrompt({ question, onAnswer }: AnswerPromptProps) {
           placeholder={t("answerPlaceholder")}
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              submit();
-            }
-          }}
+          onCompositionStart={enterSubmit.onCompositionStart}
+          onCompositionEnd={enterSubmit.onCompositionEnd}
+          onKeyDown={enterSubmit.onKeyDown}
         />
         <Button type="button" variant="pill" size="sm" onClick={submit}>
           {t("answerSubmit")}
