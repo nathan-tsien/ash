@@ -52,11 +52,18 @@ export function proxy(request: NextRequest) {
     return intlProxy(request);
   }
 
-  // Check auth for protected routes
+  // Check auth for protected routes.
+  //
+  // Gate on the durable session — the 7-day refresh token — NOT the 15-minute
+  // access token. The access token cookie expires every 15 minutes and is meant
+  // to be refreshed transparently by the BFF proxy (getAccessTokenWithRefresh);
+  // gating on it would bounce a still-valid user to /login the moment it lapses,
+  // even though /me + silent refresh succeed. The refresh token is set/cleared
+  // atomically with ash_user, so its presence is the renewability signal.
   if (!isPublicPath(pathname)) {
-    const accessToken = request.cookies.get("ash_access_token")?.value;
+    const hasSession = request.cookies.has("ash_refresh_token");
 
-    if (!accessToken) {
+    if (!hasSession) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
