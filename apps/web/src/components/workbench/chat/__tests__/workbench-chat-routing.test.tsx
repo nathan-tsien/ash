@@ -108,6 +108,57 @@ describe("WorkbenchChat composer IME handling", () => {
     fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
     expect(onFollowUp).toHaveBeenCalledWith("观众");
   });
+
+  it("guards via composition events when the confirming Enter omits isComposing", () => {
+    const onFollowUp = vi.fn(async () => {});
+    render(
+      wrap(
+        <WorkbenchChat
+          locale="zh"
+          active={conversation("completed")}
+          workspace={workspace}
+          onFollowUp={onFollowUp}
+        />,
+      ),
+    );
+    const textarea = screen.getByLabelText("compose-input");
+    fireEvent.compositionStart(textarea);
+    fireEvent.change(textarea, { target: { value: "观众" } });
+
+    // Some browsers report isComposing=false on the confirming Enter; the
+    // compositionstart ref must still suppress the submit.
+    fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
+    expect(onFollowUp).not.toHaveBeenCalled();
+
+    fireEvent.compositionEnd(textarea);
+    fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
+    expect(onFollowUp).toHaveBeenCalledWith("观众");
+  });
+});
+
+describe("AnswerPrompt IME handling", () => {
+  it("does not answer while an IME composition is active, but answers once it ends", () => {
+    const onAnswer = vi.fn();
+    render(
+      wrap(
+        <WorkbenchChat
+          locale="zh"
+          active={conversation("running")}
+          workspace={workspace}
+          pendingQuestion={pending}
+          onAnswer={onAnswer}
+        />,
+      ),
+    );
+    const input = screen.getByLabelText("answer-input");
+    fireEvent.change(input, { target: { value: "高管" } });
+
+    fireEvent.keyDown(input, { key: "Enter", shiftKey: false, isComposing: true });
+    expect(onAnswer).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(input, { key: "Enter", shiftKey: false });
+    expect(onAnswer).toHaveBeenCalledWith("高管");
+  });
 });
 
 describe("WorkbenchChat cancel control", () => {

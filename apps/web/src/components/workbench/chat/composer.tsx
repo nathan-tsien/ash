@@ -5,6 +5,7 @@ import { Button } from "@ash/ui/button";
 import gsap from "gsap";
 import { useTranslations } from "next-intl";
 import "@/lib/animations/gsap-setup";
+import { useEnterSubmit } from "./use-enter-submit";
 
 export interface ComposerProps {
   draft: string;
@@ -16,10 +17,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
   const t = useTranslations("Workbench");
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // Tracks an in-flight IME composition (Chinese/Japanese/Korean). The Enter that
-  // confirms an IME candidate also fires keydown; submitting there would send a
-  // stale/partial draft AND preventDefault would swallow the candidate selection.
-  const composingRef = useRef(false);
+  const enterSubmit = useEnterSubmit<HTMLTextAreaElement>(onSend);
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -65,24 +63,9 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
             aria-label={t("textareaAria")}
             aria-multiline="true"
             onChange={(e) => onDraftChange(e.target.value)}
-            onCompositionStart={() => {
-              composingRef.current = true;
-            }}
-            onCompositionEnd={() => {
-              composingRef.current = false;
-            }}
-            onKeyDown={(e) => {
-              // Skip submit while composing. compositionend can fire before or
-              // after keydown depending on the browser, so combine the ref with
-              // the native isComposing flag and the legacy 229 keyCode for IMEs
-              // that do not surface isComposing on the confirming Enter.
-              const composing =
-                composingRef.current || e.nativeEvent.isComposing || e.keyCode === 229;
-              if (e.key === "Enter" && !e.shiftKey && !composing) {
-                e.preventDefault();
-                onSend();
-              }
-            }}
+            onCompositionStart={enterSubmit.onCompositionStart}
+            onCompositionEnd={enterSubmit.onCompositionEnd}
+            onKeyDown={enterSubmit.onKeyDown}
           />
         </div>
         <div className="flex items-center justify-between gap-3">

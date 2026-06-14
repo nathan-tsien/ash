@@ -66,7 +66,7 @@ Floating pill button appears when user scrolls > 200px from bottom of the `Scrol
 - Rests at ~2 rows (`min-h-[48px]`), auto-grows on content via `useEffect` resetting `height` to `auto` then capping at `scrollHeight` (`max-h-[168px]`).
 - Focus is signalled by the container `focus-within` ring only; the prior GSAP `scale: 1.01` on the full-bleed bar was removed (it nudged sub-pixel layout — MOTION-6, decorative motion avoided in panes).
 - `Enter` sends; `Shift+Enter` inserts newline. Send button with GSAP press animation also available.
-- IME-safe: the `Enter` that confirms an IME candidate (Chinese/Japanese/Korean) does **not** submit. The keydown handler skips send while a composition is active, combining a `compositionstart`/`compositionend` ref with the native `isComposing` flag and the legacy `229` keyCode (browsers disagree on whether `compositionend` precedes the confirming keydown).
+- IME-safe: the `Enter` that confirms an IME candidate (Chinese/Japanese/Korean) does **not** submit. Skips send while a composition is active, combining a `compositionstart`/`compositionend` ref with the native `isComposing` flag and the legacy `229` keyCode (browsers disagree on whether `compositionend` precedes the confirming keydown). Shared via the `useEnterSubmit` hook so the composer and the `AnswerPrompt` input behave identically.
 - Shortcut hint updated to **Enter 发送 · Shift+Enter 换行** (i18n `Workbench.shortcutHint`).
 - Attachment icon visible but disabled with tooltip (**即将推出**) until roadmap unlocks ingestion.
 
