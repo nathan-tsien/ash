@@ -163,9 +163,21 @@ atomically with `ash_user`, so its presence is the renewability signal. Covered 
 | Property | Type | Description |
 |----------|------|-------------|
 | `user` | `AuthUser \| null` | Current user or null if unauthenticated. |
-| `login(email, password)` | `Promise<void>` | Calls `/api/auth/login`; updates `user`. |
-| `logout()` | `Promise<void>` | Calls `/api/auth/logout`; clears `user`. |
-| `refreshUser()` | `void` | Re-fetches `/api/auth/me` (with retry on 401); updates `user`. |
+| `status` | `"loading" \| "authenticated" \| "unauthenticated"` | Resolution state of the initial `/me` probe. `loading` until it lands; `unauthenticated` distinguishes "probe failed" from "not yet probed" (both have `user: null`). |
+| `login(email, password)` | `Promise<void>` | Calls `/api/auth/login`; sets `user` + `status: authenticated`. |
+| `logout()` | `Promise<void>` | Calls `/api/auth/logout`; clears `user` + `status: unauthenticated`. |
+| `refreshUser()` | `void` | Re-fetches `/api/auth/me` (with retry on 401); updates `user` + `status`. |
+
+### Protected-route guard (revoked-session catch)
+
+The proxy admits any request with a refresh-token cookie but cannot detect a
+present-but-revoked token. `RequireAuth` (`apps/web/src/components/auth/require-auth.tsx`),
+mounted in the `(app)` route-group layout, closes that gap on the client: when the
+`/me` probe + silent refresh fail (`status: unauthenticated`) it redirects to
+`/login?callbackUrl=<path>`. While `status` is `loading` it renders children (the proxy
+already guaranteed a session cookie) to avoid blanking the app on every navigation.
+Covered by `apps/web/src/components/auth/__tests__/require-auth.test.tsx` and
+`apps/web/src/context/__tests__/auth-context.test.tsx`.
 
 ## File map
 
@@ -177,7 +189,8 @@ packages/iam-client/
 
 apps/web/src/
   server/auth.ts         # Cookie utilities + refreshAccessToken()
-  context/auth-context.tsx # React Context for client auth state
+  context/auth-context.tsx # React Context for client auth state (user + status)
+  components/auth/require-auth.tsx # Client guard: redirect to /login on revoked session
   app/api/auth/
     login/route.ts
     logout/route.ts
