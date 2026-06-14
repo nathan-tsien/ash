@@ -7,6 +7,7 @@ import { TaskWorkspace } from "./workspace/task-workspace";
 import { ProjectWorkspace } from "./workspace/project-workspace";
 import { WorkbenchHome } from "./workbench-home";
 import { useAnswerTask, useCancelTask, useReattachOnView, useSendFollowUp, useTaskRun, useTaskRuns } from "./task-run-provider";
+import { useTaskList } from "./use-task-list";
 import { CommandPalette } from "@/components/command-palette/command-palette";
 import { useCallback, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
@@ -30,7 +31,7 @@ function mapTaskStatus(status: string): "idle" | "running" | "completed" | "fail
 
 export function WorkbenchApp({
   locale,
-  tasks,
+  tasks: initialTasks,
   projects,
   activeTask,
   activeProject,
@@ -42,6 +43,9 @@ export function WorkbenchApp({
   const fabRef = useRef<HTMLButtonElement>(null);
   const t = useTranslations("Workbench");
 
+  // Server-hydrated list, refreshed from the backend on mount (the BFF refreshes
+  // the token, so this populates even when the SSR snapshot came back empty).
+  const tasks = useTaskList(initialTasks, locale);
   // Live runs created this session override / extend server-hydrated tasks.
   const sessionRuns = useTaskRuns();
   const answerTask = useAnswerTask();
