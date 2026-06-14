@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: praxis API
-  version: 0.1.5
+  version: 0.1.6
   description: >-
     praxis HTTP API. Source of truth for the wire contract (design-first; see ADR-0007).
     Stability: this is a stable, additive contract within 0.1.x (see openapi/VERSIONING.md) —
@@ -244,6 +244,10 @@ paths:
         (the live correlation id is delivered only over the event stream, re-emitted on
         subscribe for still-pending questions). A task with no session yet (draft) returns
         an empty page.
+        Each page is newest-first; to render the conversation top-to-bottom (oldest at the
+        top, newest at the bottom) the client reverses each page and prepends older pages
+        as the user scrolls up. Following next_cursor backward until it is null walks the
+        entire session into view.
       parameters:
         - name: id
           in: path

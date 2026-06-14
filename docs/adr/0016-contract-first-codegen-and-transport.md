@@ -32,7 +32,7 @@ The same slice also completed the remaining deferred capabilities: task list
 ### 1. Contract source: authenticated gh-based sync + CI drift check
 
 `apps/web/scripts/sync-praxis-contract.sh` pulls `openapi/praxis.yaml` and `openapi/schemas.json`
-at a pinned tag (default `openapi-v0.1.5`) from `github.com/nathan-tsien/praxis` via
+at a pinned tag (default `openapi-v0.1.6`) from `github.com/nathan-tsien/praxis` via
 `gh api ... -H "Accept: application/vnd.github.raw"`. The fetched files are committed into
 `apps/web/src/lib/praxis/contract/` (the vendored snapshot).
 
@@ -47,7 +47,7 @@ Four scripts are declared in `apps/web/package.json`:
   any drift between the committed client and the vendored contract. This step runs in CI after
   install.
 
-The vendored snapshot is byte-identical to tag `openapi-v0.1.5`.
+The vendored snapshot is byte-identical to tag `openapi-v0.1.6`.
 
 ### 2. Typed transport: one openapi-fetch factory; SSE is the single hand-written exception
 
@@ -129,4 +129,4 @@ from a client module).
 - `apps/web/scripts/sync-praxis-contract.sh` (sync implementation)
 - `apps/web/src/lib/praxis/openapi-fetch-client.ts` (factory)
 - `apps/web/src/server/praxis-client.ts` (server-direct client)
-- praxis `github.com/nathan-tsien/praxis`, tag `openapi-v0.1.5`
+- praxis `github.com/nathan-tsien/praxis`, tag `openapi-v0.1.6`
