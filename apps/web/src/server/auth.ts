@@ -77,37 +77,103 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   }
 }
 
+/** Tokens minted by a successful IAM refresh, returned by the single-flight
+ *  network call so coalesced callers can each write them to their own response. */
+interface RefreshedTokens {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}
+
+/** Thrown when refresh fails for a non-authoritative reason (5xx, network).
+ *  These must NOT end the session — the refresh token is still good; retry later. */
+class TransientRefreshError extends Error {}
+
+/** Process-level single-flight, keyed by refresh-token value.
+ *
+ *  The IAM rotates refresh tokens: each /auth/refresh consumes the presented
+ *  token and mints a new one, so a token can only be redeemed once. The workbench
+ *  fans out several praxis calls in parallel; when the 15-minute access token
+ *  expires, those requests would each redeem the SAME refresh token, letting one
+ *  win and the rest fail with "invalid refresh token" — and the old code wiped
+ *  the whole session on that failure. Coalescing by token value means concurrent
+ *  refreshes share one network call and one rotation, eliminating the stampede.
+ *
+ *  Keyed by token (not a single global) so distinct users never share a refresh. */
+const inFlightRefresh = new Map<string, Promise<RefreshedTokens | null>>();
+
+/** Perform the IAM refresh. Resolves to the new tokens, or null when the token
+ *  is definitively invalid (401). Throws TransientRefreshError on 5xx/network so
+ *  the caller can tell "session is dead" apart from "try again later". */
+async function performRefresh(refreshToken: string): Promise<RefreshedTokens | null> {
+  const client = createIamClient();
+  let data, error, response;
+  try {
+    ({ data, error, response } = await client.POST("/auth/refresh", {
+      body: { refresh_token: refreshToken },
+    }));
+  } catch (cause) {
+    // fetch rejected (IAM unreachable / DNS / abort) — transient, keep the session.
+    throw new TransientRefreshError("iam refresh request failed", { cause });
+  }
+
+  if (error || !data) {
+    // Only a definitive 401 ("invalid refresh token") means the session is dead.
+    // Any other status (5xx, 403-disabled, unexpected) is transient: do not let a
+    // momentary IAM hiccup destroy a 7-day session.
+    if (response?.status === 401) return null;
+    throw new TransientRefreshError(`iam refresh returned ${response?.status ?? "no status"}`);
+  }
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    user: { id: data.user_id, email: data.email, role: data.role },
+  };
+}
+
 /** Attempt to refresh the access token using the refresh token cookie.
  *  On success, updates all auth cookies and returns the user.
- *  On failure, clears all auth cookies and returns null.
+ *  On a definitively-invalid token, clears all auth cookies and returns null.
+ *  On a transient failure, leaves cookies intact and returns null (retry later).
  */
 export async function refreshAccessToken(): Promise<AuthUser | null> {
   const refreshToken = await getRefreshToken();
   if (!refreshToken) return null;
 
-  const client = createIamClient();
-  const { data, error } = await client.POST("/auth/refresh", {
-    body: { refresh_token: refreshToken },
-  });
+  // Single-flight: join an in-flight refresh for this token instead of issuing a
+  // second /auth/refresh that would race the rotation and fail.
+  let pending = inFlightRefresh.get(refreshToken);
+  if (!pending) {
+    pending = performRefresh(refreshToken).finally(() => {
+      inFlightRefresh.delete(refreshToken);
+    });
+    inFlightRefresh.set(refreshToken, pending);
+  }
 
-  if (error || !data) {
+  let tokens: RefreshedTokens | null;
+  try {
+    tokens = await pending;
+  } catch {
+    // Transient failure — keep the session so a later request can retry.
+    return null;
+  }
+
+  if (!tokens) {
+    // Definitively invalid refresh token: the session is genuinely over.
     await clearAuthCookies();
     return null;
   }
 
-  const user: AuthUser = {
-    id: data.user_id,
-    email: data.email,
-    role: data.role,
-  };
-
+  // Persist the rotated tokens onto this request's response. Coalesced callers
+  // all write the same fresh values, so this is idempotent across the race.
   await setAuthCookies({
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    user,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    user: tokens.user,
   });
 
-  return user;
+  return tokens.user;
 }
 
 /** Return the current access token, refreshing once if the cookie is absent.
