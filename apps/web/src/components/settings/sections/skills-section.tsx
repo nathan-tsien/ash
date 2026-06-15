@@ -1,28 +1,33 @@
 "use client";
 
-import { Badge } from "@ash/ui/badge";
-import { Button } from "@ash/ui/button";
 import { useTranslations } from "next-intl";
+import { useSkillCatalog } from "@/lib/praxis/use-skill-catalog";
 import { SectionHeader } from "../section-header";
 
 export function SkillsSection() {
   const t = useTranslations("Settings");
+  const { skills, loading, error } = useSkillCatalog();
 
   return (
     <div>
-      <SectionHeader
-        heading={t("skills.heading")}
-        description={t("skills.description")}
-      />
+      <SectionHeader heading={t("skills.heading")} description={t("skills.description")} />
 
-      <p className="text-sm text-muted-foreground">{t("skills.phase2Hint")}</p>
+      {loading && <p className="text-sm text-muted-foreground">{t("skills.loading")}</p>}
+      {error && <p className="text-sm text-destructive">{t("skills.error")}</p>}
+      {!loading && !error && skills.length === 0 && (
+        <p className="text-sm text-muted-foreground">{t("skills.empty")}</p>
+      )}
 
-      <div className="mt-6">
-        <Button disabled className="gap-2">
-          {t("skills.heading")}
-          <Badge variant="muted">{t("phase2Badge")}</Badge>
-        </Button>
-      </div>
+      {!loading && !error && skills.length > 0 && (
+        <ul className="mt-2 flex flex-col gap-3">
+          {skills.map((s) => (
+            <li key={s.id} className="rounded-lg border border-border bg-card p-3">
+              <p className="text-sm font-medium text-foreground">{s.display_name}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{s.description}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
