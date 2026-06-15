@@ -139,6 +139,12 @@ vi.mock("lucide-react", () => ({
   Sparkles: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="sparkles" {...props} />
   ),
+  X: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="x" {...props} />
+  ),
+  ArrowRight: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="arrow-right" {...props} />
+  ),
 }));
 
 // Mock highlight.js CSS import
