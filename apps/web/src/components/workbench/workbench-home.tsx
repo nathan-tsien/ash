@@ -85,6 +85,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
 
     try {
       const id = await startTask(prompt, skillIds);
+      // Clear chips only on success — a failed start keeps the selection for retry.
       setSkillIds([]);
       router.push(taskHref(id));
     } catch {

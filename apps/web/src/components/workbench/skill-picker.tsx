@@ -75,7 +75,7 @@ export function SkillPicker({ selected, onChange, disabled }: SkillPickerProps) 
             <button
               type="button"
               onClick={() => toggle(id)}
-              className="rounded-sm hover:text-foreground"
+              className="rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={t("removeSkillAria")}
               disabled={disabled}
             >
