@@ -34,4 +34,19 @@ describe("useSkillCatalog", () => {
     render(<Probe />);
     await waitFor(() => expect(screen.getByText("error")).toBeInTheDocument());
   });
+
+  it("refetches on a later mount after an error (cache reset)", async () => {
+    listSkills.mockRejectedValueOnce(new Error("boom"));
+    const first = render(<Probe />);
+    await waitFor(() => expect(screen.getByText("error")).toBeInTheDocument());
+    first.unmount();
+
+    listSkills.mockResolvedValueOnce({
+      items: [{ id: "web-search", kind: "skill", display_name: "web-search", description: "d", scope: "global", binding: "hint" }],
+      next_cursor: null,
+    });
+    render(<Probe />);
+    await waitFor(() => expect(screen.getByText("web-search")).toBeInTheDocument());
+    expect(listSkills).toHaveBeenCalledTimes(2);
+  });
 });
