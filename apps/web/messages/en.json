@@ -227,15 +227,10 @@
     },
     "skills": {
       "heading": "Skills",
-      "description": "Toggle capabilities the Agent can invoke. Items marked Phase 2 depend on runtime support.",
-      "categoryBrowse": "Browse",
-      "categoryWrite": "Write",
-      "categoryCode": "Code",
-      "categoryMedia": "Media",
-      "categoryData": "Data",
-      "enabledLabel": "Enabled",
-      "disabledLabel": "Disabled",
-      "phase2Hint": "Available once the runtime is connected in Phase 2."
+      "description": "Skills you can suggest when starting a task (a hint, not a lock).",
+      "loading": "Loading…",
+      "error": "Failed to load skills",
+      "empty": "No skills available"
     },
     "connectors": {
       "heading": "Connectors",
@@ -313,6 +308,9 @@
     "textareaAria": "Message composer",
     "shortcutHint": "Enter send · Shift+Enter newline",
     "send": "Send",
+    "skillPickerButton": "Skills",
+    "skillPickerHint": "Suggested skills (a hint, not a lock — the model may still choose otherwise)",
+    "removeSkillAria": "Remove skill",
     "workspaceTitle": "Workspace",
     "workspaceFabTooltip": "Reveal Plan/tools/artifacts",
     "planHeading": "Plan",
