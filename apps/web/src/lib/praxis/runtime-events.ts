@@ -21,3 +21,8 @@ export type HistoryEvent = components["schemas"]["HistoryEvent"];
 export type HistoryItem = components["schemas"]["HistoryItem"];
 export type TaskHistoryPage = components["schemas"]["TaskHistoryPage"];
 export type TaskList = components["schemas"]["TaskList"];
+
+/** A registered skill descriptor (praxis 0.2.0 GET /v1/skills item). */
+export type SkillSummary = components["schemas"]["ResourceDescriptor"];
+/** A page of skill descriptors. */
+export type SkillList = components["schemas"]["SkillList"];

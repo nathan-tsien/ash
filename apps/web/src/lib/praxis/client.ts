@@ -1,4 +1,4 @@
-import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, SkillList, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
 import { httpPraxisClient } from "./http-client";
 
 /**
@@ -9,8 +9,10 @@ import { httpPraxisClient } from "./http-client";
 export interface PraxisTaskClient {
   /** POST /v1/tasks */
   createTask(req: CreateTaskRequest): Promise<TaskSummary>;
-  /** POST /v1/tasks/{id}/start */
-  startTask(id: string, userInput: string): Promise<TaskSummary>;
+  /** POST /v1/tasks/{id}/start. `skillHints` are sent as `skill_hints` (hints, not locks). */
+  startTask(id: string, userInput: string, skillHints?: string[]): Promise<TaskSummary>;
+  /** GET /v1/skills — one page of registered skills usable as hints. */
+  listSkills(params?: { limit?: number; cursor?: string }): Promise<SkillList>;
   /** GET /v1/tasks/{id}/events (SSE) — yields RuntimeEvents until the turn ends */
   streamEvents(id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent>;
   /** POST /v1/tasks/{id}/messages */

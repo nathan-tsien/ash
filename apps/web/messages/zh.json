@@ -226,16 +226,11 @@
       "empty": "暂无定时任务。"
     },
     "skills": {
-      "heading": "Skill",
-      "description": "Agent 可调用的能力开关。带 Phase 2 标记的项依赖运行时落地。",
-      "categoryBrowse": "浏览",
-      "categoryWrite": "写作",
-      "categoryCode": "代码",
-      "categoryMedia": "多媒体",
-      "categoryData": "数据",
-      "enabledLabel": "已启用",
-      "disabledLabel": "已关闭",
-      "phase2Hint": "Phase 2 接通运行时后可用。"
+      "heading": "技能",
+      "description": "在任务开始时可建议使用的技能（提示，非强制）。",
+      "loading": "加载中…",
+      "error": "技能列表加载失败",
+      "empty": "暂无可用技能"
     },
     "connectors": {
       "heading": "Connectors",
@@ -313,6 +308,9 @@
     "textareaAria": "消息输入框",
     "shortcutHint": "Enter 发送 · Shift+Enter 换行",
     "send": "发送",
+    "skillPickerButton": "技能",
+    "skillPickerHint": "建议技能（提示，非强制，模型可能仍自行选择）",
+    "removeSkillAria": "移除技能",
     "workspaceTitle": "工作台",
     "workspaceFabTooltip": "展开 Plan / 工具 / 工件",
     "planHeading": "Plan",

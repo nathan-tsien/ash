@@ -5,8 +5,9 @@ import { getAccessTokenWithRefresh } from "./auth";
 /** praxis HTTP base URL. Server-only; distinct default from iam's 8090. */
 const PRAXIS_BASE_URL = process.env.PRAXIS_BASE_URL ?? "http://localhost:8091";
 
-/** Only `/v1/tasks/**` is proxied. Keeps this from being an open proxy. */
-const ALLOWED = (segments: string[]) => segments[0] === "v1" && segments[1] === "tasks";
+/** Only `/v1/tasks/**` and `/v1/skills/**` are proxied. Keeps this from being an open proxy. */
+const ALLOWED = (segments: string[]) =>
+  segments[0] === "v1" && (segments[1] === "tasks" || segments[1] === "skills");
 
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

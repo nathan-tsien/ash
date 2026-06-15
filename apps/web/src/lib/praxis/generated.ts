@@ -57,6 +57,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List registered skills the caller can use as hints (single page). */
+        get: operations["listSkills"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/skills/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch one skill, including its instructions body. */
+        get: operations["getSkill"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tasks/{id}": {
         parameters: {
             query?: never;
@@ -392,11 +426,55 @@ export interface components {
         CreateProjectRequest: {
             title: string;
         };
+        /** @description Discovery descriptor for a registered resource. v0.2.0 emits only skills; plugin/mcp/connector are forward-shaped. See the resource-registry design doc. */
+        ResourceDescriptor: {
+            /** @description Stable identifier; the value clients pass as a skill hint. */
+            id: string;
+            /** @description One of: skill | plugin | mcp | connector. v0.2.0: always "skill". */
+            kind: string;
+            /** @description Human-facing label. v0.2.0: equals id. */
+            display_name: string;
+            /** @description One-line what/when. Load-bearing: also the model's routing signal. */
+            description: string;
+            /** @description Optional semver from SKILL.md frontmatter. */
+            version?: string | null;
+            icon?: string | null;
+            /** @description Provenance: repo | user | plugin | system. */
+            source?: string;
+            /** @description Visibility: global | tenant | project. v0.2.0: always "global". */
+            scope: string;
+            /** @description Binding semantics: hint | enable | authorize. Skills are always "hint". */
+            binding: string;
+            /** @description Only meaningful for enable/authorize bindings; null for hint. */
+            enabled?: boolean | null;
+        };
+        /** @description A page of skill descriptors. next_cursor null/absent means no more pages. */
+        SkillList: {
+            items: components["schemas"]["ResourceDescriptor"][];
+            next_cursor?: string | null;
+        };
+        /** @description A skill descriptor plus its SKILL.md instructions body. */
+        SkillDetail: {
+            id: string;
+            kind: string;
+            display_name: string;
+            description: string;
+            version?: string | null;
+            icon?: string | null;
+            source?: string;
+            scope: string;
+            binding: string;
+            enabled?: boolean | null;
+            /** @description SKILL.md body, frontmatter stripped. */
+            instructions?: string | null;
+        };
         /** @description Body for starting a task's first turn. */
         StartTaskRequest: {
             user_input: string;
             /** @description Optional name of a registered skill to prefer for this task. A hint, not a lock: the model may still select a different skill. Unregistered hints are ignored. */
             skill_hint?: string;
+            /** @description Optional list of registered skill names to prefer for this task. Hints, not locks: unregistered names are ignored. Unioned with skill_hint (which is retained for backward compatibility). */
+            skill_hints?: string[];
         };
         /** @description Body for sending a follow-up user message into a running task. */
         SendMessageRequest: {
@@ -560,6 +638,56 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    listSkills: {
+        parameters: {
+            query?: {
+                /** @description Max items per page. Server returns a single page in v0.1.0; pagination logic is deferred. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque pagination cursor from a prior response's next_cursor. Ignored until pagination ships. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of skill descriptors. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillList"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    getSkill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The skill. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillDetail"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     getTask: {

@@ -81,6 +81,46 @@ describe("httpPraxisClient", () => {
     expect(body).toEqual({ user_input: "do it" });
   });
 
+  it("listSkills GETs /api/praxis/v1/skills and returns the page", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      new Response('{"items":[{"id":"web-search","kind":"skill","display_name":"web-search","description":"Search the web","scope":"global","binding":"hint"}],"next_cursor":null}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const page = await httpPraxisClient.listSkills();
+
+    expect(page.items[0].id).toBe("web-search");
+    const url = extractUrl(fetchFn.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/praxis/v1/skills");
+  });
+
+  it("startTask includes skill_hints when provided", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      new Response('{"id":"t1","status":"running"}', { status: 202, headers: { "content-type": "application/json" } }),
+    );
+
+    await httpPraxisClient.startTask("t1", "hi", ["web-search", "doc-write"]);
+
+    const body = await extractBody(fetchFn);
+    expect(body).toEqual({ user_input: "hi", skill_hints: ["web-search", "doc-write"] });
+  });
+
+  it("startTask omits skill_hints when none are selected", async () => {
+    const fetchFn = stubFetch();
+    fetchFn.mockResolvedValue(
+      new Response('{"id":"t1","status":"running"}', { status: 202, headers: { "content-type": "application/json" } }),
+    );
+
+    await httpPraxisClient.startTask("t1", "hi", []);
+
+    const body = await extractBody(fetchFn);
+    expect(body).toEqual({ user_input: "hi" });
+  });
+
   it("complete POSTs and tolerates a 204 with no body", async () => {
     const fetchFn = stubFetch();
     fetchFn.mockResolvedValue(new Response(null, { status: 204 }));

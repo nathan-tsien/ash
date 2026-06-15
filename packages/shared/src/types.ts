@@ -135,18 +135,6 @@ export interface ScheduledTask {
   description: string;
 }
 
-export type SkillCategory = "browse" | "write" | "code" | "media" | "data";
-
-export interface AgentSkill {
-  id: string;
-  label: string;
-  category: SkillCategory;
-  description: string;
-  enabled: boolean;
-  /** Marks capabilities still gated behind Phase 2 server work. */
-  requiresPhase2?: boolean;
-}
-
 export type ConnectorKind = "notes" | "mcp" | "file" | "calendar";
 export type ConnectorStatus = "connected" | "disconnected" | "error";
 

@@ -54,6 +54,11 @@
         "skill_hint": {
           "type": "string",
           "description": "Optional name of a registered skill to prefer for this task. A hint, not a lock: the model may still select a different skill. Unregistered hints are ignored."
+        },
+        "skill_hints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional list of registered skill names to prefer for this task. Hints, not locks: unregistered names are ignored. Unioned with skill_hint (which is retained for backward compatibility)."
         }
       },
       "required": ["user_input"],
@@ -148,6 +153,53 @@
         "next_cursor": { "type": ["string", "null"] }
       },
       "required": ["items"],
+      "additionalProperties": false
+    },
+    "ResourceDescriptor": {
+      "type": "object",
+      "description": "Discovery descriptor for a registered resource. v0.2.0 emits only skills; plugin/mcp/connector are forward-shaped. See the resource-registry design doc.",
+      "properties": {
+        "id": { "type": "string", "description": "Stable identifier; the value clients pass as a skill hint." },
+        "kind": { "type": "string", "description": "One of: skill | plugin | mcp | connector. v0.2.0: always \"skill\"." },
+        "display_name": { "type": "string", "description": "Human-facing label. v0.2.0: equals id." },
+        "description": { "type": "string", "description": "One-line what/when. Load-bearing: also the model's routing signal." },
+        "version": { "type": ["string", "null"], "description": "Optional semver from SKILL.md frontmatter." },
+        "icon": { "type": ["string", "null"] },
+        "source": { "type": "string", "description": "Provenance: repo | user | plugin | system." },
+        "scope": { "type": "string", "description": "Visibility: global | tenant | project. v0.2.0: always \"global\"." },
+        "binding": { "type": "string", "description": "Binding semantics: hint | enable | authorize. Skills are always \"hint\"." },
+        "enabled": { "type": ["boolean", "null"], "description": "Only meaningful for enable/authorize bindings; null for hint." }
+      },
+      "required": ["id", "kind", "display_name", "description", "scope", "binding"],
+      "additionalProperties": false
+    },
+    "SkillList": {
+      "type": "object",
+      "description": "A page of skill descriptors. next_cursor null/absent means no more pages.",
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/ResourceDescriptor" } },
+        "next_cursor": { "type": ["string", "null"] }
+      },
+      "required": ["items"],
+      "additionalProperties": false
+    },
+    "SkillDetail": {
+      "type": "object",
+      "description": "A skill descriptor plus its SKILL.md instructions body.",
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "display_name": { "type": "string" },
+        "description": { "type": "string" },
+        "version": { "type": ["string", "null"] },
+        "icon": { "type": ["string", "null"] },
+        "source": { "type": "string" },
+        "scope": { "type": "string" },
+        "binding": { "type": "string" },
+        "enabled": { "type": ["boolean", "null"] },
+        "instructions": { "type": ["string", "null"], "description": "SKILL.md body, frontmatter stripped." }
+      },
+      "required": ["id", "kind", "display_name", "description", "scope", "binding"],
       "additionalProperties": false
     },
     "ProjectList": {

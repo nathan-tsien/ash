@@ -1,5 +1,5 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, SkillList, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
 
 /**
  * Local fake praxis client. Emits real-shaped events for a scripted run, with
@@ -41,7 +41,7 @@ export const fakePraxisClient: PraxisTaskClient = {
     return summary;
   },
 
-  async startTask(id: string): Promise<TaskSummary> {
+  async startTask(id: string, _userInput?: string, _skillHints?: string[]): Promise<TaskSummary> {
     const run = runs.get(id);
     if (run) {
       run.summary.status = "running";
@@ -65,6 +65,16 @@ export const fakePraxisClient: PraxisTaskClient = {
     const summary = fromRun ?? fromSeed;
     if (!summary) throw new Error(`fake getTask: unknown id ${id}`);
     return summary;
+  },
+
+  async listSkills(): Promise<SkillList> {
+    return {
+      items: [
+        { id: "web-search", kind: "skill", display_name: "web-search", description: "检索公开网页并返回结构化摘要。", scope: "global", binding: "hint" },
+        { id: "doc-write", kind: "skill", display_name: "doc-write", description: "生成与修订 Markdown 文档。", scope: "global", binding: "hint" },
+      ],
+      next_cursor: null,
+    };
   },
 
   async *streamEvents(id: string): AsyncIterable<RuntimeEvent> {

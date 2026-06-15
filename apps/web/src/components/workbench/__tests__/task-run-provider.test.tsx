@@ -24,6 +24,9 @@ function baseClient(overrides: Partial<PraxisTaskClient>): PraxisTaskClient {
     async listTasks() {
       return { items: [], next_cursor: null };
     },
+    async listSkills() {
+      return { items: [], next_cursor: null };
+    },
     async getTask(id) {
       return { id, status: "draft" };
     },
@@ -205,6 +208,29 @@ describe("TaskRunProvider", () => {
     fireEvent.click(screen.getByText("attach"));
     await new Promise((r) => setTimeout(r, 0));
     expect(historyCalls).toBe(0); // guard skipped: the live stream is still open
+  });
+
+  it("forwards skillHints to client.startTask", async () => {
+    const startSpy = vi.fn(async (id: string) => ({ id, status: "running" as const }));
+    mockClient = baseClient({
+      startTask: startSpy,
+      async *streamEvents() {
+        // settle immediately
+      },
+    });
+
+    function SkillHarness() {
+      const start = useStartTask();
+      return <button onClick={() => void start("do it", ["web-search"])}>start-skill</button>;
+    }
+    render(
+      <TaskRunProvider>
+        <SkillHarness />
+      </TaskRunProvider>,
+    );
+    fireEvent.click(screen.getByText("start-skill"));
+
+    await waitFor(() => expect(startSpy).toHaveBeenCalledWith("t1", "do it", ["web-search"]));
   });
 
   it("attach is a no-op for a terminal task", async () => {
