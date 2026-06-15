@@ -168,7 +168,15 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         createdAt: startedAt,
         updatedAt: startedAt,
         messages: [
-          { id: `user-${summary.id}`, role: "user", content: directive, createdAt: startedAt },
+          {
+            id: `user-${summary.id}`,
+            role: "user",
+            content: directive,
+            createdAt: startedAt,
+            // Correlation key so the persisted first user_message reconciles this
+            // optimistic bubble in place instead of appending a duplicate.
+            clientId: `user-${summary.id}`,
+          },
         ],
         artifacts: [],
         toolTraces: [],
@@ -300,6 +308,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         role: "user",
         content: text,
         createdAt: new Date().toISOString(),
+        // Correlation key so the persisted follow-up user_message reconciles this
+        // optimistic bubble in place instead of appending a duplicate.
+        clientId: `local-${taskId}-${cur.messages.length}`,
       };
       const next: Task = { ...cur, status: "running" as const, messages: [...cur.messages, msg] };
       upsert(next);

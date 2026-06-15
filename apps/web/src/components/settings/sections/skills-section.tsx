@@ -12,18 +12,18 @@ export function SkillsSection() {
     <div>
       <SectionHeader heading={t("skills.heading")} description={t("skills.description")} />
 
-      {loading && <p className="text-sm text-muted-foreground">{t("skills.loading")}</p>}
-      {error && <p className="text-sm text-destructive">{t("skills.error")}</p>}
+      {loading && <p className="text-body text-muted-foreground">{t("skills.loading")}</p>}
+      {error && <p className="text-body text-destructive">{t("skills.error")}</p>}
       {!loading && !error && skills.length === 0 && (
-        <p className="text-sm text-muted-foreground">{t("skills.empty")}</p>
+        <p className="text-body text-muted-foreground">{t("skills.empty")}</p>
       )}
 
       {!loading && !error && skills.length > 0 && (
         <ul className="mt-2 flex flex-col gap-3">
           {skills.map((s) => (
             <li key={s.id} className="rounded-lg border border-border bg-card p-3">
-              <p className="text-sm font-medium text-foreground">{s.display_name}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{s.description}</p>
+              <p className="text-body-sm font-medium text-foreground">{s.display_name}</p>
+              <p className="mt-0.5 text-label font-normal text-muted-foreground">{s.description}</p>
             </li>
           ))}
         </ul>

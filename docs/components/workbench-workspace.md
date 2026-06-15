@@ -28,10 +28,14 @@ Displays artifacts and execution details for a single Task. Reuses existing `Art
 |  [artifact card] [artifact card]  |
 |  --------------------------------|
 |  Tool Traces                      |
-|  [tool 1]  success  1.2s         |
-|  [tool 2]  running  ...          |
+|  | (o) tool_1        1200 ms     |
+|  |     summary line              |
+|  | (o) tool_2                    |
+|  |     summary line              |
 +-----------------------------------+
 ```
+
+The `(o)` glyph is a `StatusDot` hung on a vertical timeline rail (`border-l`).
 
 ### Data blobs
 
@@ -64,15 +68,35 @@ Renders `Artifact[]` from the active Task. Each artifact displays `title`, `prev
 
 ### ToolsCard
 
-Renders `ToolTrace[]` from the active Task. Orientation: **oldest top, newest bottom** (mirrors conversational reading). Changing orientation requires documenting rationale + migrating fixtures.
+Renders `ToolTrace[]` from the active Task as a **vertical timeline rail**: a
+single `border-l border-border` hairline runs through the dot column, and each
+row hangs a `StatusDot` node on the rail (`-2px` optical alignment, matching
+`plan-card.tsx`). Orientation: **oldest top, newest bottom** (mirrors
+conversational reading). Changing orientation requires documenting rationale +
+migrating fixtures.
 
-| `status` | Palette guidance |
-|----------|------------------|
-| `success` | Subtle emerald-muted |
-| `running` | Spinner / pulse occupying secondary text |
-| `error` | Destructive token |
+One status language only — the rail dot — replacing the prior dot + badge +
+spinner trio. The dot maps domain status to the `StatusDot` visual variant:
 
-Each trace row displays `toolName`, `summary`, `status`, and optional `durationMs`.
+| `ToolTrace.status` | `StatusDot` variant | Token |
+|--------------------|---------------------|-------|
+| `success` | `success` | `bg-status-success` |
+| `running` | `running` | `bg-status-running` + `animate-pulse` |
+| `error` | `error` | `bg-destructive` |
+
+Each row is two lines:
+
+- Line 1: mono tool chip (`<code>` `text-caption font-mono`) + right-aligned
+  `durationMs` (`text-caption tabular-nums text-muted-foreground`), shown only
+  when `durationMs` is defined.
+- Line 2: `summary` (`text-body-sm text-muted-foreground`).
+
+**Expandable detail.** When a trace carries optional `input` and/or `result`
+fields (added to the shared `ToolTrace` contract by the chat/SSE seam), the row
+renders a disclosure toggle. Expanding reveals the present field(s) in a mono
+`<pre>` block under `输入` / `结果` (Input / Result) labels. The toggle and
+labels are localized (`toolExpand` / `toolCollapse` / `toolInput` /
+`toolResult`). Rows without detail render no toggle.
 
 ## ProjectWorkspace
 
@@ -147,11 +171,13 @@ Both workspace variants use vertical stacked cards within a scrollable area. Opt
 
 Status indicators follow the same palette as the Sidebar:
 
-| Status | Token |
-|--------|-------|
-| `success` / `completed` | Emerald-muted (`bg-emerald-500` for dots) |
-| `running` | Blue pulse (`bg-blue-500 animate-pulse`) |
-| `error` / `failed` | Destructive token (`bg-destructive`) |
+Use the `StatusDot` primitive (do not hand-roll dots) with semantic tokens:
+
+| Status | `StatusDot` variant | Token |
+|--------|---------------------|-------|
+| `success` / `completed` | `success` | `bg-status-success` |
+| `running` | `running` | `bg-status-running animate-pulse` |
+| `error` / `failed` | `error` | `bg-destructive` |
 
 ### Tool traces timeline orientation
 

@@ -6,6 +6,13 @@ export interface Message {
   content: string;
   createdAt: string;
   isStreaming?: boolean;
+  /**
+   * Stable client-side correlation key for an optimistically-rendered message.
+   * Set on the locally-seeded user bubble at send time so the history projection
+   * can reconcile that same bubble in place (keeping its React key) instead of
+   * appending a duplicate when the persisted turn is folded back in.
+   */
+  clientId?: string;
 }
 
 export type ConversationStatus = "idle" | "running" | "completed" | "failed";
@@ -40,6 +47,10 @@ export interface ToolTrace {
   status: ToolTraceStatus;
   startedAt: string;
   durationMs?: number;
+  /** Serialized tool input (args), revealed in the expandable trace detail. */
+  input?: string;
+  /** Serialized tool result/output, revealed in the expandable trace detail. */
+  result?: string;
 }
 
 export type ArtifactKind = "document" | "code" | "image" | "link";

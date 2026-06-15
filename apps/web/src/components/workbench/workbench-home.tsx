@@ -108,8 +108,8 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
             <div className="w-full rounded-xl border border-border bg-card p-4 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">{t("pendingPromptLabel")}</p>
-                  <p className="mt-1 truncate text-sm font-medium text-foreground">{pendingPrompt}</p>
+                  <p className="text-label font-normal text-muted-foreground">{t("pendingPromptLabel")}</p>
+                  <p className="mt-1 truncate text-body font-medium text-foreground">{pendingPrompt}</p>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -137,7 +137,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
               <Sparkles className="size-7 text-muted-foreground" aria-hidden />
             </div>
             <h1 className="text-xl font-semibold">{t("homeTitle")}</h1>
-            <p className="text-sm text-muted-foreground">{t("homeSubtitle")}</p>
+            <p className="text-body text-muted-foreground">{t("homeSubtitle")}</p>
           </div>
 
           {/* Quick composer when no pending prompt but user wants to type */}
@@ -152,7 +152,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
                     if (e.key === "Enter") void handleStart();
                   }}
                   placeholder={t("textareaPlaceholder")}
-                  className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+                  className="flex-1 bg-transparent text-body placeholder:text-muted-foreground focus:outline-none"
                   aria-label={t("textareaAria")}
                   disabled={starting}
                 />
@@ -167,7 +167,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
           {/* Recent Tasks */}
           {recentTasks.length > 0 && (
             <section className="w-full">
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">{t("recentTasks")}</h2>
+              <h2 className="mb-3 text-body-sm font-medium text-muted-foreground">{t("recentTasks")}</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {recentTasks.map((task) => (
                   <Link
@@ -175,8 +175,8 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
                     href={taskHref(task.id)}
                     className="group rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent"
                   >
-                    <p className="truncate text-sm font-medium">{task.title}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                    <p className="truncate text-body-sm font-medium">{task.title}</p>
+                    <p className="mt-1 truncate text-label font-normal text-muted-foreground">
                       {formatRelativeTime(task.updatedAt, locale)}
                     </p>
                   </Link>
@@ -188,7 +188,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
           {/* Projects */}
           {recentProjects.length > 0 && (
             <section className="w-full">
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">{t("projects")}</h2>
+              <h2 className="mb-3 text-body-sm font-medium text-muted-foreground">{t("projects")}</h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {recentProjects.map((project) => (
                   <Link
@@ -196,8 +196,8 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
                     href={projectHref(project.id)}
                     className="group rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent"
                   >
-                    <p className="truncate text-sm font-medium">{project.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="truncate text-body-sm font-medium">{project.name}</p>
+                    <p className="mt-1 text-label font-normal text-muted-foreground">
                       {project.tasks.length} {t("tasksCount")}
                     </p>
                   </Link>
@@ -209,8 +209,8 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
           {/* Empty state when no tasks and no projects */}
           {recentTasks.length === 0 && recentProjects.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <p className="text-sm font-medium text-muted-foreground">{t("homeEmptyTitle")}</p>
-              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{t("homeEmptyBody")}</p>
+              <p className="text-body font-medium text-muted-foreground">{t("homeEmptyTitle")}</p>
+              <p className="max-w-sm text-body-sm leading-relaxed text-muted-foreground">{t("homeEmptyBody")}</p>
             </div>
           )}
         </div>

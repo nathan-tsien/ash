@@ -41,6 +41,32 @@ If `isStreaming`:
 - Subtle caret / gradient shimmer permissible.
 - Respect scroll policy (below).
 
+### Optimistic user message — single source of truth (no duplicate)
+
+A user's just-sent message renders **immediately** for both new-task start and
+follow-ups: the provider seeds the optimistic user bubble (`startTask` for the
+first turn, `sendFollowUp` for later turns) before any network round-trip, so the
+chat never waits on praxis to echo the turn.
+
+To avoid a duplicate when the persisted turn is later folded back in (history
+catch-up on re-attach / cold load), each optimistic user message carries a stable
+`Message.clientId`. The history projection's `user_message` branch reconciles
+against it: if an unreconciled optimistic message (one still carrying a
+`clientId`) has identical content, it is updated **in place** — same `id`, same
+React key, only `content`/`createdAt` authoritatively set from history — instead
+of appending a fresh `hist-*` message. The `clientId` is dropped on reconcile so
+each seed matches at most once (repeated identical turns each reconcile their own
+seed, in order). This removes both the visible duplicate and the React-key churn
+that could momentarily hide a re-keyed bubble.
+
+The entrance animation diffs **by message id** (a `data-message-id` on each
+`.message-bubble`, tracked in a seen-id set), not by a count/index slice: during
+the SSE reconciliation window the list can change without growing, so an index
+slice would mis-target. Reconciled twins are marked seen without re-animating, and
+each entrance tween clears its inline `opacity`/`visibility` on completion so a
+re-keyed bubble can never be left `visibility:hidden` (MOTION-1: motion never
+hides content).
+
 Thinking indicator localized copy example: **Agent 正在思考…** (zh-CN surfaced string; docs remain English explanatory).
 
 ### Timestamps
@@ -124,7 +150,9 @@ follow `docs/design-guidelines.md` (no rogue palette literals; ADR-0013/0014).
 `useReattachOnView(taskId)`. Streams persist across in-session navigation, so this is guarded
 (`provider.attach`): it no-ops for unknown/terminal tasks and ones already streaming, acting only
 when a non-terminal stream has actually ended — catching up via `GET /v1/tasks/{id}/history` then
-re-subscribing (recovering the live `ask_id`).
+re-subscribing (recovering the live `ask_id`). The history fold reconciles the already-rendered
+optimistic user bubble in place via `clientId`/content match (see *Optimistic user message* above), so
+catch-up never produces a duplicate of the user's own turn.
 
 **Deep-link cold load (ADR-0016).** Full reload / direct navigation to `/app/task/[id]` now hydrates
 (previously deferred). The server component fetches the task (`getActiveTask` → `GET /v1/tasks/{id}`)
@@ -141,10 +169,12 @@ flips the task to a terminal state.
 **Multi-turn follow-up (ADR-0016).** On an existing task (including a completed one) the composer
 sends a free follow-up instead of an answer: `workbench-app.tsx` passes `onFollowUp` to the chat for
 task views, which routes to `provider.sendFollowUp(id, text)` → optimistic user message appended to
-the provider task + `POST /v1/tasks/{id}/messages`, then the same `runStream` mechanism re-subscribes
-for the assistant turn. The provider task is the single source of truth for the follow-up message
-(no local `extraMessages` append for task views, avoiding duplication). The `awaiting_input` answer
-path is unchanged and takes precedence when a `pendingQuestion` is present.
+the provider task (seeded with a `clientId` correlation key) + `POST /v1/tasks/{id}/messages`, then
+the same `runStream` mechanism re-subscribes for the assistant turn. The provider task is the single
+source of truth for the follow-up message (no local `extraMessages` append for task views, avoiding
+duplication), and the `clientId` lets a later history fold reconcile that same bubble in place rather
+than appending a second copy (see *Optimistic user message — single source of truth*). The
+`awaiting_input` answer path is unchanged and takes precedence when a `pendingQuestion` is present.
 
 See ADR-0015 (interactive execution) and ADR-0016 (contract-first codegen + transport) for the full
 decision records.

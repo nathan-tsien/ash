@@ -50,7 +50,12 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const prevMessageCountRef = useRef(0);
+  // Ids whose entrance has already played. Diffing by id (not by count) is robust
+  // to the SSE reconciliation window where an optimistic user bubble is replaced
+  // by its persisted twin: the list can change without growing, so an index slice
+  // would mis-target — and a re-keyed bubble left at messageEntrance()'s
+  // autoAlpha:0 would stay hidden (MOTION-1: motion never hides content).
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
 
   const messages = useMemo(
     () => [...active.messages, ...extraMessages],
@@ -91,37 +96,49 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
   useGSAP(
     () => {
       const bubbles = gsap.utils.toArray<HTMLElement>(".message-bubble");
+      // Re-seed the seen set to the rendered conversation so the per-message
+      // effect treats nothing here as "new" and the cross-fade owns this batch.
+      seenMessageIdsRef.current = new Set(messages.map((m) => m.id));
       if (bubbles.length === 0) return;
 
-      gsap.from(bubbles, messageStagger());
-
-      prevMessageCountRef.current = messages.length;
+      gsap.from(bubbles, {
+        ...messageStagger(),
+        // Defensive: clear inline autoAlpha/visibility once the batch settles so a
+        // bubble can never be left visibility:hidden (MOTION-1).
+        onComplete: () => gsap.set(bubbles, { clearProps: "opacity,visibility" }),
+      });
     },
     { scope: containerRef, dependencies: [active.id] },
   );
 
-  /* Entrance animation for newly added messages. */
+  /* Entrance animation for messages whose id has not yet been animated. */
   useGSAP(
     () => {
-      if (messages.length <= prevMessageCountRef.current) {
-        prevMessageCountRef.current = messages.length;
-        return;
-      }
-
+      const seen = seenMessageIdsRef.current;
       const bubbles = gsap.utils.toArray<HTMLElement>(".message-bubble");
-      const newBubbles = bubbles.slice(prevMessageCountRef.current);
+      const newBubbles = bubbles.filter((el) => {
+        const id = el.dataset.messageId;
+        return id !== undefined && !seen.has(id);
+      });
+
+      // Mark every currently-rendered id as seen, including reconciled twins that
+      // are not animated here — so a later re-render never replays their entrance.
+      for (const m of messages) seen.add(m.id);
 
       if (newBubbles.length > 0) {
         const tl = gsap.timeline();
-        tl.from(newBubbles, messageEntrance());
+        tl.from(newBubbles, {
+          ...messageEntrance(),
+          // Clear inline autoAlpha/visibility on settle so a bubble that gets
+          // re-keyed during the live SSE window can never stay hidden (MOTION-1).
+          onComplete: () => gsap.set(newBubbles, { clearProps: "opacity,visibility" }),
+        });
         tl.call(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, undefined, "<0.1");
       }
-
-      prevMessageCountRef.current = messages.length;
     },
-    { scope: containerRef, dependencies: [messages.length] },
+    { scope: containerRef, dependencies: [messages.map((m) => m.id).join("|")] },
   );
 
   return (
@@ -131,7 +148,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
           <MessageSquare className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <div className="min-w-0">
             <h1 className="truncate text-body-lg font-semibold leading-tight">{active.title}</h1>
-            <p className="truncate text-xs text-muted-foreground">{active.preview}</p>
+            <p className="truncate text-label font-normal text-muted-foreground">{active.preview}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -189,11 +206,11 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
                   <Sparkles className="size-6 text-muted-foreground" aria-hidden />
                 </div>
                 <h2 className="text-body-lg font-semibold text-foreground">{t("emptyChatTitle")}</h2>
-                <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
+                <p className="max-w-sm text-body-sm font-normal leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
               </div>
             ) : (
               messages.map((m) => (
-                <div key={m.id} className="message-bubble">
+                <div key={m.id} data-message-id={m.id} className="message-bubble">
                   <MessageBubble locale={locale} message={m} />
                 </div>
               ))
@@ -204,7 +221,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
               </div>
             )}
             {active.status === "running" && (
-              <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-label font-normal text-muted-foreground">
                 <Loader2
                   ref={(el) => {
                     if (el) {

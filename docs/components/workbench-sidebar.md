@@ -46,31 +46,65 @@ Display fields from `Task` in `@ash/shared/src/types.ts` -- update both code and
 
 | Field | Visual treatment |
 |-------|------------------|
-| `title` | Primary line, `text-[13px] font-medium`, truncated |
-| `status` | Status dot (see below) |
-| `updatedAt` | Relative time via `formatRelativeTime` (zh-CN) |
+| `title` | Primary line, `text-body-sm`, truncated. `font-medium` by default, `font-semibold` when the row is active |
+| `status` | Status indicator on line 2 (see Status indicators below) |
 
-Selecting a task row navigates to `/app/task/[taskId]`. Active task uses `bg-sidebar-accent` highlight.
+Line 2 carries **status only** — there is no relative-time string. `Task.updatedAt` from a
+`summaryToTask` projection is a synthetic per-fetch stamp (identical on every card; see
+`lib/praxis/summary-projection.ts`), so rendering it as relative time was uniform and misleading.
+Status is the meaningful secondary signal until praxis adds `updated_at` to the `TaskSummary`
+contract (contract-first: extend the OpenAPI schema + regenerate, never hand-edit `generated.ts`).
+
+Selecting a task row navigates to `/app/task/[taskId]`. The **active row** is marked by a 2px
+left accent rail `border-l-2 border-sidebar-rail` plus `bg-sidebar-accent`, a `font-semibold`
+title, and `aria-current="page"`. Hover (`hover:bg-sidebar-accent/60`) is deliberately weaker so
+the selected row clearly outranks it (PRIN-4). Rows have a consistent `min-h-12`.
 
 ### Project list item (`Project`)
 
 | Field | Visual treatment |
 |-------|------------------|
-| `name` | Primary line, `text-[13px] font-medium`, truncated, preceded by `Folder` icon |
-| task summary | Computed: running task count (if > 0) + completed task count, `text-[11px] text-muted-foreground` |
+| `name` | Primary line, `text-body-sm font-medium`, truncated, preceded by `Folder` icon |
+| task summary | Computed: running task count (if > 0) + completed task count, `text-caption text-muted-foreground` |
 
-Selecting a project row navigates to `/app/project/[projectId]`. Active project uses `bg-sidebar-accent` highlight.
+Selecting a project row navigates to `/app/project/[projectId]`. Active project uses the same
+accent-rail treatment as task rows.
+
+## Deterministic ordering
+
+Both the dual-section Tasks list and `ProjectNav` sort with a single shared comparator,
+`taskStatusSortRank` (`lib/task-status.ts`), so the list never looks shuffled (PRIN-1). Bucket
+priority (lower sorts first):
+
+| Rank | Status | Rationale |
+|------|--------|-----------|
+| 0 | `awaiting_input` | Needs the user now |
+| 1 | `running` | Live work |
+| 2 | `pending` | Queued |
+| 3 | `failed` | Stays visible above the done pile |
+| 4 | `completed` | Finished |
+
+The sort is **stable** and runs on a copied array, so the server's LIFO (most-recent-first) order is
+preserved within each bucket. The `.slice(0, 10)` cap is applied **after** sorting.
 
 ## Status indicators
 
+Status is carried by COLOR-3 token triplets only — no raw palette literals (COLOR-2). Live work
+(`running`) pulses via the shared `StatusDot` primitive (`size-2`, `animate-pulse`); every settled
+status reads as a calm soft chip (`text-label font-medium`, `rounded-md px-1.5 py-0.5`):
+
 | Status | Visual |
 |--------|--------|
-| `running` | `size-1.5` dot, `bg-blue-500`, `animate-pulse` |
-| `completed` | `size-1.5` dot, `bg-emerald-500` |
-| `failed` | `size-1.5` dot, `bg-destructive` |
-| `pending` / idle | `size-1.5` dot, `bg-muted-foreground/40` |
+| `running` | `StatusDot status="running"` (`bg-status-running`, `animate-pulse`) + label in `text-status-running-foreground` |
+| `awaiting_input` | Chip `bg-status-warning-soft text-status-warning-foreground` (attention, not error) |
+| `completed` | Chip `bg-status-success-soft text-status-success-foreground` |
+| `failed` | Chip `bg-destructive/10 text-destructive` |
+| `pending` / idle | Chip `bg-muted text-muted-foreground` |
 
-Status dot is paired with the relative time string in a flex row (`gap-2`).
+The live dot + label sit in a flex row (`gap-2`). Status helpers (`taskStatusIsLive`,
+`taskStatusChipClass`, `taskStatusDotVariant`, `taskStatusLabelKey`) live in `lib/task-status.ts`
+app-side so `packages/ui` never imports domain types. `ProjectNav` rows keep the inline
+`StatusDot` + title layout (the dot is the sole status carrier there).
 
 ## List limits
 
@@ -108,8 +142,8 @@ When `viewMode === "project"` and an `activeProject` is resolved, the sidebar re
 | Element | Behavior |
 |---------|----------|
 | Back arrow | `<Link href="/app">`, returns to dual-section layout |
-| Project name | Truncated `text-[13px] font-semibold` |
-| Task list | Same status dot + title layout as TaskSection, but navigates to `/app/task/[taskId]` |
+| Project name | Truncated `text-body-sm font-semibold` |
+| Task list | Inline status dot + title layout, deterministic `taskStatusSortRank` order, active accent-rail treatment; navigates to `/app/task/[taskId]` |
 | `[+]` button | Creates a new Task within the project |
 
 ## Search
