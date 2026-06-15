@@ -210,6 +210,29 @@ describe("TaskRunProvider", () => {
     expect(historyCalls).toBe(0); // guard skipped: the live stream is still open
   });
 
+  it("forwards skillHints to client.startTask", async () => {
+    const startSpy = vi.fn(async (id: string) => ({ id, status: "running" as const }));
+    mockClient = baseClient({
+      startTask: startSpy,
+      async *streamEvents() {
+        // settle immediately
+      },
+    });
+
+    function SkillHarness() {
+      const start = useStartTask();
+      return <button onClick={() => void start("do it", ["web-search"])}>start-skill</button>;
+    }
+    render(
+      <TaskRunProvider>
+        <SkillHarness />
+      </TaskRunProvider>,
+    );
+    fireEvent.click(screen.getByText("start-skill"));
+
+    await waitFor(() => expect(startSpy).toHaveBeenCalledWith("t1", "do it", ["web-search"]));
+  });
+
   it("attach is a no-op for a terminal task", async () => {
     let historyCalls = 0;
     mockClient = baseClient({

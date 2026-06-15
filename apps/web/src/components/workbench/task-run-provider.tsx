@@ -28,7 +28,7 @@ interface TaskRunContextValue {
   runs: Task[];
   getRun(id: string): Task | undefined;
   /** Create + start a task, returning its id. Streaming updates land async. */
-  startTask(directive: string): Promise<string>;
+  startTask(directive: string, skillHints?: string[]): Promise<string>;
   /** Answer the live pending question on a task (praxis ask_user). */
   answer(taskId: string, text: string): Promise<void>;
   /** Re-attach a task's stream: catch up via /history, then re-subscribe. */
@@ -152,7 +152,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   );
 
   const startTask = useCallback(
-    async (directive: string): Promise<string> => {
+    async (directive: string, skillHints?: string[]): Promise<string> => {
       const client = clientRef.current;
       const startedAt = new Date().toISOString();
       const summary = await client.createTask({
@@ -183,7 +183,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       activeStreamsRef.current.add(summary.id);
       void (async () => {
         try {
-          await clientRef.current.startTask(summary.id, directive);
+          await clientRef.current.startTask(summary.id, directive, skillHints);
           upsert({ ...seeded, status: "running" });
           await runStream(summary.id, { ...seeded, status: "running" }, controller);
         } catch {
@@ -357,7 +357,7 @@ export function useTaskRun(id: string | undefined): Task | undefined {
   return id ? getRun(id) : undefined;
 }
 
-export function useStartTask(): (directive: string) => Promise<string> {
+export function useStartTask(): (directive: string, skillHints?: string[]) => Promise<string> {
   return useTaskRunContext().startTask;
 }
 
