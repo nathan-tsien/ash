@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: praxis API
-  version: 0.1.6
+  version: 0.2.0
   description: >-
     praxis HTTP API. Source of truth for the wire contract (design-first; see ADR-0007).
-    Stability: this is a stable, additive contract within 0.1.x (see openapi/VERSIONING.md) —
+    Stability: this is a stable, additive contract within 0.x (see openapi/VERSIONING.md) —
     no breaking change to an existing shape without a version bump. The `/v1` path is the
     major-compatibility axis; `info.version` is the document semver. Tagged-union consumers
     MUST ignore unknown `type`/`code` values so additions stay backward-compatible.
@@ -97,6 +97,42 @@ paths:
               schema:
                 $ref: "./schemas.json#/$defs/ProjectList"
         "401":
+          $ref: "#/components/responses/Error"
+  /v1/skills:
+    get:
+      operationId: listSkills
+      summary: List registered skills the caller can use as hints (single page).
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: A page of skill descriptors.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.json#/$defs/SkillList"
+        "401":
+          $ref: "#/components/responses/Error"
+  /v1/skills/{id}:
+    get:
+      operationId: getSkill
+      summary: Fetch one skill, including its instructions body.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The skill.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas.json#/$defs/SkillDetail"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
           $ref: "#/components/responses/Error"
   /v1/tasks/{id}:
     get:

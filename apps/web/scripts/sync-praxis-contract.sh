@@ -12,7 +12,7 @@
 set -euo pipefail
 
 REPO="nathan-tsien/praxis"
-TAG="${PRAXIS_TAG:-openapi-v0.1.6}"
+TAG="${PRAXIS_TAG:-openapi-v0.2.0}"
 CONTRACT_DIR="$(cd "$(dirname "$0")/.." && pwd)/src/lib/praxis/contract"
 
 fetch() { # $1 = repo path, writes to stdout
