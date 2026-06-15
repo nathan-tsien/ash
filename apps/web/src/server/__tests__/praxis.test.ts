@@ -50,6 +50,21 @@ describe("forwardToPraxis", () => {
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
+  it("forwards a /v1/skills GET to praxis (allowlisted)", async () => {
+    const fetchFn = fetchMock();
+    fetchFn.mockResolvedValue(
+      new Response('{"items":[]}', { status: 200, headers: { "content-type": "application/json" } }),
+    );
+    const req = new Request("http://localhost/api/praxis/v1/skills", { method: "GET" });
+
+    const res = await forwardToPraxis(req, ["v1", "skills"]);
+
+    expect(res.status).toBe(200);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const calledUrl = String(fetchFn.mock.calls[0][0]);
+    expect(calledUrl).toContain("/v1/skills");
+  });
+
   it("401s when there is no session", async () => {
     const fetchFn = fetchMock();
     mockToken.mockResolvedValue(undefined);
