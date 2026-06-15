@@ -16,6 +16,7 @@ import { taskHref, projectHref } from "@/lib/workbench-href";
 import { formatRelativeTime } from "@ash/shared";
 import { useRouter } from "@/i18n/navigation";
 import { useStartTask } from "./task-run-provider";
+import { SkillPicker } from "./skill-picker";
 
 export interface WorkbenchHomeProps {
   locale: AshLocale;
@@ -69,6 +70,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
     getPendingPromptServerSnapshot,
   );
   const [draft, setDraft] = useState("");
+  const [skillIds, setSkillIds] = useState<string[]>([]);
   const [starting, setStarting] = useState(false);
   const startTask = useStartTask();
   const router = useRouter();
@@ -82,14 +84,15 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
     setDraft("");
 
     try {
-      const id = await startTask(prompt);
+      const id = await startTask(prompt, skillIds);
+      setSkillIds([]);
       router.push(taskHref(id));
     } catch {
       // Task creation failed (e.g. real praxis unreachable); re-enable the
       // composer so the user can retry instead of being stuck disabled.
       setStarting(false);
     }
-  }, [pendingPrompt, draft, starting, startTask, router]);
+  }, [pendingPrompt, draft, skillIds, starting, startTask, router]);
 
   const handleDismiss = useCallback(() => {
     clearPendingPrompt();
@@ -138,22 +141,25 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
 
           {/* Quick composer when no pending prompt but user wants to type */}
           {!pendingPrompt && (
-            <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
-              <input
-                type="text"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleStart();
-                }}
-                placeholder={t("textareaPlaceholder")}
-                className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
-                aria-label={t("textareaAria")}
-                disabled={starting}
-              />
-              <Button onClick={() => void handleStart()} variant="pill" size="sm" disabled={starting}>
-                {t("send")}
-              </Button>
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+                <input
+                  type="text"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void handleStart();
+                  }}
+                  placeholder={t("textareaPlaceholder")}
+                  className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+                  aria-label={t("textareaAria")}
+                  disabled={starting}
+                />
+                <Button onClick={() => void handleStart()} variant="pill" size="sm" disabled={starting}>
+                  {t("send")}
+                </Button>
+              </div>
+              <SkillPicker selected={skillIds} onChange={setSkillIds} disabled={starting} />
             </div>
           )}
 

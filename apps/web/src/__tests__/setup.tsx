@@ -1,6 +1,15 @@
 /// <reference types="vitest" />
 import "@testing-library/jest-dom/vitest";
 
+// jsdom lacks ResizeObserver; Radix ScrollArea (and others) reference it on mount.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Mock next-intl
 // useTranslations returns "Namespace.key" by default (no provider), but when
 // NextIntlClientProvider supplies messages the context overrides the stub so
