@@ -20,7 +20,6 @@ beforeAll(() => {
 const messages = {
   Workbench: {
     skillPickerButton: "技能",
-    skillPickerEmpty: "暂无可用技能",
     skillPickerHint: "建议技能（非强制）",
     removeSkillAria: "移除技能",
   },
