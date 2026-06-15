@@ -29,7 +29,7 @@ Nav items map 1:1 to section IDs below. Active item uses accent background per t
 | `billing` | `Settings.Billing` | Display-only plan summary | Stripe / quota integration |
 | `personalization` | `Settings.Personalization` | Real toggles (local persistence TBD) | Cross-device sync |
 | `scheduled-tasks` | `Settings.ScheduledTasks` | Mock list from `@ash/shared`; pause/resume UI stubs | ash-server CRUD + cron engine |
-| `skills` | `Settings.Skills` | Mock list; enable/disable toggles (`requiresPhase2` gates disabled) | cogito capability registry |
+| `skills` | `Settings.Skills` | Live read-only catalog from `GET /v1/skills` (ADR-0017); no toggles — `binding` is hint-only in 0.2.0 | per-skill detail view (`GET /v1/skills/{id}`); skill management |
 | `connectors` | `Settings.Connectors` | Mock list; connect/disconnect button stubs | OAuth flows + MCP server management |
 
 ## Mock domain types

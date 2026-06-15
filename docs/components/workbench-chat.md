@@ -72,6 +72,27 @@ Floating pill button appears when user scrolls > 200px from bottom of the `Scrol
 
 Ensure composer remains keyboard navigable (`aria-multiline`, proper label association).
 
+### Task-start skill picker (ADR-0017)
+
+The home composer carries a `SkillPicker` (i18n `Workbench.skillPickerButton` / `skillPickerHint` /
+`removeSkillAria`). It lists the registered skill catalog from `GET /v1/skills` via the
+session-cached `useSkillCatalog` hook (browser -> BFF -> praxis), showing each skill's
+`display_name` and `description`. Selection is **multi-select**: the picker tracks a set of skill
+ids and renders the chosen skills as removable chips.
+
+On task start the chosen ids are sent as `StartTaskRequest.skill_hints` (an array of skill id
+strings). The payload contract:
+
+```
+POST /v1/tasks/{id}/start  { ..., skill_hints: ["skill-a", "skill-b"] }
+```
+
+Semantics are **hint, not lock**: the ids steer skill selection but do not pin it — the model may
+still pick a different skill, and unregistered ids are ignored by praxis. This is **task-start
+only**: the contract has no skill field on follow-up messages (`POST /v1/tasks/{id}/messages`), so
+skills cannot be re-suggested mid-task. The legacy single `skill_hint` field remains in the contract
+but ash sends the array form.
+
 ## Live task runs (ADR-0011)
 
 For a Task started in-session, the Chat renders the **live** message list from `TaskRunProvider`. The home composer creates + starts a task via `PraxisTaskClient`, then routes to `/app/task/[id]`; `runtimeEventReducer` folds the praxis `RuntimeEvent` SSE stream into the `Task`:
