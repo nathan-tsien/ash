@@ -24,6 +24,9 @@ function baseClient(overrides: Partial<PraxisTaskClient>): PraxisTaskClient {
     async listTasks() {
       return { items: [], next_cursor: null };
     },
+    async listSkills() {
+      return { items: [], next_cursor: null };
+    },
     async getTask(id) {
       return { id, status: "draft" };
     },

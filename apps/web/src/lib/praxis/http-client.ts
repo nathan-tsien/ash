@@ -1,5 +1,5 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, RuntimeEvent, SkillList, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
 import { PraxisError } from "./errors";
 import { SseParser } from "./sse";
 import { createPraxisFetchClient } from "./openapi-fetch-client";
@@ -53,9 +53,12 @@ export const httpPraxisClient: PraxisTaskClient = {
     return unwrap(await api.POST("/v1/tasks", { body: req }), "createTask");
   },
 
-  async startTask(id: string, userInput: string): Promise<TaskSummary> {
+  async startTask(id: string, userInput: string, skillHints?: string[]): Promise<TaskSummary> {
+    const body = skillHints && skillHints.length > 0
+      ? { user_input: userInput, skill_hints: skillHints }
+      : { user_input: userInput };
     return unwrap(
-      await api.POST("/v1/tasks/{id}/start", { params: { path: { id } }, body: { user_input: userInput } }),
+      await api.POST("/v1/tasks/{id}/start", { params: { path: { id } }, body }),
       "startTask",
     );
   },
@@ -71,6 +74,13 @@ export const httpPraxisClient: PraxisTaskClient = {
     return unwrap(
       await api.GET("/v1/tasks/{id}", { params: { path: { id } } }),
       "getTask",
+    );
+  },
+
+  async listSkills(params?: { limit?: number; cursor?: string }): Promise<SkillList> {
+    return unwrap(
+      await api.GET("/v1/skills", { params: { query: { limit: params?.limit, cursor: params?.cursor } } }),
+      "listSkills",
     );
   },
 
