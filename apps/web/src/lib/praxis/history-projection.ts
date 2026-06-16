@@ -173,12 +173,15 @@ function pushMessage(task: Task, msg: Message): Task {
  * instead of appending a fresh `hist-*` message. This removes both the visible
  * duplicate and the key churn that could otherwise re-key (and momentarily hide)
  * the live bubble. Matching is by an unreconciled optimistic message (carries a
- * `clientId`) with identical content; the first such match wins, so repeated
+ * `clientId`) with content equal after trimming — praxis may normalize/trim the
+ * persisted text, and an exact compare would miss it and re-introduce the very
+ * duplicate this dedupe prevents. The first such match wins, so repeated
  * identical turns each reconcile their own seed in order.
  */
 function reconcileUserMessage(task: Task, content: string, ts: string): Task {
+  const target = content.trim();
   const i = task.messages.findIndex(
-    (m) => m.role === "user" && m.clientId !== undefined && m.content === content,
+    (m) => m.role === "user" && m.clientId !== undefined && m.content.trim() === target,
   );
   if (i === -1) {
     return pushMessage(task, makeMessage("user", content, ts, task));

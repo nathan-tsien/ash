@@ -7,12 +7,6 @@ import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-// Visual status name for the StatusDot primitive. Domain status maps 1:1 here
-// (running/success/error); kept local so the dot stays presentation-only.
-function dotStatus(status: ToolTrace["status"]): "running" | "success" | "error" {
-  return status;
-}
-
 export function ToolsCard({ traces }: { traces: ToolTrace[] }) {
   const t = useTranslations("Workbench");
 
@@ -40,13 +34,9 @@ function ToolRow({ trace, last }: { trace: ToolTrace; last: boolean }) {
   const t = useTranslations("Workbench");
   const [open, setOpen] = useState(false);
 
-  // input/result are optional ToolTrace detail fields (added to the shared
-  // ToolTrace contract by the chat/SSE seam). Read them tolerantly so this
-  // file stays decoupled from merge ordering; surface a disclosure only when
-  // at least one is present.
-  const detail = trace as ToolTrace & { input?: string; result?: string };
-  const input = detail.input;
-  const result = detail.result;
+  // input/result are optional detail fields on the shared ToolTrace contract;
+  // surface the disclosure only when at least one is present.
+  const { input, result } = trace;
   const hasDetail = Boolean(input) || Boolean(result);
 
   const statusLabel =
@@ -67,7 +57,7 @@ function ToolRow({ trace, last }: { trace: ToolTrace; last: boolean }) {
     >
       {/* Status node hung on the rail. -ml puts the dot center on the border. */}
       <StatusDot
-        status={dotStatus(trace.status)}
+        status={trace.status}
         label={statusLabel}
         className="absolute left-0 top-1.5 -ml-[5px]"
       />
@@ -115,7 +105,9 @@ function ToolDetail({ label, value }: { label: string; value: string }) {
       <span className="text-caption font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
-      <pre className="overflow-x-auto rounded-md bg-muted px-2 py-1.5 text-caption font-mono text-foreground">
+      {/* Cap height so a large tool payload scrolls inside its own box instead
+          of expanding the workspace pane vertically (UX). */}
+      <pre className="max-h-48 overflow-auto rounded-md bg-muted px-2 py-1.5 text-caption font-mono text-foreground">
         {value}
       </pre>
     </div>
