@@ -25,22 +25,21 @@ function seed(): Task {
 }
 
 /**
- * Build a newest-first PraxisMessage[] from a chronological list of message specs.
- * Each spec carries role + content blocks; seq is assigned chronologically.
+ * Build an ascending (oldest-first) PraxisMessage[] from a chronological list of
+ * message specs — the praxis 0.4.0 page order. Each spec carries role + content
+ * blocks; seq is assigned chronologically.
  */
 function msgs(
   specs: Array<{ role: "user" | "assistant"; content: PraxisMessage["content"] }>,
 ): PraxisMessage[] {
-  return specs
-    .map((s, i) => ({
-      id: `m${i}`,
-      task_id: "t1",
-      seq: i,
-      role: s.role,
-      created_at: `2026-06-13T00:00:0${i}.000Z`,
-      content: s.content,
-    }))
-    .reverse();
+  return specs.map((s, i) => ({
+    id: `m${i}`,
+    task_id: "t1",
+    seq: i,
+    role: s.role,
+    created_at: `2026-06-13T00:00:0${i}.000Z`,
+    content: s.content,
+  }));
 }
 
 describe("historyToTask", () => {
@@ -48,7 +47,7 @@ describe("historyToTask", () => {
     expect(historyToTask(seed(), [], labels).messages).toHaveLength(0);
   });
 
-  it("projects messages in chronological order from newest-first items", () => {
+  it("projects messages in chronological order from ascending (oldest-first) items", () => {
     const task = historyToTask(
       seed(),
       msgs([

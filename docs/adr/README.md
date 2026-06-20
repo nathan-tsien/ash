@@ -35,10 +35,12 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0015](./0015-praxis-0.1.5-interactive-execution.md) | praxis 0.1.5 interactive execution (`ask_user` + same-session history catch-up) |
 | [0016](./0016-contract-first-codegen-and-transport.md) | Contract-first codegen and transport alignment |
 | [0017](./0017-praxis-0.2.0-skill-discovery-and-hints.md) | praxis 0.2.0 skill discovery + hints at task start |
+| [0018](./0018-praxis-0.3.0-block-model.md) | praxis 0.3.0 block-oriented stream + history model (`StreamEvent` / `MessagePage`) |
+| [0019](./0019-praxis-0.4.0-history-chronological-ordering.md) | praxis 0.4.0 history chronological (ascending) page ordering |
 
 ### Reserved band
 
-Next free IDs (**0018+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
+Next free IDs (**0020+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
 
 ## Template
 

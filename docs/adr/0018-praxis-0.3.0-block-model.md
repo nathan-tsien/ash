@@ -63,7 +63,9 @@ Two facts shape the response:
 
 4. **History projection becomes a near-identity map.** `history-projection.ts` folds `Message[]`
    directly into the view-model (newest-first page reversed, older pages prepended) and paginates on
-   `next_before_seq`. The bespoke per-event folding is gone.
+   `next_before_seq`. The bespoke per-event folding is gone. (Page ordering amended by ADR-0019:
+   praxis 0.4.0 makes each page ascending, so the per-page reverse is dropped — pages are now
+   prepended without reversal.)
 
 5. **ask_user via tool_use block.** A `tool_use` ContentBlock with `tool_name ==
    "message_ask_user"` and no matching `tool_result` is the pending question; its `call_id` is the

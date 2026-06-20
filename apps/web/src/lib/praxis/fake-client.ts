@@ -163,11 +163,12 @@ export const fakePraxisClient: PraxisTaskClient = {
   },
 
   async history(): Promise<MessagePage> {
-    // Scripted persisted Messages (newest-first), enough to exercise the projector.
+    // Scripted persisted Messages, ascending by seq (oldest first, praxis 0.4.0),
+    // enough to exercise the projector.
     return {
       items: [
-        { id: "m1", task_id: "fake", seq: 1, role: "assistant", created_at: "2026-06-13T00:00:01.000Z", content: [{ type: "text", data: { text: "好的" } }] },
         { id: "m0", task_id: "fake", seq: 0, role: "user", created_at: "2026-06-13T00:00:00.000Z", content: [{ type: "text", data: { text: "生成 PPT" } }] },
+        { id: "m1", task_id: "fake", seq: 1, role: "assistant", created_at: "2026-06-13T00:00:01.000Z", content: [{ type: "text", data: { text: "好的" } }] },
       ],
     };
   },

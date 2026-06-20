@@ -252,7 +252,9 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         let cursor: number | undefined;
         do {
           const page = await client.history(taskId, cursor);
-          items.push(...page.items);
+          // praxis 0.4.0: pages are ascending within, walked newest -> older across
+          // calls. Prepend each older page so `items` stays chronological overall.
+          items.unshift(...page.items);
           cursor = page.next_before_seq ?? undefined;
         } while (cursor);
         const rebuilt = historyToTask(existing, items, historyLabels);
