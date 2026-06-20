@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useState } from "react";
 import type { PraxisTaskClient } from "@/lib/praxis/client";
-import type { RuntimeEvent, TaskHistoryPage } from "@/lib/praxis/runtime-events";
+import type { StreamEvent, MessagePage } from "@/lib/praxis/runtime-events";
 
 // The provider captures getPraxisClient() once via useRef; swap in a per-test client.
 let mockClient: PraxisTaskClient;
@@ -30,7 +30,7 @@ function baseClient(overrides: Partial<PraxisTaskClient>): PraxisTaskClient {
     async getTask(id) {
       return { id, status: "draft" };
     },
-    async *streamEvents(): AsyncIterable<RuntimeEvent> {
+    async *streamEvents(): AsyncIterable<StreamEvent> {
       // no events by default; overridden per test
     },
     async sendMessage() {},
@@ -73,10 +73,12 @@ function renderHarness() {
 describe("TaskRunProvider", () => {
   it("marks the task failed when the stream closes without a terminal event", async () => {
     mockClient = baseClient({
-      async *streamEvents(): AsyncIterable<RuntimeEvent> {
-        yield { type: "turn_started" };
-        yield { type: "text_delta", chunk: "partial" };
-        // Stream ends here — no turn_completed / turn_failed.
+      async *streamEvents(): AsyncIterable<StreamEvent> {
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "content_block_start", index: 0, content_block: { type: "text", data: { text: "" } } };
+        yield { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "partial" } };
+        yield { type: "content_block_stop", index: 0 };
+        // Stream ends here — no stream_end / message_stop with end_turn.
       },
     });
 
@@ -87,9 +89,10 @@ describe("TaskRunProvider", () => {
 
   it("keeps a completed task completed even if complete() rejects", async () => {
     mockClient = baseClient({
-      async *streamEvents(): AsyncIterable<RuntimeEvent> {
-        yield { type: "turn_started" };
-        yield { type: "turn_completed" };
+      async *streamEvents(): AsyncIterable<StreamEvent> {
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "message_stop" };
+        yield { type: "stream_end", task_status: "completed" };
       },
       async complete() {
         throw new Error("409 task already terminal");
@@ -105,12 +108,17 @@ describe("TaskRunProvider", () => {
     let resolveAnswer!: () => void;
     const answered = new Promise<void>((r) => (resolveAnswer = r));
     mockClient = baseClient({
-      async *streamEvents(): AsyncIterable<RuntimeEvent> {
-        yield { type: "turn_started" };
-        yield { type: "ask_user", ask_id: "q1", text: "Which audience?", attachments: [] };
+      async *streamEvents(): AsyncIterable<StreamEvent> {
+        // Emit a message_ask_user tool_use block so pendingQuestionFromMessages finds it.
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "q1", tool_name: "message_ask_user", args: { question: "Which audience?" } } } };
+        yield { type: "content_block_stop", index: 0 };
+        yield { type: "message_stop" };
+        yield { type: "turn_paused" };
         await answered;
         yield { type: "turn_resumed" };
-        yield { type: "turn_completed" };
+        yield { type: "message_start", message: { id: "m2", task_id: "t1", seq: 1, role: "assistant", created_at: "2026-06-13T00:00:01.000Z" } };
+        yield { type: "message_stop" };
         yield { type: "stream_end", task_status: "completed" };
       },
       async answer() {
@@ -128,10 +136,13 @@ describe("TaskRunProvider", () => {
 
   it("does not mark awaiting_input tasks failed when the stream stays open", async () => {
     mockClient = baseClient({
-      async *streamEvents(): AsyncIterable<RuntimeEvent> {
-        yield { type: "turn_started" };
-        yield { type: "ask_user", ask_id: "q1", text: "?", attachments: [] };
-        // stream ends here WITHOUT a terminal event — but task is awaiting_input
+      async *streamEvents(): AsyncIterable<StreamEvent> {
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "q1", tool_name: "message_ask_user", args: { question: "?" } } } };
+        yield { type: "content_block_stop", index: 0 };
+        yield { type: "message_stop" };
+        yield { type: "turn_paused" };
+        // stream ends here WITHOUT a stream_end terminal event — but task is awaiting_input
       },
     });
     renderHarness();
@@ -140,37 +151,53 @@ describe("TaskRunProvider", () => {
 
   it("attach pages history, rebuilds messages, and recovers the live ask_id", async () => {
     let streamCall = 0;
-    const historyPages: TaskHistoryPage[] = [
+    const historyPages: MessagePage[] = [
       {
         items: [
-          { seq: 2, ts: "2026-06-13T00:00:02.000Z", event: { type: "ask_user", text: "Which audience?", attachments: [] } },
+          {
+            id: "m2", task_id: "t1", seq: 2, role: "assistant",
+            created_at: "2026-06-13T00:00:02.000Z",
+            content: [{ type: "tool_use", data: { call_id: "q1", tool_name: "message_ask_user", args: { question: "Which audience?" } } }],
+          },
         ],
-        next_cursor: "p2",
+        next_before_seq: 2,
       },
       {
         items: [
-          { seq: 1, ts: "2026-06-13T00:00:01.000Z", event: { type: "assistant_message", text: "earlier reply" } },
-          { seq: 0, ts: "2026-06-13T00:00:00.000Z", event: { type: "user_message", content: "hi" } },
+          {
+            id: "m1", task_id: "t1", seq: 1, role: "assistant",
+            created_at: "2026-06-13T00:00:01.000Z",
+            content: [{ type: "text", data: { text: "earlier reply" } }],
+          },
+          {
+            id: "m0", task_id: "t1", seq: 0, role: "user",
+            created_at: "2026-06-13T00:00:00.000Z",
+            content: [{ type: "text", data: { text: "hi" } }],
+          },
         ],
-        next_cursor: null,
       },
     ];
     let historyCalls = 0;
     mockClient = baseClient({
-      async *streamEvents(): AsyncIterable<RuntimeEvent> {
+      async *streamEvents(): AsyncIterable<StreamEvent> {
         streamCall += 1;
         if (streamCall === 1) {
-          // Initial run parks awaiting input (read-only — no ask_id recovered yet on this path).
-          yield { type: "turn_started" };
-          yield { type: "ask_user", ask_id: "live-initial", text: "Which audience?", attachments: [] };
+          // Initial run parks awaiting input via a message_ask_user block + turn_paused.
+          yield { type: "message_start", message: { id: "m-live", task_id: "t1", seq: 99, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+          yield { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "live-initial", tool_name: "message_ask_user", args: { question: "Which audience?" } } } };
+          yield { type: "content_block_stop", index: 0 };
+          yield { type: "message_stop" };
+          yield { type: "turn_paused" };
           return; // generator ends; provider leaves awaiting_input open
         }
-        // Re-attach subscription: server re-emits the pending question with its live id.
-        yield { type: "ask_user", ask_id: "recovered-id", text: "Which audience?", attachments: [] };
+        // Re-attach subscription: server re-emits the pending question block.
+        // History already rebuilt the task with pendingQuestion; stream can be empty or
+        // re-emit turn_paused to reconfirm.
+        yield { type: "turn_paused" };
       },
-      async history(_id: string, cursor?: string) {
+      async history(_id: string, cursor?: number) {
         historyCalls += 1;
-        return cursor === "p2" ? historyPages[1] : historyPages[0];
+        return cursor !== undefined ? historyPages[1] : historyPages[0];
       },
     });
 
@@ -187,9 +214,12 @@ describe("TaskRunProvider", () => {
   it("attach is a no-op while a stream is still live (no double subscription)", async () => {
     let historyCalls = 0;
     mockClient = baseClient({
-      async *streamEvents(_id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent> {
-        yield { type: "turn_started" };
-        yield { type: "ask_user", ask_id: "q1", text: "?", attachments: [] };
+      async *streamEvents(_id: string, signal?: AbortSignal): AsyncIterable<StreamEvent> {
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "q1", tool_name: "message_ask_user", args: { question: "?" } } } };
+        yield { type: "content_block_stop", index: 0 };
+        yield { type: "message_stop" };
+        yield { type: "turn_paused" };
         // Stay open (as praxis does while awaiting an answer) until aborted.
         await new Promise<void>((resolve) => {
           if (signal?.aborted) resolve();
@@ -236,9 +266,9 @@ describe("TaskRunProvider", () => {
   it("attach is a no-op for a terminal task", async () => {
     let historyCalls = 0;
     mockClient = baseClient({
-      async *streamEvents(): AsyncIterable<RuntimeEvent> {
-        yield { type: "turn_started" };
-        yield { type: "turn_completed" };
+      async *streamEvents(): AsyncIterable<StreamEvent> {
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "message_stop" };
         yield { type: "stream_end", task_status: "completed" };
       },
       async history() {

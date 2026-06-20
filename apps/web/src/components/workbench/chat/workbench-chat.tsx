@@ -86,7 +86,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
     const userMsg: Message = {
       id: `local-user-${crypto.randomUUID()}`,
       role: "user",
-      content: text,
+      blocks: [{ kind: "text", text }],
       createdAt: now,
     };
     setExtraMessages((prev) => [...prev, userMsg]);

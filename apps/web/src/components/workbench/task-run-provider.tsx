@@ -76,8 +76,8 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       deckFallbackTitle: t("runtimeDeckFallbackTitle"),
       deckPreview: t("runtimeDeckPreview"),
       failureNotice: (reason: string) => t("runtimeFailureNotice", { reason }),
-      notifyMessage: (text: string) => text,
       truncationNotice: t("runtimeTruncationNotice"),
+      askFallbackText: t("runtimeAskFallback"),
     }),
     [t],
   );
@@ -85,7 +85,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
     () => ({
       deckFallbackTitle: t("runtimeDeckFallbackTitle"),
       deckPreview: t("runtimeDeckPreview"),
-      notifyMessage: (text: string) => text,
+      askFallbackText: t("runtimeAskFallback"),
     }),
     [t],
   );
@@ -171,7 +171,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
           {
             id: `user-${summary.id}`,
             role: "user",
-            content: directive,
+            blocks: [{ kind: "text", text: directive }],
             createdAt: startedAt,
             // Correlation key so the persisted first user_message reconciles this
             // optimistic bubble in place instead of appending a duplicate.
@@ -249,11 +249,11 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       controllersRef.current.set(taskId, controller);
       try {
         const items: Awaited<ReturnType<typeof client.history>>["items"] = [];
-        let cursor: string | undefined;
+        let cursor: number | undefined;
         do {
           const page = await client.history(taskId, cursor);
           items.push(...page.items);
-          cursor = page.next_cursor ?? undefined;
+          cursor = page.next_before_seq ?? undefined;
         } while (cursor);
         const rebuilt = historyToTask(existing, items, historyLabels);
         upsert(rebuilt);
@@ -306,7 +306,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       const msg: Message = {
         id: `local-${taskId}-${cur.messages.length}`,
         role: "user",
-        content: text,
+        blocks: [{ kind: "text", text }],
         createdAt: new Date().toISOString(),
         // Correlation key so the persisted follow-up user_message reconciles this
         // optimistic bubble in place instead of appending a duplicate.
