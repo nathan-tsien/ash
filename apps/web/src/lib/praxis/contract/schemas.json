@@ -77,7 +77,7 @@
       "type": "object",
       "description": "Body for answering a pending message_ask_user question.",
       "properties": {
-        "ask_id": { "type": "string" },
+        "ask_id": { "type": "string", "description": "The `tool_use.call_id` of the pending `message_ask_user` block to answer." },
         "answer": { "type": "string" }
       },
       "required": ["ask_id", "answer"],
@@ -210,6 +210,37 @@
         "next_cursor": { "type": ["string", "null"] }
       },
       "required": ["items"],
+      "additionalProperties": false
+    },
+    "IgnoredSkillHint": {
+      "type": "object",
+      "description": "A skill_hint that could not be honored, with the reason why.",
+      "properties": {
+        "name": { "type": "string", "description": "The skill name that was ignored." },
+        "reason": {
+          "type": "string",
+          "enum": ["not_configured", "not_registered"],
+          "description": "Why the hint was ignored: no skill provider is configured (`not_configured`), or the named skill is unknown to the provider (`not_registered`)."
+        }
+      },
+      "required": ["name", "reason"],
+      "additionalProperties": false
+    },
+    "StartTaskResponse": {
+      "type": "object",
+      "description": "202 Accepted response to POST /v1/tasks/{id}/start. Carries the task snapshot and any skill hints that could not be honored.",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "title": { "type": ["string", "null"] },
+        "status": { "$ref": "#/$defs/TaskStatus" },
+        "project_id": { "type": ["string", "null"], "format": "uuid" },
+        "ignored_skill_hints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/IgnoredSkillHint" },
+          "description": "Skill hints that were supplied but could not be honored (omitted when empty)."
+        }
+      },
+      "required": ["id", "status"],
       "additionalProperties": false
     },
     "ErrorBody": {

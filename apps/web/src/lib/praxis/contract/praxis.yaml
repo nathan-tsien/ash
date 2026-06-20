@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: praxis API
-  version: 0.2.0
+  version: 0.3.0
   description: >-
     praxis HTTP API. Source of truth for the wire contract (design-first; see ADR-0007).
     Stability: this is a stable, additive contract within 0.x (see openapi/VERSIONING.md) —
@@ -217,8 +217,19 @@ paths:
       operationId: taskEvents
       summary: Server-sent event stream of a task's runtime events.
       description: >-
-        SSE stream (text/event-stream). Each event's `data` is a JSON RuntimeEvent
-        (tagged union, discriminator `type`; see components.schemas.RuntimeEvent).
+        SSE stream (text/event-stream). Each event's `data` is a JSON StreamEvent
+        (block-oriented tagged union, discriminator `type`; see components.schemas.StreamEvent).
+
+        Block-oriented stream model (0.3.0): the stream follows the Anthropic message-turn
+        lifecycle — `message_start` opens a message shell, one or more `content_block_start`
+        / `content_block_delta` / `content_block_stop` triplets carry incremental block
+        content (text, thinking, tool_use, image), `message_delta` supplies the final
+        stop_reason and cumulative usage, and `message_stop` closes the turn. Praxis-owned
+        control events (`turn_paused`, `turn_resumed`, `skill_activation_requested`,
+        `stream_end`, `ping`) are interleaved as they occur.
+
+        ContentBlock uses adjacent tagging: `{"type":"<variant>","data":{...}}`.
+        BlockDelta uses internal tagging: `{"type":"<variant>",...fields...}`.
 
         Stream semantics (v0.1.0, stable):
         1. This is a READ-ONLY window onto the server-side session driver. Closing the
@@ -229,20 +240,20 @@ paths:
         3. The stream is LIVE-ONLY: it delivers events from the moment of subscription.
            There is no event id, no Last-Event-ID, and no replay; events emitted while a
            client is disconnected are not redelivered. The reconnect/catch-up story
-           (a session snapshot read endpoint, then re-subscribe) is a planned 0.1.x
-           additive item and is intentionally not part of v0.1.0.
+           is GET /v1/tasks/{id}/history (render history, then re-subscribe).
         4. The stream always TERMINATES (0.1.4): the server emits a final
            `stream_end{task_status}` frame and closes the connection. It is sent
            immediately when subscribing to a task already in a terminal status
-           (without reviving its session), after a `turn_failed`/`turn_cancelled`
-           is delivered, or on server-side session teardown (complete, cancel,
-           lease loss). A client may treat `stream_end` as authoritative
-           end-of-stream; reconnect only if `task_status` is non-terminal.
-           Comment-line keep-alive frames are sent on idle streams.
+           (without reviving its session), after message_stop or a task failure,
+           or on server-side session teardown (complete, cancel, lease loss).
+           A client may treat `stream_end` as authoritative end-of-stream; reconnect
+           only if `task_status` is non-terminal. Comment-line keep-alive frames
+           are sent on idle streams.
 
-        On subscribe, the server re-emits any currently-pending `ask_user` events
-        (questions awaiting an answer) ahead of the live stream, so a reconnecting
-        client recovers their `ask_id`. Clients MUST dedup `ask_user` by `ask_id`.
+        On subscribe, the server re-emits any currently-pending ask_user content blocks
+        (ToolUse blocks with tool_name `message_ask_user`) ahead of the live stream, so
+        a reconnecting client recovers the `call_id` (ask_id). Clients MUST dedup by
+        `call_id` (= `ask_id` in AnswerRequest).
 
         The event union is marked beta (x-praxis-stability): variant fields may change
         while cogito is pre-1.0; the set of variants only grows (consumers MUST ignore
@@ -254,11 +265,11 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "200":
-          description: SSE stream of RuntimeEvent frames.
+          description: SSE stream of StreamEvent frames.
           content:
             text/event-stream:
               schema:
-                $ref: "#/components/schemas/RuntimeEvent"
+                $ref: "#/components/schemas/StreamEvent"
         "401":
           $ref: "#/components/responses/Error"
         "404":
@@ -270,20 +281,19 @@ paths:
       operationId: taskHistory
       summary: A page of a task's historical conversation events (newest first).
       description: >-
-        Returns persisted conversation events projected into the HistoryEvent union,
-        newest-first, paginated by an opaque seq cursor. This is the catch-up half of
-        the reconnect story: a client renders history here, then subscribes to
-        GET /v1/tasks/{id}/events for the live stream. History carries completed blocks
-        (assistant_message, thinking, tool_use, tool_result, notify_user, ask_user,
-        user_message, turn_completed, turn_failed); the live stream carries deltas and
-        turn boundaries. The two do not overlap. A historical ask_user carries no ask_id
-        (the live correlation id is delivered only over the event stream, re-emitted on
-        subscribe for still-pending questions). A task with no session yet (draft) returns
-        an empty page.
+        Returns a page of persisted Message objects for a task, newest-first, paginated
+        by a seq cursor. This is the catch-up half of the reconnect story: a client renders
+        history here (see MessagePage / Message / ContentBlock), then subscribes to
+        GET /v1/tasks/{id}/events for the live stream. History carries complete Message
+        objects (all ContentBlock variants, stop_reason, usage, attachments); the live
+        stream carries block-lifecycle deltas (BlockDelta) and turn-boundary events. The
+        two do not overlap. A task with no session yet (draft) returns an empty page.
+
         Each page is newest-first; to render the conversation top-to-bottom (oldest at the
         top, newest at the bottom) the client reverses each page and prepends older pages
-        as the user scrolls up. Following next_cursor backward until it is null walks the
-        entire session into view.
+        as the user scrolls up. Following next_before_seq backward until it is absent walks
+        the entire session into view. Pass the returned next_before_seq as the `cursor`
+        query parameter to fetch the next (older) page.
       parameters:
         - name: id
           in: path
@@ -293,11 +303,11 @@ paths:
         - $ref: "#/components/parameters/Cursor"
       responses:
         "200":
-          description: A page of history, newest first.
+          description: A page of Message objects, newest first.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskHistoryPage"
+                $ref: "#/components/schemas/MessagePage"
         "400":
           $ref: "#/components/responses/Error"
         "401":
@@ -344,6 +354,13 @@ paths:
     post:
       operationId: answerQuestion
       summary: Answer a pending message_ask_user question.
+      description: >-
+        Submits an answer for a paused message_ask_user question. `ask_id` in
+        AnswerRequest is the `call_id` of the `ToolUse` ContentBlock with
+        `tool_name == "message_ask_user"` that initiated the pause. The `call_id`
+        is delivered over the live event stream (in a `content_block_start` event)
+        and re-emitted on subscribe so a reconnecting client can recover it. Clients
+        MUST NOT hardcode ask_ids; always source them from the live stream or history.
       parameters:
         - name: id
           in: path
@@ -396,134 +413,547 @@ components:
           schema:
             $ref: "./schemas.json#/$defs/ErrorBody"
   schemas:
-    RuntimeEvent:
+    # --- Content block schemas (adjacent tagging: {"type":..., "data":{...}}) ---
+    CitationSourceKind:
+      type: string
+      description: Kind of citation source. Open set; consumers tolerate unknown values.
+      enum: [knowledge, web, file]
+
+    Citation:
+      type: object
+      description: Source attribution for a span within a Text content block.
+      required: [source_kind]
+      properties:
+        source_kind:
+          $ref: "#/components/schemas/CitationSourceKind"
+        title:
+          type: string
+          description: Human-facing title of the cited source.
+        url:
+          type: string
+          description: Source URL.
+        document_id:
+          type: string
+          description: Source document id (knowledge base or file reference).
+        cited_text:
+          type: string
+          description: The exact text excerpted from the source.
+        text_start:
+          type: integer
+          minimum: 0
+          description: Inclusive start char offset into the citing Text block's text.
+        text_end:
+          type: integer
+          minimum: 0
+          description: Exclusive end char offset into the citing Text block's text.
+
+    SourceKind:
+      type: string
+      description: Provenance kind of a tool. Open set; consumers tolerate unknown values.
+      enum: [builtin, mcp, plugin, skill]
+
+    Source:
+      type: object
+      description: Provenance of a tool invocation.
+      required: [kind]
+      properties:
+        kind:
+          $ref: "#/components/schemas/SourceKind"
+        name:
+          type: string
+          description: Provider name (e.g. MCP server id, plugin id). Absent for builtin.
+
+    Display:
+      type: object
+      description: Human-facing display metadata for a tool call. All fields are optional.
+      properties:
+        title:
+          type: string
+          description: Short title to show instead of the raw tool name.
+        icon:
+          type: string
+          description: Icon hint.
+        summary:
+          type: string
+          description: One-line human summary of the call.
+
+    ImageSourceKind:
+      type: string
+      description: Image source discriminant. Open set; consumers tolerate unknown values.
+      enum: [base64, url, file_ref]
+
+    ImageSource:
+      type: object
+      description: Image bytes source (reserved; spec D5 — not yet populated).
+      required: [kind, media_type]
+      properties:
+        kind:
+          $ref: "#/components/schemas/ImageSourceKind"
+        media_type:
+          type: string
+          description: MIME type, e.g. image/png.
+        data:
+          type: string
+          description: Base64-encoded image bytes. Present when kind == base64.
+        url:
+          type: string
+          description: External image URL. Present when kind == url.
+        file_id:
+          type: string
+          description: Workspace file reference. Present when kind == file_ref.
+
+    ContentBlock:
       description: >-
-        Praxis-owned mirror of cogito's session stream events, delivered as SSE data frames.
-        Internally tagged by `type` (snake_case). The real type lives in praxis-protocol.
+        One unit of message content. Adjacently tagged: {"type":"<variant>","data":{...}}.
+        The set of variants only grows; consumers MUST ignore unknown type values.
+      oneOf:
+        - type: object
+          required: [type, data]
+          additionalProperties: false
+          description: Assistant or user text, optionally annotated with citations.
+          properties:
+            type: { const: text }
+            data:
+              type: object
+              required: [text]
+              additionalProperties: false
+              properties:
+                text:
+                  type: string
+                  description: The text content.
+                citations:
+                  type: array
+                  items: { $ref: "#/components/schemas/Citation" }
+                  description: >-
+                    Source citations referencing spans of the text field.
+                    Omitted when empty.
+        - type: object
+          required: [type, data]
+          additionalProperties: false
+          description: Model reasoning. The provider signature is never surfaced (spec D1).
+          properties:
+            type: { const: thinking }
+            data:
+              type: object
+              required: [text]
+              additionalProperties: false
+              properties:
+                text:
+                  type: string
+                  description: Reasoning text; empty when redacted.
+                redacted:
+                  type: boolean
+                  description: >-
+                    True when the provider redacted or encrypted the reasoning.
+                    Omitted when false.
+        - type: object
+          required: [type, data]
+          additionalProperties: false
+          description: >-
+            A tool invocation. Covers message_ask_user / message_notify_user and
+            all other tools. call_id correlates with the matching ToolResult block.
+          properties:
+            type: { const: tool_use }
+            data:
+              type: object
+              required: [call_id, tool_name, args]
+              additionalProperties: false
+              properties:
+                call_id:
+                  type: string
+                  description: Opaque tool-call id; correlates with the matching ToolResult.
+                tool_name:
+                  type: string
+                  description: Tool name.
+                args:
+                  description: Tool arguments as a JSON object.
+                source:
+                  $ref: "#/components/schemas/Source"
+                  description: >-
+                    Provenance of the tool (builtin / mcp / plugin / skill).
+                    Omitted when absent.
+                display:
+                  $ref: "#/components/schemas/Display"
+                  description: >-
+                    Optional human-facing display metadata.
+                    Omitted when absent.
+        - type: object
+          required: [type, data]
+          additionalProperties: false
+          description: >-
+            A tool result. call_id matches the originating ToolUse block.
+            content is absent when the tool produced no output; present otherwise, independent of ok.
+            error_message is present when not ok.
+          properties:
+            type: { const: tool_result }
+            data:
+              type: object
+              required: [call_id, ok]
+              additionalProperties: false
+              properties:
+                call_id:
+                  type: string
+                  description: Id matching the originating ToolUse.call_id.
+                ok:
+                  type: boolean
+                  description: Whether the tool succeeded.
+                content:
+                  type: array
+                  items: { $ref: "#/components/schemas/ContentBlock" }
+                  description: "Result content blocks (multimodal-capable). Absent when the tool produced no output; present otherwise. Independent of `ok`."
+                error_message:
+                  type: string
+                  description: Error message; present when not ok.
+        - type: object
+          required: [type, data]
+          additionalProperties: false
+          description: Image content. Reserved for multimodal (spec D5); not yet populated.
+          properties:
+            type: { const: image }
+            data:
+              type: object
+              required: [source]
+              additionalProperties: false
+              properties:
+                source:
+                  $ref: "#/components/schemas/ImageSource"
+                  description: Where the image bytes come from.
+      discriminator:
+        propertyName: type
+
+    # --- BlockDelta (internally tagged: {"type":"<variant>",...fields}) ---
+    BlockDelta:
+      description: >-
+        Incremental delta carried by a content_block_delta stream event.
+        Internally tagged by `type` (snake_case). The set of variants only grows;
+        consumers MUST ignore unknown type values.
+      oneOf:
+        - type: object
+          required: [type, text]
+          additionalProperties: false
+          description: Incremental assistant text chunk.
+          properties:
+            type: { const: text_delta }
+            text:
+              type: string
+              description: Text chunk appended to the current Text content block.
+        - type: object
+          required: [type, thinking]
+          additionalProperties: false
+          description: Incremental reasoning/thinking text chunk.
+          properties:
+            type: { const: thinking_delta }
+            thinking:
+              type: string
+              description: Thinking chunk appended to the current Thinking content block.
+        - type: object
+          required: [type, partial_json]
+          additionalProperties: false
+          description: Incremental tool-argument JSON fragment (RR-B; shape reserved).
+          properties:
+            type: { const: input_json_delta }
+            partial_json:
+              type: string
+              description: Partial JSON string to be concatenated into the final args object.
+        - type: object
+          required: [type, signature]
+          additionalProperties: false
+          description: Thinking provider signature fragment (RR-C; shape reserved).
+          properties:
+            type: { const: signature_delta }
+            signature:
+              type: string
+              description: Signature chunk.
+        - type: object
+          required: [type, citation]
+          additionalProperties: false
+          description: Inline citation appended to a Text content block (RR-D; shape reserved).
+          properties:
+            type: { const: citations_delta }
+            citation:
+              $ref: "#/components/schemas/Citation"
+              description: The citation being appended.
+      discriminator:
+        propertyName: type
+
+    # --- Message schemas ---
+    MessageRole:
+      type: string
+      description: Role of the message author.
+      enum: [user, assistant]
+
+    StopReason:
+      type: string
+      description: >-
+        Reason the model stopped generating. Open set; consumers tolerate unknown values.
+        end_turn: natural stopping point. max_tokens: context or output token limit hit.
+        stop_sequence: configured stop sequence matched. awaiting_input: HITL pause
+        (message_ask_user). cancelled: task was cancelled. failed: task failed with error.
+      enum: [end_turn, max_tokens, stop_sequence, awaiting_input, cancelled, failed]
+
+    Usage:
+      type: object
+      description: Token accounting for a completed message.
+      required: [input_tokens, output_tokens]
+      additionalProperties: false
+      properties:
+        input_tokens:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tokens consumed by the prompt/context.
+        output_tokens:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tokens produced by the model.
+
+    AttachmentKind:
+      type: string
+      description: Physical kind of an attachment.
+      enum: [file, image]
+
+    AttachmentSource:
+      type: string
+      description: Where an attachment came from.
+      enum: [user_upload, agent_generated]
+
+    Attachment:
+      type: object
+      description: A file or image attached to a message.
+      required: [id, name, mime_type, size_bytes, uri, kind, source]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Opaque attachment identifier.
+        name:
+          type: string
+          description: Human-facing file name.
+        mime_type:
+          type: string
+          description: MIME type, e.g. image/png.
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 0
+          description: File size in bytes.
+        uri:
+          type: string
+          description: Download or reference URI.
+        extracted_text:
+          type: string
+          description: Text extracted from the file, if available. Omitted when absent.
+        kind:
+          $ref: "#/components/schemas/AttachmentKind"
+        source:
+          $ref: "#/components/schemas/AttachmentSource"
+
+    MessageError:
+      type: object
+      description: Structured error attached to a failed message.
+      required: [code, message]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable description.
+
+    Message:
+      type: object
+      description: >-
+        The message envelope: the unit of history and the live-stream accumulation.
+        Returned by GET /v1/tasks/{id}/history; also opened by message_start and
+        finalized by message_stop on the live stream.
+      required: [id, task_id, seq, role, created_at]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Opaque message identifier.
+        task_id:
+          type: string
+          description: Id of the task this message belongs to.
+        seq:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Monotonically increasing sequence number within the task.
+        role:
+          $ref: "#/components/schemas/MessageRole"
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/ContentBlock" }
+          description: >-
+            Typed content blocks making up the message body.
+            Omitted when empty (e.g. the shell opened by message_start).
+        stop_reason:
+          $ref: "#/components/schemas/StopReason"
+          description: Reason the model stopped, if the message is complete. Omitted while streaming.
+        usage:
+          $ref: "#/components/schemas/Usage"
+          description: Token usage for this message, if available. Omitted when absent.
+        model:
+          type: string
+          description: Model identifier that generated this message. Omitted when absent.
+        attachments:
+          type: array
+          items: { $ref: "#/components/schemas/Attachment" }
+          description: Files or images attached to this message. Omitted when empty.
+        error:
+          $ref: "#/components/schemas/MessageError"
+          description: Structured error, if the message represents a failure. Omitted when absent.
+        created_at:
+          type: string
+          format: date-time
+          description: ISO 8601 creation timestamp.
+        completed_at:
+          type: string
+          format: date-time
+          description: ISO 8601 completion timestamp; absent while the message is streaming.
+
+    MessagePage:
+      type: object
+      description: >-
+        A paginated slice of messages from a task's history. Pages are newest-first.
+        Pass next_before_seq as the `cursor` query parameter to fetch the next (older) page.
+        Absent next_before_seq means the log is exhausted.
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Message" }
+          description: Messages in this page.
+        next_before_seq:
+          type: integer
+          format: int64
+          minimum: 0
+          description: >-
+            Cursor: pass as the `cursor` query parameter to fetch the previous
+            (older) page. Absent on the last page.
+
+    # --- Stream event schemas (internally tagged: {"type":"<variant>",...fields}) ---
+    StreamEvent:
+      description: >-
+        Block-oriented praxis stream event. Internally tagged by `type` (snake_case).
+        Replaces the old RuntimeEvent. The cogito-to-praxis mapping lives in praxis-runtime.
+        The set of variants only grows; consumers MUST ignore unknown type values.
       x-praxis-stability: beta
       oneOf:
-        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_started } } }
-        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_paused } } }
-        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_resumed } } }
-        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_cancelled } } }
+        - type: object
+          required: [type, message]
+          additionalProperties: false
+          description: >-
+            Opening envelope for an assistant message turn. content is empty;
+            usage.output_tokens is 1 (prefill sentinel).
+          properties:
+            type: { const: message_start }
+            message:
+              $ref: "#/components/schemas/Message"
+        - type: object
+          required: [type, index, content_block]
+          additionalProperties: false
+          description: >-
+            A content block opened. content_block carries the empty shell
+            (text: "", tool_use: args {}, thinking: "").
+          properties:
+            type: { const: content_block_start }
+            index:
+              type: integer
+              minimum: 0
+              description: Zero-based index of this block within the message.
+            content_block:
+              $ref: "#/components/schemas/ContentBlock"
+              description: The block shell (no content yet).
+        - type: object
+          required: [type, index, delta]
+          additionalProperties: false
+          description: An incremental update to the content block at index.
+          properties:
+            type: { const: content_block_delta }
+            index:
+              type: integer
+              minimum: 0
+              description: Zero-based index of the block being updated.
+            delta:
+              $ref: "#/components/schemas/BlockDelta"
+              description: The delta to apply.
+        - type: object
+          required: [type, index]
+          additionalProperties: false
+          description: The content block at index is complete.
+          properties:
+            type: { const: content_block_stop }
+            index:
+              type: integer
+              minimum: 0
+              description: Zero-based index of the completed block.
         - type: object
           required: [type]
           additionalProperties: false
+          description: Per-message metadata update emitted after all content blocks close.
           properties:
-            type: { const: turn_completed }
+            type: { const: message_delta }
             stop_reason:
-              type: string
-              description: >-
-                Final model call's stop reason (snake_case open set: end_turn, tool_use,
-                max_tokens, stop_sequence). max_tokens flags a truncated turn presented as
-                completed. Absent on legacy/replay-reconstructed events (live-only signal).
-                Consumers tolerate unknown values.
+              $ref: "#/components/schemas/StopReason"
+              description: Reason the model stopped, if known at this point. Omitted when absent.
+            usage:
+              $ref: "#/components/schemas/Usage"
+              description: Cumulative token usage for the message, if provided. Omitted when absent.
         - type: object
-          required: [type, reason]
+          required: [type]
           additionalProperties: false
+          description: The assistant message is complete.
           properties:
-            type: { const: turn_failed }
-            reason: { type: string }
+            type: { const: message_stop }
         - type: object
-          required: [type, chunk]
+          required: [type]
           additionalProperties: false
+          description: >-
+            The turn paused awaiting an async job (cogito-internal; does not change
+            task status). The driver will emit turn_resumed when it continues.
           properties:
-            type: { const: text_delta }
-            chunk: { type: string }
+            type: { const: turn_paused }
         - type: object
-          required: [type, chunk]
+          required: [type]
           additionalProperties: false
+          description: A previously paused turn resumed.
           properties:
-            type: { const: thinking_delta }
-            chunk: { type: string }
+            type: { const: turn_resumed }
         - type: object
           required: [type, skill_name]
           additionalProperties: false
+          description: The model requested activation of a named skill.
           properties:
             type: { const: skill_activation_requested }
-            skill_name: { type: string }
-        - type: object
-          required: [type, call_id, tool_name, args]
-          additionalProperties: false
-          properties:
-            type: { const: tool_dispatch_started }
-            call_id: { type: string }
-            tool_name: { type: string }
-            args: {}
-        - type: object
-          required: [type, call_id, ok]
-          additionalProperties: false
-          properties:
-            type: { const: tool_dispatch_ended }
-            call_id: { type: string }
-            ok: { type: boolean }
-            error_message: { type: ["string", "null"] }
-        - type: object
-          required: [type, text, ask_id]
-          additionalProperties: false
-          properties:
-            type: { const: notify_user }
-            text: { type: string }
-            attachments:
-              type: array
-              items: { type: string }
-        - type: object
-          required: [type, ask_id, text]
-          additionalProperties: false
-          properties:
-            type: { const: ask_user }
-            ask_id: { type: string }
-            text: { type: string }
-            attachments:
-              type: array
-              items: { type: string }
+            skill_name:
+              type: string
+              description: The name of the skill the model wants to activate.
         - type: object
           required: [type, task_status]
           additionalProperties: false
           description: >-
-            Praxis-originated end-of-stream marker (0.1.4): the LAST frame
-            before the server closes the stream, carrying the task's terminal
-            (or last known) status. Sent immediately when subscribing to an
-            already-terminal task.
+            Praxis-originated end-of-stream marker (0.1.4): the LAST frame before the server
+            closes the SSE stream, carrying the task's terminal (or last known) status.
+            Sent immediately when subscribing to an already-terminal task.
           properties:
             type: { const: stream_end }
             task_status:
               $ref: "./schemas.json#/$defs/TaskStatus"
+        - type: object
+          required: [type]
+          additionalProperties: false
+          description: >-
+            Keepalive ping. Also expressible as an SSE comment line; this variant
+            allows structured handling when needed.
+          properties:
+            type: { const: ping }
       discriminator:
         propertyName: type
-    HistoryEvent:
-      description: >-
-        A projected historical conversation event, internally tagged by `type`
-        (snake_case). Historical sibling of RuntimeEvent: completed blocks rather than
-        deltas. The set of variants only grows; consumers MUST ignore unknown `type`.
-      x-praxis-stability: beta
-      oneOf:
-        - { type: object, required: [type, content], additionalProperties: false, properties: { type: { const: user_message }, content: {} } }
-        - { type: object, required: [type, text], additionalProperties: false, properties: { type: { const: assistant_message }, text: { type: string } } }
-        - { type: object, required: [type, text], additionalProperties: false, properties: { type: { const: thinking }, text: { type: string } } }
-        - { type: object, required: [type, call_id, tool_name, args], additionalProperties: false, properties: { type: { const: tool_use }, call_id: { type: string }, tool_name: { type: string }, args: {} } }
-        - { type: object, required: [type, call_id, ok], additionalProperties: false, properties: { type: { const: tool_result }, call_id: { type: string }, ok: { type: boolean }, output: {}, error_message: { type: string } } }
-        - { type: object, required: [type, text, attachments], additionalProperties: false, properties: { type: { const: notify_user }, text: { type: string }, attachments: { type: array, items: { type: string } } } }
-        - { type: object, required: [type, text, attachments], additionalProperties: false, properties: { type: { const: ask_user }, text: { type: string }, attachments: { type: array, items: { type: string } } } }
-        - { type: object, required: [type], additionalProperties: false, properties: { type: { const: turn_completed } } }
-        - { type: object, required: [type, reason], additionalProperties: false, properties: { type: { const: turn_failed }, reason: {} } }
-    HistoryItem:
-      type: object
-      additionalProperties: false
-      required: [seq, ts, event]
-      properties:
-        seq: { type: integer, format: int64, minimum: 0 }
-        turn_id: { type: string }
-        ts: { type: string, format: date-time }
-        event: { $ref: "#/components/schemas/HistoryEvent" }
-    TaskHistoryPage:
-      type: object
-      additionalProperties: false
-      description: A page of history, newest-first. `next_cursor` (opaque) fetches the next older page; null/absent means the log is exhausted.
-      required: [items]
-      properties:
-        items: { type: array, items: { $ref: "#/components/schemas/HistoryItem" } }
-        next_cursor: { type: [string, "null"] }
   securitySchemes:
     bearerAuth:
       type: http
