@@ -18,22 +18,19 @@ export const mockConversationsZh: Conversation[] = [
       {
         id: "msg-1",
         role: "user",
-        content:
-          "帮我调研 2026 年 AI Agent 产品趋势，重点看 Manus、Cursor Agent 和 Claude Code，输出一份结构化报告大纲。",
+        blocks: [{ kind: "text", text: "帮我调研 2026 年 AI Agent 产品趋势，重点看 Manus、Cursor Agent 和 Claude Code，输出一份结构化报告大纲。" }],
         createdAt: "2026-05-23T10:38:00+08:00",
       },
       {
         id: "msg-2",
         role: "assistant",
-        content:
-          "好的，我会先从公开资料与产品文档入手，整理 Agent UX 模式差异，再给出报告大纲与下一步写作建议。",
+        blocks: [{ kind: "text", text: "好的，我会先从公开资料与产品文档入手，整理 Agent UX 模式差异，再给出报告大纲与下一步写作建议。" }],
         createdAt: "2026-05-23T10:38:12+08:00",
       },
       {
         id: "msg-3",
         role: "assistant",
-        content:
-          "我已经完成初步检索，正在对比三者的任务编排、Plan 面板和工作区设计。接下来会生成报告目录与关键结论摘要。",
+        blocks: [{ kind: "text", text: "我已经完成初步检索，正在对比三者的任务编排、Plan 面板和工作区设计。接下来会生成报告目录与关键结论摘要。" }],
         createdAt: "2026-05-23T10:41:30+08:00",
         isStreaming: true,
       },
@@ -96,13 +93,13 @@ export const mockConversationsZh: Conversation[] = [
       {
         id: "msg-4",
         role: "user",
-        content: "给 AI 工具类账号策划本周 5 个选题。",
+        blocks: [{ kind: "text", text: "给 AI 工具类账号策划本周 5 个选题。" }],
         createdAt: "2026-05-22T18:10:00+08:00",
       },
       {
         id: "msg-5",
         role: "assistant",
-        content: "已生成 5 个选题，并按短视频 / 图文 / 长文做了分发建议。",
+        blocks: [{ kind: "text", text: "已生成 5 个选题，并按短视频 / 图文 / 长文做了分发建议。" }],
         createdAt: "2026-05-22T18:18:00+08:00",
       },
     ],
@@ -141,7 +138,7 @@ export const mockConversationsZh: Conversation[] = [
       {
         id: "msg-6",
         role: "assistant",
-        content: "上传 Slack 导出或粘贴频道摘要，我可以帮你整理成周报。",
+        blocks: [{ kind: "text", text: "上传 Slack 导出或粘贴频道摘要，我可以帮你整理成周报。" }],
         createdAt: "2026-05-21T09:05:00+08:00",
       },
     ],
@@ -159,15 +156,13 @@ export const mockConversationsZh: Conversation[] = [
       {
         id: "msg-7",
         role: "user",
-        content:
-          "新签供应商 Acme Cloud 的合同条款与我们的合规清单有哪些差异？请给出风险等级与整改建议。",
+        blocks: [{ kind: "text", text: "新签供应商 Acme Cloud 的合同条款与我们的合规清单有哪些差异？请给出风险等级与整改建议。" }],
         createdAt: "2026-05-20T16:05:00+08:00",
       },
       {
         id: "msg-8",
         role: "assistant",
-        content:
-          "已完成条款逐条比对，发现 3 处高风险差异（数据驻留、审计权、子处理器披露），已生成差异速览文档。",
+        blocks: [{ kind: "text", text: "已完成条款逐条比对，发现 3 处高风险差异（数据驻留、审计权、子处理器披露），已生成差异速览文档。" }],
         createdAt: "2026-05-20T16:28:00+08:00",
       },
     ],

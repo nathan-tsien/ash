@@ -13,13 +13,13 @@ export const mockTasks: Task[] = [
       {
         id: "msg-task-1-1",
         role: "user",
-        content: "Help me remove the watermark from this image",
+        blocks: [{ kind: "text", text: "Help me remove the watermark from this image" }],
         createdAt: "2026-05-30T08:00:00Z",
       },
       {
         id: "msg-task-1-2",
         role: "assistant",
-        content: "I've processed the image and removed the watermark. The result is ready for download.",
+        blocks: [{ kind: "text", text: "I've processed the image and removed the watermark. The result is ready for download." }],
         createdAt: "2026-05-30T08:00:12Z",
       },
     ],
@@ -54,13 +54,13 @@ export const mockTasks: Task[] = [
       {
         id: "msg-task-2-1",
         role: "user",
-        content: "Generate a PPT from the attached Q2 sales report",
+        blocks: [{ kind: "text", text: "Generate a PPT from the attached Q2 sales report" }],
         createdAt: "2026-05-30T09:30:00Z",
       },
       {
         id: "msg-task-2-2",
         role: "assistant",
-        content: "Working on it. I'm analyzing the report structure and creating slides...",
+        blocks: [{ kind: "text", text: "Working on it. I'm analyzing the report structure and creating slides..." }],
         createdAt: "2026-05-30T09:30:05Z",
       },
     ],
@@ -87,13 +87,13 @@ export const mockTasks: Task[] = [
       {
         id: "msg-task-3-1",
         role: "user",
-        content: "Translate this product manual to English",
+        blocks: [{ kind: "text", text: "Translate this product manual to English" }],
         createdAt: "2026-05-29T14:00:00Z",
       },
       {
         id: "msg-task-3-2",
         role: "assistant",
-        content: "Translation complete. The document has been translated with technical terminology preserved.",
+        blocks: [{ kind: "text", text: "Translation complete. The document has been translated with technical terminology preserved." }],
         createdAt: "2026-05-29T14:02:30Z",
       },
     ],
