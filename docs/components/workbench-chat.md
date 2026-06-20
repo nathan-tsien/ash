@@ -50,11 +50,11 @@ chat never waits on praxis to echo the turn.
 
 To avoid a duplicate when the persisted turn is later folded back in (history
 catch-up on re-attach / cold load), each optimistic user message carries a stable
-`Message.clientId`. The history projection's `user_message` branch reconciles
+`Message.clientId`. The history projection reconciles persisted user `Message`s
 against it: if an unreconciled optimistic message (one still carrying a
-`clientId`) has identical content, it is updated **in place** — same `id`, same
-React key, only `content`/`createdAt` authoritatively set from history — instead
-of appending a fresh `hist-*` message. The `clientId` is dropped on reconcile so
+`clientId`) has identical text (compared via `textOf`, trimmed), it is updated
+**in place** — same `id`, same React key, only `blocks`/`createdAt` authoritatively
+set from history — instead of appending a fresh message. The `clientId` is dropped on reconcile so
 each seed matches at most once (repeated identical turns each reconcile their own
 seed, in order). This removes both the visible duplicate and the React-key churn
 that could momentarily hide a re-keyed bubble.
@@ -121,11 +121,11 @@ but ash sends the array form.
 
 ## Live task runs (ADR-0011)
 
-For a Task started in-session, the Chat renders the **live** message list from `TaskRunProvider`. The home composer creates + starts a task via `PraxisTaskClient`, then routes to `/app/task/[id]`; `runtimeEventReducer` folds the praxis `RuntimeEvent` SSE stream into the `Task`:
+For a Task started in-session, the Chat renders the **live** message list from `TaskRunProvider`. The home composer creates + starts a task via `PraxisTaskClient`, then routes to `/app/task/[id]`; `runtimeEventReducer` folds the praxis **0.3.0 `StreamEvent`** block stream into the `Task` (ADR-0018):
 
-- `text_delta` chunks accumulate into a single assistant `Message` with `isStreaming: true`; `turn_completed`/`turn_failed` clears the flag.
-- The existing `status === "running"` thinking placeholder covers the turn-in-flight window.
-- `thinking_delta` and `skill_activation_requested` are not surfaced this slice.
+- `message_start` opens a streaming assistant `Message` (`isStreaming: true`); `content_block_start/delta/stop` build its `blocks: AshContentBlock[]` (text/thinking deltas append; tool_use args assemble from `input_json_delta`, finalized on `content_block_stop`); `message_stop` clears the flag.
+- A `Message` renders block-by-block: text → markdown, thinking → a collapsed muted disclosure, tool_use → a compact chip (full args/result live in the workspace tool trace), tool_result → not echoed in chat, image → an alt stub (rich image/citation rendering deferred per ADR-0018).
+- `stream_end{task_status}` is the authoritative terminal; `ping` / `skill_activation_requested` are not surfaced this slice.
 
 This slice ships **no real transport** — a local fake drives the stream (see ADR-0011). The "remote streaming updates" stickiness rule above still applies to the simulated stream.
 

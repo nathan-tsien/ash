@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (2026-06-20)
+Accepted (2026-06-20)
 
 Supersedes the event-shape decisions of ADR-0015 (praxis 0.1.5 interactive execution) and the
 `RuntimeEvent`/`HistoryEvent` projection assumptions baked into ADR-0011/0012. Keeps ADR-0016

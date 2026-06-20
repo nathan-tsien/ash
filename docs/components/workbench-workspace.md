@@ -193,10 +193,10 @@ In Phase 1, data flows from `@ash/shared` mocks via server-side fetchers. Future
 
 ### Live task runs (ADR-0011)
 
-For a Task started in-session, `TaskWorkspace` renders the **live** `Task` from `TaskRunProvider`, not a server mock. The `Task` is produced by folding the praxis `RuntimeEvent` SSE stream through `runtimeEventReducer`:
+For a Task started in-session, `TaskWorkspace` renders the **live** `Task` from `TaskRunProvider`, not a server mock. The `Task` is produced by folding the praxis **0.3.0 `StreamEvent`** block stream through `runtimeEventReducer` (ADR-0018):
 
-- `toolTraces[]` accrue from `tool_dispatch_started` (status `running`) → `tool_dispatch_ended` (`success`/`error` + client-computed `durationMs`).
-- `artifacts[]` -- praxis emits no artifact event today (its `task_outputs` is deferred to praxis Sprint 3d), so the reducer **synthesizes a placeholder `.pptx` `document` artifact** on `turn_completed`. This is a provisional seam (`TODO(ash)`), replaced by a real mapping when praxis ships outputs. Label it as a mock-equivalent per the Forbidden rule above.
+- `toolTraces[]` are **derived from the message blocks** (`tracesFromBlocks`): a `tool_use` block opens a running trace keyed by `callId`, and the matching `tool_result` block (correlated by `callId`, possibly in a later message) resolves it to `success`/`error` with result detail. Scanning blocks makes the result's message-framing irrelevant and dedupes by `callId`, so a `/history` re-attach cannot duplicate a row. (`durationMs` is not computed in this slice — praxis carries no per-call timing yet.)
+- `artifacts[]` -- praxis emits no artifact event today (its `task_outputs` is deferred), so the reducer **synthesizes a placeholder `.pptx` `document` artifact** on terminal `stream_end{task_status: "completed"}`. This is a provisional seam (`TODO(ash)`), replaced by a real mapping when praxis ships outputs. Label it as a mock-equivalent per the Forbidden rule above.
 
 ## Future extensions
 
