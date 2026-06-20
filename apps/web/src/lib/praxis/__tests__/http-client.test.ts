@@ -235,7 +235,7 @@ describe("httpPraxisClient", () => {
   it("history GETs the history endpoint and returns the page", async () => {
     const fetchFn = stubFetch();
     fetchFn.mockResolvedValue(
-      new Response('{"items":[{"seq":0,"ts":"2026-06-13T00:00:00.000Z","event":{"type":"assistant_message","text":"hi"}}],"next_cursor":null}', {
+      new Response('{"items":[{"id":"m1","task_id":"t1","seq":0,"role":"assistant","created_at":"2026-06-13T00:00:00.000Z","content":[{"type":"text","data":{"text":"hi"}}]}]}', {
         status: 200,
         headers: { "content-type": "application/json" },
       }),
@@ -243,19 +243,19 @@ describe("httpPraxisClient", () => {
 
     const page = await httpPraxisClient.history("t1");
     expect(page.items).toHaveLength(1);
-    expect(page.next_cursor).toBeNull();
+    expect(page.next_before_seq ?? undefined).toBeUndefined();
     const url = extractUrl(fetchFn.mock.calls[0][0]);
     expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/history");
   });
 
-  it("history forwards cursor as a query param", async () => {
+  it("history forwards cursor as a numeric query param", async () => {
     const fetchFn = stubFetch();
     fetchFn.mockResolvedValue(new Response('{"items":[]}', { status: 200, headers: { "content-type": "application/json" } }));
 
-    await httpPraxisClient.history("t1", "abc");
+    await httpPraxisClient.history("t1", 42);
     const url = extractUrl(fetchFn.mock.calls[0][0]);
     expect(url.pathname).toBe("/api/praxis/v1/tasks/t1/history");
-    expect(url.searchParams.get("cursor")).toBe("abc");
+    expect(url.searchParams.get("cursor")).toBe("42");
   });
 
   it("surfaces ErrorBody.code in the thrown error", async () => {

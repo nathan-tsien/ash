@@ -25,7 +25,7 @@ describe("praxisBlockToAsh", () => {
     expect(praxisBlockToAsh(b)).toEqual({ kind: "tool_result", callId: "c1", ok: false, detail: "boom" });
   });
   it("maps an image block to a stub (alt only, per ADR-0018 deferral)", () => {
-    const b = { type: "image", data: { source: { type: "url", url: "x" } } } as ContentBlock;
+    const b = { type: "image", data: { source: { type: "url", url: "x" } } } as unknown as ContentBlock;
     expect(praxisBlockToAsh(b)).toEqual({ kind: "image" });
   });
 });
