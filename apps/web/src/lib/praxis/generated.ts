@@ -191,9 +191,9 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * A page of a task's historical conversation events (newest first).
-         * @description Returns a page of persisted Message objects for a task, newest-first, paginated by a seq cursor. This is the catch-up half of the reconnect story: a client renders history here (see MessagePage / Message / ContentBlock), then subscribes to GET /v1/tasks/{id}/events for the live stream. History carries complete Message objects (all ContentBlock variants, stop_reason, usage, attachments); the live stream carries block-lifecycle deltas (BlockDelta) and turn-boundary events. The two do not overlap. A task with no session yet (draft) returns an empty page.
-         *     Each page is newest-first; to render the conversation top-to-bottom (oldest at the top, newest at the bottom) the client reverses each page and prepends older pages as the user scrolls up. Following next_before_seq backward until it is absent walks the entire session into view. Pass the returned next_before_seq as the `cursor` query parameter to fetch the next (older) page.
+         * A page of a task's historical conversation events (chronological).
+         * @description Returns a page of persisted Message objects for a task, paginated by a seq cursor. This is the catch-up half of the reconnect story: a client renders history here (see MessagePage / Message / ContentBlock), then subscribes to GET /v1/tasks/{id}/events for the live stream. History carries complete Message objects (all ContentBlock variants, stop_reason, usage, attachments); the live stream carries block-lifecycle deltas (BlockDelta) and turn-boundary events. The two do not overlap. A task with no session yet (draft) returns an empty page.
+         *     Items within a page are ordered ascending (oldest first), so a client renders a page top-to-bottom directly. Pages walk newest -> older across calls: the first call (no cursor) returns the newest page so a freshly-opened task shows its latest state immediately; pass the returned next_before_seq as the `cursor` query parameter to fetch the next (older) page and PREPEND it as the user scrolls up. Following next_before_seq until it is absent walks the entire session into view. A whole turn is never split across a page boundary, and no message is repeated or skipped between pages.
          */
         get: operations["taskHistory"];
         put?: never;
@@ -497,9 +497,9 @@ export interface components {
              */
             completed_at?: string;
         };
-        /** @description A paginated slice of messages from a task's history. Pages are newest-first. Pass next_before_seq as the `cursor` query parameter to fetch the next (older) page. Absent next_before_seq means the log is exhausted. */
+        /** @description A paginated slice of messages from a task's history. Items within a page are ordered ascending (oldest first, chronological). Pages walk newest -> older: pass next_before_seq as the `cursor` query parameter to fetch the next (older) page. Absent next_before_seq means the log is exhausted. */
         MessagePage: {
-            /** @description Messages in this page. */
+            /** @description Messages in this page, ascending by seq (oldest first). A whole turn is never split across pages, and no message is repeated or skipped between pages. */
             items: components["schemas"]["Message"][];
             /**
              * Format: int64
@@ -999,7 +999,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description A page of Message objects, newest first. */
+            /** @description A page of Message objects, ascending (oldest first) within the page. */
             200: {
                 headers: {
                     [name: string]: unknown;

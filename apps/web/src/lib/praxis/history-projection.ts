@@ -5,9 +5,9 @@ import { pendingQuestionFromMessages, praxisBlockToAsh } from "./block-fold";
 import { tracesFromBlocks } from "./tool-trace";
 
 /**
- * Bulk projection of a task's persisted `/history` page (praxis 0.3.0
- * `MessagePage`, newest-first) into ash's `Task` view-model (ADR-0018). Pure and
- * deterministic.
+ * Bulk projection of a task's persisted `/history` page (praxis 0.4.0
+ * `MessagePage`, ascending / oldest-first) into ash's `Task` view-model
+ * (ADR-0018, reordered by ADR-0019). Pure and deterministic.
  *
  * History returns complete `Message` objects (typed `ContentBlock[]`), so this is
  * a near-identity map: each praxis Message becomes a view Message, tool traces are
@@ -25,12 +25,12 @@ export interface HistoryLabels {
 }
 
 export function historyToTask(seed: Task, items: PraxisMessage[], labels: HistoryLabels): Task {
-  // praxis returns newest-first (across all paged items); fold oldest-first so
-  // the optimistic-message reconcile order is stable.
-  const chronological = [...items].reverse();
+  // praxis 0.4.0: each /history page is ascending (oldest-first) and the caller
+  // prepends older pages, so `items` already arrives chronological — fold as-is
+  // (oldest-first) to keep the optimistic-message reconcile order stable.
   let messages = [...seed.messages];
   let latestTs = seed.updatedAt;
-  for (const pm of chronological) {
+  for (const pm of items) {
     messages = reconcileOrAppend(messages, praxisMessageToView(pm));
     if (pm.created_at) latestTs = pm.created_at;
   }

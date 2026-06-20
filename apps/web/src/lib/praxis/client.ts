@@ -23,7 +23,7 @@ export interface PraxisTaskClient {
   listTasks(params?: { limit?: number; cursor?: string }): Promise<TaskList>;
   /** GET /v1/tasks/{id} — fetch a single task summary (deep-link cold load). */
   getTask(id: string): Promise<TaskSummary>;
-  /** GET /v1/tasks/{id}/history — one page of Messages, newest-first (cursor = next_before_seq). */
+  /** GET /v1/tasks/{id}/history — one page of Messages, ascending by seq / oldest-first (cursor = next_before_seq). */
   history(id: string, cursor?: number): Promise<MessagePage>;
   /** POST /v1/tasks/{id}/complete */
   complete(id: string): Promise<void>;

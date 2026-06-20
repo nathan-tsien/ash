@@ -23,7 +23,7 @@ export type ContentBlock = components["schemas"]["ContentBlock"];
 
 /** praxis wire Message (block-shaped). ash's view-model Message is in @ash/shared. */
 export type PraxisMessage = components["schemas"]["Message"];
-/** A page of persisted Messages, newest-first; cursor `next_before_seq`. */
+/** A page of persisted Messages, ascending by seq (oldest first); cursor `next_before_seq`. */
 export type MessagePage = components["schemas"]["MessagePage"];
 export type PraxisMessageRole = components["schemas"]["MessageRole"];
 export type StopReason = components["schemas"]["StopReason"];

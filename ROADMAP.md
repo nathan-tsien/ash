@@ -51,6 +51,7 @@ Blocked until roadmap owners accept **streaming ADR trio** (transport, session p
 | P2.3 | Praxis task lifecycle — contract-first codegen (gh sync to pinned tag + `openapi-fetch`), transparent BFF, RSC direct fetch, task list (`GET /v1/tasks` + `/app/tasks` page), deep-link cold load (`GET /v1/tasks/{id}`), cancel, multi-turn follow-up (`POST /messages`) | — | **Committed** (ADR-0016) |
 | P2.4 | Skill discovery + hints at task start — `GET /v1/skills` (BFF allowlist), skill picker on the home composer sending `skill_hints`, settings read-only catalog (ADR-0017) | — | **Committed** |
 | P2.5 | praxis 0.3.0 block-model migration — `StreamEvent` block stream + `MessagePage` history replace the flat `RuntimeEvent`/`HistoryEvent` model; native `ContentBlock[]` view-model (text/thinking/tool_use/tool_result/image); reducer/history/tool-trace rewritten; ask_user via `message_ask_user` tool block (ADR-0018). Image/citation rich rendering deferred. | — | **Committed** |
+| P2.6 | praxis 0.4.0 history chronological ordering — `MessagePage.items` are ascending (oldest-first); history projection drops the per-page reverse and the re-attach loop prepends older pages so multi-page catch-up stays chronological (ADR-0019). Doc-string-only contract diff; server-side pagination correctness fix inherited. | — | **Committed** |
 
 > P2.3 wires the task business flow end-to-end against the praxis contract; all API access is
 > codegen'd from the OpenAPI contract (single source of truth). Projects (list/create) stay deferred.

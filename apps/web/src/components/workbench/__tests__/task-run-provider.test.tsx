@@ -57,6 +57,7 @@ function Harness() {
       <button onClick={() => id && void attach(id)}>attach</button>
       <span data-testid="status">{run?.status ?? "none"}</span>
       <span data-testid="pq">{run?.pendingQuestion?.text ?? ""}</span>
+      <span data-testid="msgs">{run?.messages.map((m) => m.id).join(",") ?? ""}</span>
     </div>
   );
 }
@@ -163,16 +164,17 @@ describe("TaskRunProvider", () => {
         next_before_seq: 2,
       },
       {
+        // praxis 0.4.0: ascending (oldest-first) within the page.
         items: [
-          {
-            id: "m1", task_id: "t1", seq: 1, role: "assistant",
-            created_at: "2026-06-13T00:00:01.000Z",
-            content: [{ type: "text", data: { text: "earlier reply" } }],
-          },
           {
             id: "m0", task_id: "t1", seq: 0, role: "user",
             created_at: "2026-06-13T00:00:00.000Z",
             content: [{ type: "text", data: { text: "hi" } }],
+          },
+          {
+            id: "m1", task_id: "t1", seq: 1, role: "assistant",
+            created_at: "2026-06-13T00:00:01.000Z",
+            content: [{ type: "text", data: { text: "earlier reply" } }],
           },
         ],
       },
@@ -209,6 +211,9 @@ describe("TaskRunProvider", () => {
     // Both history pages fetched, messages rebuilt from history, live ask_id recovered.
     await waitFor(() => expect(screen.getByTestId("pq")).toHaveTextContent("Which audience?"));
     await waitFor(() => expect(historyCalls).toBe(2));
+    // Older page (m0,m1) is prepended ahead of the newer page (m2): rebuilt history
+    // stays chronological across the page boundary (praxis 0.4.0 ordering).
+    expect(screen.getByTestId("msgs").textContent).toContain("m0,m1,m2");
   });
 
   it("attach is a no-op while a stream is still live (no double subscription)", async () => {

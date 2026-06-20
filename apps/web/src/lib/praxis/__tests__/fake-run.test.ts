@@ -117,7 +117,7 @@ describe("fake praxis interactive run", () => {
     expect(state.task.status).toBe("completed");
   });
 
-  it("history() returns newest-first committed blocks with no next_before_seq", async () => {
+  it("history() returns ascending (oldest-first) committed blocks with no next_before_seq", async () => {
     const summary = await fakePraxisClient.createTask({ user_input: "x", title: "x" });
     const page = await fakePraxisClient.history(summary.id);
     expect(Array.isArray(page.items)).toBe(true);
