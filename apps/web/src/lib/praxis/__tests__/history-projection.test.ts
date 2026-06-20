@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Task } from "@ash/shared";
-import type { HistoryItem } from "../runtime-events";
+import { textOf } from "@ash/shared";
+import type { PraxisMessage } from "../runtime-events";
 import { historyToTask, type HistoryLabels } from "../history-projection";
 
 const labels: HistoryLabels = {
   deckFallbackTitle: "Presentation",
   deckPreview: "preview",
-  notifyMessage: (t) => t,
+  askFallbackText: "待回答",
 };
 
 function seed(): Task {
@@ -23,10 +24,22 @@ function seed(): Task {
   };
 }
 
-// items() takes chronological events and stamps newest-first (as praxis returns).
-function items(events: HistoryItem["event"][]): HistoryItem[] {
-  return events
-    .map((event, i) => ({ seq: i, ts: `2026-06-13T00:00:0${i}.000Z`, event }))
+/**
+ * Build a newest-first PraxisMessage[] from a chronological list of message specs.
+ * Each spec carries role + content blocks; seq is assigned chronologically.
+ */
+function msgs(
+  specs: Array<{ role: "user" | "assistant"; content: PraxisMessage["content"] }>,
+): PraxisMessage[] {
+  return specs
+    .map((s, i) => ({
+      id: `m${i}`,
+      task_id: "t1",
+      seq: i,
+      role: s.role,
+      created_at: `2026-06-13T00:00:0${i}.000Z`,
+      content: s.content,
+    }))
     .reverse();
 }
 
@@ -38,59 +51,32 @@ describe("historyToTask", () => {
   it("projects messages in chronological order from newest-first items", () => {
     const task = historyToTask(
       seed(),
-      items([
-        { type: "user_message", content: "生成 PPT" },
-        { type: "assistant_message", text: "好的" },
+      msgs([
+        { role: "user", content: [{ type: "text", data: { text: "生成 PPT" } }] },
+        { role: "assistant", content: [{ type: "text", data: { text: "好的" } }] },
       ]),
       labels,
     );
     expect(task.messages.map((m) => m.role)).toEqual(["user", "assistant"]);
-    expect(task.messages[1].content).toBe("好的");
+    expect(textOf(task.messages[1])).toBe("好的");
   });
 
-  it("projects a user_message carrying a content-block array", () => {
-    // praxis history sends user_message.content as a list of content blocks,
-    // not a bare string: [{ type: "text", data: { text } }].
+  it("maps a tool_use + tool_result pair across messages to a success tool trace", () => {
+    // Represent a tool_use in the first (assistant) message and a tool_result in
+    // a second (assistant) message — tracesFromBlocks reconciles across messages.
     const task = historyToTask(
       seed(),
-      items([
+      msgs([
         {
-          type: "user_message",
-          content: [{ type: "text", data: { text: "你是什么模型？" } }],
-        } as HistoryItem["event"],
-      ]),
-      labels,
-    );
-    expect(task.messages).toHaveLength(1);
-    expect(task.messages[0].role).toBe("user");
-    expect(task.messages[0].content).toBe("你是什么模型？");
-  });
-
-  it("synthesizes a single deck artifact across multiple turn_completed events", () => {
-    const task = historyToTask(
-      seed(),
-      items([
-        { type: "user_message", content: "q1" },
-        { type: "assistant_message", text: "a1" },
-        { type: "turn_completed" },
-        { type: "user_message", content: "q2" },
-        { type: "assistant_message", text: "a2" },
-        { type: "turn_completed" },
-      ]),
-      labels,
-    );
-    // One deck per task, not one per turn — duplicate ids crash React's key check.
-    expect(task.artifacts).toHaveLength(1);
-    const ids = task.artifacts.map((a) => a.id);
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it("projects a closed tool trace from tool_use + tool_result", () => {
-    const task = historyToTask(
-      seed(),
-      items([
-        { type: "tool_use", call_id: "c1", tool_name: "slides.render", args: { theme: "x" } },
-        { type: "tool_result", call_id: "c1", ok: true },
+          role: "assistant",
+          content: [
+            { type: "tool_use", data: { call_id: "c1", tool_name: "slides.render", args: { theme: "x" } } },
+          ],
+        },
+        {
+          role: "assistant",
+          content: [{ type: "tool_result", data: { call_id: "c1", ok: true } }],
+        },
       ]),
       labels,
     );
@@ -98,32 +84,36 @@ describe("historyToTask", () => {
     expect(task.toolTraces[0].status).toBe("success");
   });
 
-  it("projects a historical ask_user as a read-only pending question (no askId)", () => {
+  it("an unanswered message_ask_user tool_use block sets pendingQuestion with askId = call_id", () => {
     const task = historyToTask(
       seed(),
-      items([{ type: "ask_user", text: "Which audience?", attachments: [] }]),
+      msgs([
+        {
+          role: "assistant",
+          content: [
+            {
+              type: "tool_use",
+              data: { call_id: "q1", tool_name: "message_ask_user", args: { question: "Which audience?" } },
+            },
+          ],
+        },
+      ]),
       labels,
     );
     expect(task.status).toBe("awaiting_input");
-    expect(task.pendingQuestion).toEqual({ askId: "", text: "Which audience?", attachments: [] });
-  });
-
-  it("marks the task completed on a historical turn_completed", () => {
-    const task = historyToTask(seed(), items([{ type: "turn_completed" }]), labels);
-    expect(task.status).toBe("completed");
-    expect(task.artifacts).toHaveLength(1);
+    expect(task.pendingQuestion).toEqual({ askId: "q1", text: "Which audience?", attachments: [] });
   });
 });
 
 describe("historyToTask — optimistic user-message reconcile", () => {
-  function seedWithOptimistic(content: string): Task {
+  function seedWithOptimistic(text: string): Task {
     return {
       ...seed(),
       messages: [
         {
           id: "user-t1",
           role: "user",
-          content,
+          blocks: [{ kind: "text", text }],
           createdAt: "2026-06-13T00:00:00.000Z",
           clientId: "user-t1",
         },
@@ -131,25 +121,23 @@ describe("historyToTask — optimistic user-message reconcile", () => {
     };
   }
 
-  it("reconciles the persisted user_message into the optimistic bubble in place", () => {
+  it("reconciles the persisted user message into the optimistic bubble in place", () => {
     const task = historyToTask(
       seedWithOptimistic("你是谁"),
-      items([{ type: "user_message", content: "你是谁" }]),
+      msgs([{ role: "user", content: [{ type: "text", data: { text: "你是谁" } }] }]),
       labels,
     );
     // One bubble, not two: the optimistic seed is reused, not appended.
     expect(task.messages).toHaveLength(1);
-    // Same id keeps the React key stable; clientId is dropped so it matches once.
+    // Same id keeps the React key stable; clientId dropped so it matches once.
     expect(task.messages[0].id).toBe("user-t1");
     expect(task.messages[0].clientId).toBeUndefined();
   });
 
   it("reconciles even when persisted content differs only by surrounding whitespace", () => {
-    // praxis may normalize/trim the stored text; matching must tolerate that or
-    // the very duplicate this dedupe exists to prevent reappears.
     const task = historyToTask(
       seedWithOptimistic("你是谁"),
-      items([{ type: "user_message", content: "  你是谁\n" }]),
+      msgs([{ role: "user", content: [{ type: "text", data: { text: "  你是谁\n" } }] }]),
       labels,
     );
     expect(task.messages).toHaveLength(1);
@@ -161,15 +149,15 @@ describe("historyToTask — optimistic user-message reconcile", () => {
     const base: Task = {
       ...seed(),
       messages: [
-        { id: "m1", role: "user", content: "ok", createdAt: "2026-06-13T00:00:00.000Z", clientId: "c1" },
-        { id: "m2", role: "user", content: "ok", createdAt: "2026-06-13T00:00:01.000Z", clientId: "c2" },
+        { id: "m1", role: "user", blocks: [{ kind: "text", text: "ok" }], createdAt: "2026-06-13T00:00:00.000Z", clientId: "c1" },
+        { id: "m2", role: "user", blocks: [{ kind: "text", text: "ok" }], createdAt: "2026-06-13T00:00:01.000Z", clientId: "c2" },
       ],
     };
     const task = historyToTask(
       base,
-      items([
-        { type: "user_message", content: "ok" },
-        { type: "user_message", content: "ok" },
+      msgs([
+        { role: "user", content: [{ type: "text", data: { text: "ok" } }] },
+        { role: "user", content: [{ type: "text", data: { text: "ok" } }] },
       ]),
       labels,
     );
@@ -181,7 +169,7 @@ describe("historyToTask — optimistic user-message reconcile", () => {
   it("appends a fresh message when there is no optimistic seed to match", () => {
     const task = historyToTask(
       seed(),
-      items([{ type: "user_message", content: "no seed here" }]),
+      msgs([{ role: "user", content: [{ type: "text", data: { text: "no seed here" } }] }]),
       labels,
     );
     expect(task.messages).toHaveLength(1);

@@ -1,6 +1,6 @@
-import type { Artifact, AshContentBlock, Message, PendingQuestion, Task } from "@ash/shared";
+import type { Artifact, AshContentBlock, Message, Task } from "@ash/shared";
 import type { StreamEvent } from "./runtime-events";
-import { applyDelta, finalizeToolArgs, praxisBlockToAsh } from "./block-fold";
+import { applyDelta, finalizeToolArgs, pendingQuestionFromMessages, praxisBlockToAsh } from "./block-fold";
 import { tracesFromBlocks } from "./tool-trace";
 
 /**
@@ -41,8 +41,6 @@ export interface ReducerLabels {
   /** Shown as the question text when a message_ask_user block carries none. */
   askFallbackText: string;
 }
-
-const ASK_TOOL = "message_ask_user";
 
 export function initialTaskRunState(task: Task): TaskRunState {
   return { task, currentMessageId: null, blockJsonAcc: {}, seq: 0 };
@@ -161,7 +159,7 @@ export function runtimeEventReducer(
     }
 
     case "turn_paused": {
-      const pending = pendingFromMessages(task.messages, labels.askFallbackText);
+      const pending = pendingQuestionFromMessages(task.messages, labels.askFallbackText);
       return {
         ...state,
         task: {
@@ -242,35 +240,6 @@ function noticeMessage(taskId: string, suffix: string, text: string, nowMs: numb
     role: "assistant",
     blocks: [{ kind: "text", text }],
     createdAt: iso(nowMs),
-  };
-}
-
-/**
- * Find the unanswered message_ask_user question: the last `tool_use` block with
- * tool_name `message_ask_user` whose callId has no matching `tool_result`. The
- * question text is read tolerantly from the tool args (the arg key is not pinned
- * by the OpenAPI), falling back to a label when absent.
- */
-function pendingFromMessages(messages: Message[], fallback: string): PendingQuestion | null {
-  const resolved = new Set<string>();
-  for (const m of messages) {
-    for (const b of m.blocks) if (b.kind === "tool_result") resolved.add(b.callId);
-  }
-  let found: { callId: string; args: Record<string, unknown> } | null = null;
-  for (const m of messages) {
-    for (const b of m.blocks) {
-      if (b.kind === "tool_use" && b.toolName === ASK_TOOL && !resolved.has(b.callId)) {
-        found = { callId: b.callId, args: b.args };
-      }
-    }
-  }
-  if (!found) return null;
-  const a = found.args;
-  const pick = (k: string): string | undefined => (typeof a[k] === "string" ? (a[k] as string) : undefined);
-  return {
-    askId: found.callId,
-    text: pick("question") ?? pick("text") ?? pick("prompt") ?? fallback,
-    attachments: [],
   };
 }
 

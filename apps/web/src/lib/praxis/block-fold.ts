@@ -1,5 +1,8 @@
-import type { AshContentBlock } from "@ash/shared";
+import type { AshContentBlock, Message, PendingQuestion } from "@ash/shared";
 import type { BlockDelta, ContentBlock } from "./runtime-events";
+
+/** praxis tool name for a HITL pause question (ADR-0018). */
+export const ASK_USER_TOOL = "message_ask_user";
 
 /**
  * Pure helpers shared by the live SSE reducer and the /history projection so the
@@ -85,6 +88,40 @@ export function applyDelta(
     case "citations_delta":
       return { block, jsonAcc };
   }
+}
+
+/**
+ * Find the unanswered HITL question across a conversation's message blocks: the
+ * last `tool_use` block named `message_ask_user` whose callId has no matching
+ * `tool_result`. The question text is read tolerantly from the tool args (the
+ * arg key is not pinned by the OpenAPI), falling back to a label when absent.
+ * Shared by the live reducer (turn_paused) and the history projection so the two
+ * cannot drift (AGENTS.md). `askId` is the block's callId (= AnswerRequest.ask_id).
+ */
+export function pendingQuestionFromMessages(
+  messages: Message[],
+  fallback: string,
+): PendingQuestion | null {
+  const resolved = new Set<string>();
+  for (const m of messages) {
+    for (const b of m.blocks) if (b.kind === "tool_result") resolved.add(b.callId);
+  }
+  let found: { callId: string; args: Record<string, unknown> } | null = null;
+  for (const m of messages) {
+    for (const b of m.blocks) {
+      if (b.kind === "tool_use" && b.toolName === ASK_USER_TOOL && !resolved.has(b.callId)) {
+        found = { callId: b.callId, args: b.args };
+      }
+    }
+  }
+  if (!found) return null;
+  const a = found.args;
+  const pick = (k: string): string | undefined => (typeof a[k] === "string" ? (a[k] as string) : undefined);
+  return {
+    askId: found.callId,
+    text: pick("question") ?? pick("text") ?? pick("prompt") ?? fallback,
+    attachments: [],
+  };
 }
 
 /** Parse the accumulated tool-call args JSON; `{}` on empty or malformed input. */

@@ -1,4 +1,4 @@
-import type { CreateTaskRequest, RuntimeEvent, SkillList, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, MessagePage, SkillList, StreamEvent, TaskList, TaskSummary } from "./runtime-events";
 import { httpPraxisClient } from "./http-client";
 
 /**
@@ -13,8 +13,8 @@ export interface PraxisTaskClient {
   startTask(id: string, userInput: string, skillHints?: string[]): Promise<TaskSummary>;
   /** GET /v1/skills — one page of registered skills usable as hints. */
   listSkills(params?: { limit?: number; cursor?: string }): Promise<SkillList>;
-  /** GET /v1/tasks/{id}/events (SSE) — yields RuntimeEvents until the turn ends */
-  streamEvents(id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent>;
+  /** GET /v1/tasks/{id}/events (SSE) — yields StreamEvents until the turn ends */
+  streamEvents(id: string, signal?: AbortSignal): AsyncIterable<StreamEvent>;
   /** POST /v1/tasks/{id}/messages */
   sendMessage(id: string, text: string): Promise<void>;
   /** POST /v1/tasks/{id}/answers — answer a pending ask_user question. */
@@ -23,8 +23,8 @@ export interface PraxisTaskClient {
   listTasks(params?: { limit?: number; cursor?: string }): Promise<TaskList>;
   /** GET /v1/tasks/{id} — fetch a single task summary (deep-link cold load). */
   getTask(id: string): Promise<TaskSummary>;
-  /** GET /v1/tasks/{id}/history — one page of historical events, newest-first. */
-  history(id: string, cursor?: string): Promise<TaskHistoryPage>;
+  /** GET /v1/tasks/{id}/history — one page of Messages, newest-first (cursor = next_before_seq). */
+  history(id: string, cursor?: number): Promise<MessagePage>;
   /** POST /v1/tasks/{id}/complete */
   complete(id: string): Promise<void>;
   /** POST /v1/tasks/{id}/cancel */

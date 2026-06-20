@@ -1,5 +1,5 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, SkillList, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
+import type { CreateTaskRequest, MessagePage, SkillList, StreamEvent, TaskList, TaskSummary } from "./runtime-events";
 import { PraxisError } from "./errors";
 import { SseParser } from "./sse";
 import { createPraxisFetchClient } from "./openapi-fetch-client";
@@ -104,9 +104,12 @@ export const httpPraxisClient: PraxisTaskClient = {
     );
   },
 
-  async history(id: string, cursor?: string): Promise<TaskHistoryPage> {
+  async history(id: string, cursor?: number): Promise<MessagePage> {
+    // The `cursor` query param is a string; pass the numeric next_before_seq
+    // serialized (query values are strings on the wire).
+    const query = cursor === undefined ? {} : { cursor: String(cursor) };
     return unwrap(
-      await api.GET("/v1/tasks/{id}/history", { params: { path: { id }, query: { cursor } } }),
+      await api.GET("/v1/tasks/{id}/history", { params: { path: { id }, query } }),
       "history",
     );
   },
@@ -125,9 +128,9 @@ export const httpPraxisClient: PraxisTaskClient = {
     );
   },
 
-  async *streamEvents(id: string, signal?: AbortSignal): AsyncIterable<RuntimeEvent> {
+  async *streamEvents(id: string, signal?: AbortSignal): AsyncIterable<StreamEvent> {
     // SSE is the one hand-written carve-out: openapi-fetch cannot read
-    // text/event-stream. Still yields the generated RuntimeEvent union.
+    // text/event-stream. Still yields the generated StreamEvent union.
     const res = await fetch(`${SSE_BASE}/${id}/events`, {
       headers: { accept: "text/event-stream" },
       signal,
@@ -142,17 +145,17 @@ export const httpPraxisClient: PraxisTaskClient = {
         const { done, value } = await reader.read();
         if (done) break;
         for (const data of parser.push(decoder.decode(value, { stream: true }))) {
-          yield JSON.parse(data) as RuntimeEvent;
+          yield JSON.parse(data) as StreamEvent;
         }
       }
       // Flush at stream end: the decoder may hold a multi-byte char that spanned
       // the last read, and the final frame may arrive without a trailing blank
-      // line. Without this the terminal event (e.g. turn_completed) can be lost.
+      // line. Without this the terminal event (e.g. stream_end) can be lost.
       for (const data of parser.push(decoder.decode())) {
-        yield JSON.parse(data) as RuntimeEvent;
+        yield JSON.parse(data) as StreamEvent;
       }
       for (const data of parser.flush()) {
-        yield JSON.parse(data) as RuntimeEvent;
+        yield JSON.parse(data) as StreamEvent;
       }
     } finally {
       reader.releaseLock();
