@@ -1,5 +1,6 @@
 import type { Artifact, Message, Task, ToolTrace } from "@ash/shared";
 import type { RuntimeEvent } from "./runtime-events";
+import { serializeDetail, summarizeArgs, upsertToolTrace } from "./tool-trace";
 
 /**
  * Folds the praxis SSE `RuntimeEvent` stream into ash's `Task` view-model.
@@ -99,13 +100,16 @@ export function runtimeEventReducer(
         id: event.call_id,
         toolName: event.tool_name,
         summary: summarizeArgs(event.args),
+        // Full serialized args for the expandable trace detail. praxis emits no
+        // live tool output, so `result` is populated only from /history.
+        input: serializeDetail(event.args),
         status: "running",
         startedAt: iso(nowMs),
       };
       return {
         ...state,
         toolStartMs: { ...state.toolStartMs, [event.call_id]: nowMs },
-        task: { ...task, toolTraces: [...task.toolTraces, trace], updatedAt: iso(nowMs) },
+        task: { ...task, toolTraces: upsertToolTrace(task.toolTraces, trace), updatedAt: iso(nowMs) },
       };
     }
 
@@ -255,18 +259,4 @@ function patch(state: TaskRunState, fields: Partial<Task>): TaskRunState {
 function finalizeStreaming(messages: Message[], id: string | null): Message[] {
   if (!id) return messages;
   return messages.map((m) => (m.id === id ? { ...m, isStreaming: false } : m));
-}
-
-function summarizeArgs(args: unknown): string {
-  if (args && typeof args === "object") {
-    const record = args as Record<string, unknown>;
-    const keys = Object.keys(record);
-    if (keys.length > 0) {
-      return keys
-        .map((k) => `${k}: ${String(record[k])}`)
-        .join(", ")
-        .slice(0, 120);
-    }
-  }
-  return "";
 }

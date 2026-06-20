@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v1.1.1 |
+| Version | v1.2.0 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -147,18 +147,21 @@ in `globals.css`:
 | Name | Size / line-height / weight | Use |
 |------|-----------------------------|-----|
 | `caption` | 11px / 16px / 400 | Timestamps, IDs — Latin/numeric content only |
-| `label` | 12px / 16px / 500 | Chips, badges, rail labels |
-| `body-sm` | 13px / 18px / 400 | Sidebar rows, workspace card text, nav items |
-| `body` | 14px / 20px / 400 | Chat bubbles, default interface copy |
-| `body-lg` | 15px / 22px / 400 | Chat pane headers, marketing body copy |
+| `label` | 13px / 18px / 500 | Chips, badges, rail labels |
+| `body-sm` | 14px / 20px / 500 | Sidebar rows, workspace card text, nav items |
+| `body` | 15px / 22px / 500 | Chat bubbles, default interface copy |
+| `body-lg` | 16px / 24px / 400 | Chat pane headers, marketing body copy |
 
 CJK floor: text that renders Han characters MUST be 12px or larger; `caption` is reserved
-for pure Latin/numeric strings. The scale is deliberately compressed (11–15px) for
-workbench density — hierarchy within it comes from weight and `--muted-foreground` color,
-not from size jumps. `text-sm` (14px/20px) is the stock equivalent of `body` and remains
-acceptable; `text-xs` (12px/16px/400) is acceptable where label semantics (weight 500) do
-not apply. Weights in the table are delivered by the tokens where Tailwind supports
-it (`--text-label--font-weight`); otherwise apply `font-medium` explicitly alongside the size
+for pure Latin/numeric strings. The scale stays workbench-dense (13–16px running, 11px
+numeric floor) — hierarchy within it comes from weight and `--muted-foreground` color, not
+from size jumps. Running copy (`body-sm`, `body`) carries weight 500 by token so the
+workbench reads heavier and more deliberate (PRIN-2/PRIN-4); `body-lg` and `caption` stay
+weight 400 to keep the weight-led hierarchy legible. `text-sm` (14px/20px) is the stock
+equivalent of `body-sm`; `text-xs` (12px/16px/400) is acceptable where label semantics
+(weight 500) do not apply. Weights in the table are delivered by the tokens where Tailwind
+supports it (`--text-label--font-weight`, `--text-body-sm--font-weight`,
+`--text-body--font-weight`); otherwise apply `font-medium` explicitly alongside the size
 utility. Sizes above `body-lg` use the standard Tailwind heading scale
 (`text-base` and up) and stay light-weight (PRIN-2).
 
@@ -408,6 +411,7 @@ phase; this register is its input. Status: `open | in-progress | closed(commit)`
 | D-11 | UX-4/MOTION-2 | `apps/web/src/components/command-palette/command-palette.tsx` | Hand-rolled overlay: no focus trap or focus return, no exit animation; rebuild on the Dialog primitive (or cmdk `Command.Dialog`) | closed(76a3c1f) — rebuilt on cmdk `Command.Dialog` (Radix Dialog: focus trap/return, Escape/outside dismiss, scroll lock) with symmetric data-state enter/exit |
 | D-12 | IMPL-3 | `apps/web/src/lib/praxis/runtime-event-reducer.ts`, `fake-client.ts` | Runtime-generated zh-CN UI copy outside next-intl catalogs (reducer failure text, demo stream chunks) | closed(56bfe40) — reducer copy injected via `ReducerLabels` from next-intl; `fake-client` chunks retained as simulated agent output (fixture content, not UI chrome — outside IMPL-3 by design) |
 | D-13 | UX-3 | `composer.tsx`, `command-palette.tsx`, `workbench-home.tsx` | Text inputs use `focus:outline-none` without a visible ring substitute (caret-only focus) | closed(56bfe40, 76a3c1f) — composer + home boxes light via `focus-within` ring tokens; palette search row resolved in the D-11 rebuild |
+| D-14 | TYPE-2 | `globals.css` (named type scale) | The 11–15px ladder moved one rung to 13–16px running with weight-500 defaults on `body-sm`/`body` (v1.2.0). Intentional design change, not a violation — caption holds the numeric floor and the CJK floor is unaffected. Registered for traceability | closed(v1.2.0 rule amendment, REV-1) |
 
 ## Appendix B. Revision protocol and changelog
 
@@ -437,6 +441,7 @@ Changelog:
 | v1.0.1 | 2026-06-13 | I4 landed: palette/fonts/wordmark implemented; D-8 closed |
 | v1.1.0 | 2026-06-13 | REV-3 audit outcomes: MOTION-1/2/3 codify as-built conventions (status keyframes, 200-300ms base, 350-500ms slow, power2/power3 dichotomy, symmetric overlay exits), SPACE-3 marketing shadow carve-out, UX-9 scale rewrite (closes D-10 via REV-4), IA-3 portal note, TYPE-2 stock-utility equivalence, --overlay token, D-9 closed, D-11/12/13 registered |
 | v1.1.1 | 2026-06-13 | Post-v1 a11y/i18n pass: D-13 closed (focus-within rings on composer/home/palette inputs, UX-3), D-12 closed (reducer copy via next-intl `ReducerLabels`, IMPL-3; fake-client fixture chunks scoped out), D-11 closed (command palette rebuilt on cmdk `Command.Dialog` / Radix Dialog, UX-4 + MOTION-2). Deviation-register bookkeeping only — no rule semantics changed |
+| v1.2.0 | 2026-06-16 | MINOR — visual-language weight/density upgrade: TYPE-2 ladder bumped one rung (label 13/18, body-sm 14/20, body 15/22, body-lg 16/24; caption held at 11/16 floor) with weight-500 token defaults on `body-sm`/`body` so running copy stops being DM Sans 400; `--muted-foreground` darkened for crisper secondary text (light `#6e6a63`→`#5c5851`, dark `#a39f99`→`#b3afa8`, WCAG AA held); new `--sidebar-rail` chrome token (ink, COLOR-7, both themes) for the active-row / live-timeline accent rail. D-14 registered (ladder move by design) |
 
 ## Appendix C. Token reference snapshot
 
@@ -456,7 +461,7 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 | `--secondary` | `#eceae6` | `#2b2a27` | User bubble fill, ghost surfaces |
 | `--secondary-foreground` | `#2a2825` | `#efedea` | Text on secondary fills |
 | `--muted` | `#f0eeea` | `#232220` | Inset trays |
-| `--muted-foreground` | `#6e6a63` | `#a39f99` | Secondary labels, captions |
+| `--muted-foreground` | `#5c5851` | `#b3afa8` | Secondary labels, captions |
 | `--accent` | `#eae7e2` | `#2b2a27` | Row hover washes |
 | `--accent-foreground` | `#2a2825` | `#efedea` | Text on accent washes |
 | `--destructive` | `#c53030` | `#e55050` | Destructive intent only |
@@ -466,6 +471,7 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 | `--sidebar-foreground` | `#2a2825` | `#efedea` | Sidebar text |
 | `--sidebar-border` | `#eae8e4` | `#2b2a27` | Sidebar hairlines |
 | `--sidebar-accent` | `#f2f0ec` | `#2b2a27` | Sidebar row hover |
+| `--sidebar-rail` | `var(--primary)` | `var(--primary)` | Active-row / live-timeline accent rail (ink, COLOR-10-exempt) |
 | `--workspace` | `#faf9f7` | `#1f1e1c` | Right audit rail |
 | `--overlay` | `rgba(42,40,37,0.45)` | `rgba(12,11,10,0.6)` | Modal/backdrop scrim (COLOR-2) |
 | `--ember` | `#b8441f` | `#e07b52` | Brand accent (COLOR-10 scope only) |

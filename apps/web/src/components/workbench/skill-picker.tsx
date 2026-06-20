@@ -48,7 +48,7 @@ export function SkillPicker({ selected, onChange, disabled }: SkillPickerProps) 
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="max-w-sm">
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          <DropdownMenuLabel className="text-label font-normal text-muted-foreground">
             {t("skillPickerHint")}
           </DropdownMenuLabel>
           {skills.map((s) => (
@@ -59,8 +59,8 @@ export function SkillPicker({ selected, onChange, disabled }: SkillPickerProps) 
               onSelect={(e) => e.preventDefault()}
               className="flex-col items-start gap-0.5"
             >
-              <span className="text-sm font-medium">{s.display_name}</span>
-              <span className="text-xs text-muted-foreground">{s.description}</span>
+              <span className="text-body-sm font-medium">{s.display_name}</span>
+              <span className="text-label font-normal text-muted-foreground">{s.description}</span>
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuContent>

@@ -1,5 +1,6 @@
 import type { Artifact, Message, Task, ToolTrace } from "@ash/shared";
 import type { HistoryEvent, HistoryItem } from "./runtime-events";
+import { serializeDetail, summarizeArgs, upsertToolTrace } from "./tool-trace";
 
 /**
  * Bulk projection of a task's persisted `/history` (newest-first HistoryItems)
@@ -48,7 +49,7 @@ function foldHistoryEvent(
 ): Task {
   switch (event.type) {
     case "user_message":
-      return pushMessage(task, makeMessage("user", extractText(event.content), ts, task));
+      return reconcileUserMessage(task, extractText(event.content), ts);
 
     case "assistant_message":
       return pushMessage(task, makeMessage("assistant", event.text, ts, task));
@@ -69,10 +70,11 @@ function foldHistoryEvent(
         id: event.call_id,
         toolName: event.tool_name,
         summary: summarizeArgs(event.args),
+        input: serializeDetail(event.args),
         status: "running",
         startedAt: ts,
       };
-      return { ...task, toolTraces: [...task.toolTraces, trace] };
+      return { ...task, toolTraces: upsertToolTrace(task.toolTraces, trace) };
     }
 
     case "tool_result": {
@@ -85,6 +87,8 @@ function foldHistoryEvent(
               status: event.ok ? ("success" as const) : ("error" as const),
               durationMs,
               summary: event.ok ? tr.summary : event.error_message || tr.summary,
+              // Persisted history carries tool output; surface it in the detail.
+              result: serializeDetail(event.ok ? event.output : event.error_message),
             }
           : tr,
       );
@@ -161,6 +165,35 @@ function pushMessage(task: Task, msg: Message): Task {
   return { ...task, messages: [...task.messages, msg] };
 }
 
+/**
+ * Project a persisted `user_message` while de-duplicating against an optimistic
+ * bubble. The provider seeds the just-sent user message with a stable `clientId`;
+ * when history replays that same turn we reconcile the seed IN PLACE — keeping its
+ * id (and thus its React key) and only authoritatively setting content/createdAt —
+ * instead of appending a fresh `hist-*` message. This removes both the visible
+ * duplicate and the key churn that could otherwise re-key (and momentarily hide)
+ * the live bubble. Matching is by an unreconciled optimistic message (carries a
+ * `clientId`) with content equal after trimming — praxis may normalize/trim the
+ * persisted text, and an exact compare would miss it and re-introduce the very
+ * duplicate this dedupe prevents. The first such match wins, so repeated
+ * identical turns each reconcile their own seed in order.
+ */
+function reconcileUserMessage(task: Task, content: string, ts: string): Task {
+  const target = content.trim();
+  const i = task.messages.findIndex(
+    (m) => m.role === "user" && m.clientId !== undefined && m.content.trim() === target,
+  );
+  if (i === -1) {
+    return pushMessage(task, makeMessage("user", content, ts, task));
+  }
+  const messages = [...task.messages];
+  // Drop clientId on reconcile so this seed is matched at most once.
+  const prev = { ...messages[i] };
+  delete prev.clientId;
+  messages[i] = { ...prev, role: "user", content, createdAt: ts };
+  return { ...task, messages };
+}
+
 // TODO(ash): replace synthesized artifact with praxis task_outputs mapping when
 // praxis Sprint 3d ships output artifacts (mirrors the note in runtime-event-reducer.ts).
 function synthesizeArtifact(task: Task, ts: string, labels: HistoryLabels): Artifact {
@@ -172,18 +205,4 @@ function synthesizeArtifact(task: Task, ts: string, labels: HistoryLabels): Arti
     preview: labels.deckPreview,
     updatedAt: ts,
   };
-}
-
-function summarizeArgs(args: unknown): string {
-  if (args && typeof args === "object") {
-    const record = args as Record<string, unknown>;
-    const keys = Object.keys(record);
-    if (keys.length > 0) {
-      return keys
-        .map((k) => `${k}: ${String(record[k])}`)
-        .join(", ")
-        .slice(0, 120);
-    }
-  }
-  return "";
 }

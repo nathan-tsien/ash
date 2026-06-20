@@ -12,7 +12,11 @@ import {
 import { ArrowLeft, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { taskStatusDotVariant, taskStatusLabelKey } from "@/lib/task-status";
+import {
+  taskStatusDotVariant,
+  taskStatusLabelKey,
+  taskStatusSortRank,
+} from "@/lib/task-status";
 
 export interface ProjectNavProps {
   locale: AshLocale;
@@ -22,6 +26,11 @@ export interface ProjectNavProps {
 
 export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
   const t = useTranslations("Workbench");
+  // Same deterministic ordering as TaskSection so project-internal tasks read
+  // consistently with the dual-section list (PRIN-1). Copy before sorting.
+  const tasks = [...project.tasks].sort(
+    (a, b) => taskStatusSortRank(a.status) - taskStatusSortRank(b.status),
+  );
 
   return (
     <div className="flex flex-1 flex-col">
@@ -42,7 +51,7 @@ export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
       </div>
 
       <div className="flex items-center justify-between px-3 py-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-label font-medium uppercase tracking-wider text-muted-foreground">
           {t("projectTasks")}
         </span>
         <Tooltip>
@@ -61,29 +70,39 @@ export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
       </div>
 
       <ul role="list" className="flex flex-col gap-0.5 px-1">
-        {project.tasks.map((task) => (
-          <li key={task.id}>
-            <Link
-              href={`/app/task/${task.id}`}
-              className={cn(
-                "block rounded-xl px-3 py-2.5 transition-colors",
-                task.id === activeTaskId
-                  ? "bg-sidebar-accent"
-                  : "hover:bg-sidebar-accent/60",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <StatusDot
-                  status={taskStatusDotVariant(task.status)}
-                  label={t(taskStatusLabelKey(task.status))}
-                />
-                <p className="truncate text-body-sm font-medium">
-                  {task.title}
-                </p>
-              </div>
-            </Link>
-          </li>
-        ))}
+        {tasks.map((task) => {
+          const isActive = task.id === activeTaskId;
+          return (
+            <li key={task.id}>
+              <Link
+                href={`/app/task/${task.id}`}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "block rounded-xl px-3 py-2.5 transition-colors",
+                  // Same active vocabulary as the dual-section task rows.
+                  isActive
+                    ? "border-l-2 border-sidebar-rail bg-sidebar-accent"
+                    : "hover:bg-sidebar-accent/60",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <StatusDot
+                    status={taskStatusDotVariant(task.status)}
+                    label={t(taskStatusLabelKey(task.status))}
+                  />
+                  <p
+                    className={cn(
+                      "truncate text-body-sm",
+                      isActive ? "font-semibold" : "font-medium",
+                    )}
+                  >
+                    {task.title}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

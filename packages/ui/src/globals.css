@@ -48,6 +48,7 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-rail: var(--sidebar-rail);
   --color-workspace: var(--workspace);
   --color-status-running: var(--status-running);
   --color-status-running-soft: var(--status-running-soft);
@@ -65,18 +66,23 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  /* Named interface type scale (TYPE-2): size + line-height pairs */
+  /* Named interface type scale (TYPE-2): size + line-height pairs.
+   * v1.2.0: ladder bumped one rung (label/body-sm/body/body-lg) and running
+   * copy carries weight 500 so hierarchy reads heavier without size jumps
+   * (PRIN-2/PRIN-4). caption stays at the CJK/Latin floor. */
   --text-caption: 0.6875rem;
   --text-caption--line-height: 1rem;
-  --text-label: 0.75rem;
-  --text-label--line-height: 1rem;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.125rem;
   --text-label--font-weight: 500;
-  --text-body-sm: 0.8125rem;
-  --text-body-sm--line-height: 1.125rem;
-  --text-body: 0.875rem;
-  --text-body--line-height: 1.25rem;
-  --text-body-lg: 0.9375rem;
-  --text-body-lg--line-height: 1.375rem;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-body-sm--font-weight: 500;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.375rem;
+  --text-body--font-weight: 500;
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.5rem;
   /* Pane geometry (SPACE-4): enables w-sidebar / w-rail / w-workspace */
   --spacing-sidebar: 260px;
   --spacing-rail: 56px;
@@ -109,8 +115,8 @@
   --secondary-foreground: #2a2825;
 
   --muted: #f0eeea;
-  /* Dark enough on canvas (~5.0:1) — keeps zh-CN captions readable */
-  --muted-foreground: #6e6a63;
+  /* Dark enough on canvas (~5.9:1) — crisper zh-CN secondary text (COLOR-8) */
+  --muted-foreground: #5c5851;
 
   --accent: #eae7e2;
   --accent-foreground: #2a2825;
@@ -124,6 +130,8 @@
   --sidebar-foreground: #2a2825;
   --sidebar-border: #eae8e4;
   --sidebar-accent: #f2f0ec;
+  /* Active-row / live-timeline accent rail (COLOR-1/6/7): ink, not ember */
+  --sidebar-rail: var(--primary);
 
   --workspace: #faf9f7;
 
@@ -166,7 +174,8 @@
   --secondary-foreground: #efedea;
 
   --muted: #232220;
-  --muted-foreground: #a39f99;
+  /* Brighter secondary text on smoke canvas, WCAG AA (COLOR-8) */
+  --muted-foreground: #b3afa8;
 
   --accent: #2b2a27;
   --accent-foreground: #efedea;
@@ -180,6 +189,8 @@
   --sidebar-foreground: #efedea;
   --sidebar-border: #2b2a27;
   --sidebar-accent: #2b2a27;
+  /* Active-row / live-timeline accent rail (COLOR-1/6/7): ink, not ember */
+  --sidebar-rail: var(--primary);
 
   --workspace: #1f1e1c;
 

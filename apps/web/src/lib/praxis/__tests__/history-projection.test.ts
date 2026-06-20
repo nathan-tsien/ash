@@ -114,3 +114,77 @@ describe("historyToTask", () => {
     expect(task.artifacts).toHaveLength(1);
   });
 });
+
+describe("historyToTask — optimistic user-message reconcile", () => {
+  function seedWithOptimistic(content: string): Task {
+    return {
+      ...seed(),
+      messages: [
+        {
+          id: "user-t1",
+          role: "user",
+          content,
+          createdAt: "2026-06-13T00:00:00.000Z",
+          clientId: "user-t1",
+        },
+      ],
+    };
+  }
+
+  it("reconciles the persisted user_message into the optimistic bubble in place", () => {
+    const task = historyToTask(
+      seedWithOptimistic("你是谁"),
+      items([{ type: "user_message", content: "你是谁" }]),
+      labels,
+    );
+    // One bubble, not two: the optimistic seed is reused, not appended.
+    expect(task.messages).toHaveLength(1);
+    // Same id keeps the React key stable; clientId is dropped so it matches once.
+    expect(task.messages[0].id).toBe("user-t1");
+    expect(task.messages[0].clientId).toBeUndefined();
+  });
+
+  it("reconciles even when persisted content differs only by surrounding whitespace", () => {
+    // praxis may normalize/trim the stored text; matching must tolerate that or
+    // the very duplicate this dedupe exists to prevent reappears.
+    const task = historyToTask(
+      seedWithOptimistic("你是谁"),
+      items([{ type: "user_message", content: "  你是谁\n" }]),
+      labels,
+    );
+    expect(task.messages).toHaveLength(1);
+    expect(task.messages[0].id).toBe("user-t1");
+    expect(task.messages[0].clientId).toBeUndefined();
+  });
+
+  it("reconciles repeated identical turns to their own seed in order", () => {
+    const base: Task = {
+      ...seed(),
+      messages: [
+        { id: "m1", role: "user", content: "ok", createdAt: "2026-06-13T00:00:00.000Z", clientId: "c1" },
+        { id: "m2", role: "user", content: "ok", createdAt: "2026-06-13T00:00:01.000Z", clientId: "c2" },
+      ],
+    };
+    const task = historyToTask(
+      base,
+      items([
+        { type: "user_message", content: "ok" },
+        { type: "user_message", content: "ok" },
+      ]),
+      labels,
+    );
+    // Both seeds reconciled, none appended; ids preserved in order.
+    expect(task.messages.map((m) => m.id)).toEqual(["m1", "m2"]);
+    expect(task.messages.every((m) => m.clientId === undefined)).toBe(true);
+  });
+
+  it("appends a fresh message when there is no optimistic seed to match", () => {
+    const task = historyToTask(
+      seed(),
+      items([{ type: "user_message", content: "no seed here" }]),
+      labels,
+    );
+    expect(task.messages).toHaveLength(1);
+    expect(task.messages[0].clientId).toBeUndefined();
+  });
+});
