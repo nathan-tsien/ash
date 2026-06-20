@@ -76,7 +76,7 @@ export function runtimeEventReducer(
         id: pm.id,
         role: pm.role === "user" ? "user" : "assistant",
         blocks: (pm.content ?? []).map(praxisBlockToAsh),
-        createdAt: pm.created_at ?? iso(nowMs),
+        createdAt: pm.created_at,
         isStreaming: true,
         stopReason: pm.stop_reason,
       };
@@ -121,7 +121,9 @@ export function runtimeEventReducer(
       return {
         ...state,
         blockJsonAcc: { ...state.blockJsonAcc, [event.index]: nextAcc },
-        task: withMessages(task, messages, nowMs),
+        // Deltas append text/thinking or accumulate tool-arg JSON — none change
+        // the tool trace set, so skip re-derivation on every token (perf).
+        task: setMessages(task, messages, nowMs),
       };
     }
 
@@ -145,7 +147,7 @@ export function runtimeEventReducer(
         ...m,
         stopReason: event.stop_reason ?? m.stopReason,
       }));
-      return { ...state, task: { ...task, messages, updatedAt: iso(nowMs) } };
+      return { ...state, task: setMessages(task, messages, nowMs) };
     }
 
     case "message_stop": {
@@ -161,7 +163,9 @@ export function runtimeEventReducer(
         currentMessageId: null,
         blockJsonAcc: {},
         seq,
-        task: withMessages(task, messages, nowMs),
+        // Clearing isStreaming / appending a truncation notice changes no tool
+        // trace — keep the derived traces as-is.
+        task: setMessages(task, messages, nowMs),
       };
     }
 
@@ -203,7 +207,7 @@ export function runtimeEventReducer(
           ...state,
           seq: state.seq + 1,
           currentMessageId: null,
-          task: { ...withMessages(task, messages, nowMs), status: "failed" },
+          task: { ...setMessages(task, messages, nowMs), status: "failed" },
         };
       }
       return state; // non-terminal (e.g. awaiting_input): leave as-is
@@ -220,8 +224,23 @@ export function runtimeEventReducer(
 }
 
 /** Rebuild the task with new messages + freshly derived tool traces. */
+/**
+ * Set messages + bump updatedAt, AND re-derive tool traces. Use only on events
+ * that can change the block set's tool_use/tool_result shape (block start/stop,
+ * message_start whose seed content may carry tool blocks).
+ */
 function withMessages(task: Task, messages: Message[], nowMs: number): Task {
   return { ...task, messages, toolTraces: tracesFromBlocks(messages), updatedAt: iso(nowMs) };
+}
+
+/**
+ * Set messages + bump updatedAt, KEEPING the existing tool traces. Use on events
+ * that cannot change tool traces (text/thinking deltas, input_json accumulation,
+ * stopReason, isStreaming clear, appended notices) so the O(messages×blocks)
+ * trace derivation does not run on every streamed token.
+ */
+function setMessages(task: Task, messages: Message[], nowMs: number): Task {
+  return { ...task, messages, updatedAt: iso(nowMs) };
 }
 
 function mapCurrent(messages: Message[], id: string | null, fn: (m: Message) => Message): Message[] {
