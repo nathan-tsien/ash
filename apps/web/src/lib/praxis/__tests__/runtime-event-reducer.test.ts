@@ -1,210 +1,161 @@
 import { describe, expect, it } from "vitest";
 import type { Task } from "@ash/shared";
+import type { StreamEvent } from "../runtime-events";
 import {
   initialTaskRunState,
   runtimeEventReducer,
   type ReducerLabels,
   type TaskRunState,
 } from "../runtime-event-reducer";
-import type { RuntimeEvent } from "../runtime-events";
+
+const NOW = Date.parse("2026-06-20T00:00:00.000Z");
 
 const labels: ReducerLabels = {
   deckFallbackTitle: "Presentation",
   deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
-  notifyMessage: (text) => text,
-  truncationNotice: "Response was truncated (max tokens).",
+  truncationNotice: "（输出因长度限制被截断）",
+  askFallbackText: "请补充信息",
 };
 
-function seed(): TaskRunState {
-  const task: Task = {
+function seedTask(): Task {
+  return {
     id: "t1",
     title: "生成 PPT",
     description: "生成 PPT",
-    status: "pending",
-    createdAt: "2026-06-03T00:00:00.000Z",
-    updatedAt: "2026-06-03T00:00:00.000Z",
-    messages: [
-      { id: "u1", role: "user", content: "生成 PPT", createdAt: "2026-06-03T00:00:00.000Z" },
-    ],
+    status: "running",
+    createdAt: "2026-06-20T00:00:00.000Z",
+    updatedAt: "2026-06-20T00:00:00.000Z",
+    messages: [],
     artifacts: [],
     toolTraces: [],
   };
-  return initialTaskRunState(task);
 }
 
-const run = (s: TaskRunState, evs: RuntimeEvent[], now = 1000): TaskRunState =>
-  evs.reduce((acc, ev) => runtimeEventReducer(acc, ev, now, labels), s);
+function praxisMsg(id: string, role: "user" | "assistant"): StreamEvent {
+  return {
+    type: "message_start",
+    message: { id, task_id: "t1", seq: 1, role, created_at: "2026-06-20T00:00:01.000Z" },
+  } as StreamEvent;
+}
 
-describe("runtimeEventReducer", () => {
-  it("turn_started marks the task running", () => {
-    expect(run(seed(), [{ type: "turn_started" }]).task.status).toBe("running");
+function run(state: TaskRunState, ...events: StreamEvent[]): TaskRunState {
+  return events.reduce((s, e) => runtimeEventReducer(s, e, NOW, labels), state);
+}
+
+describe("runtimeEventReducer — 0.3.0 block stream", () => {
+  it("message_start opens a streaming assistant message", () => {
+    const s = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"));
+    expect(s.task.messages).toHaveLength(1);
+    expect(s.task.messages[0]).toMatchObject({ id: "m1", role: "assistant", isStreaming: true, blocks: [] });
+    expect(s.currentMessageId).toBe("m1");
   });
 
-  it("text_delta accumulates into a streaming assistant message", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "text_delta", chunk: "你好" },
-      { type: "text_delta", chunk: "世界" },
-    ]);
-    const last = s.task.messages.at(-1)!;
-    expect(last.role).toBe("assistant");
-    expect(last.content).toBe("你好世界");
-    expect(last.isStreaming).toBe(true);
-  });
-
-  it("tool dispatch start/end yields a closed trace with duration", () => {
-    let s = runtimeEventReducer(
-      seed(),
-      { type: "tool_dispatch_started", call_id: "c1", tool_name: "slides.render", args: { theme: "minimal" } },
-      1000,
-      labels,
+  it("builds a text block from content_block_start + text_delta + stop", () => {
+    const s = run(
+      initialTaskRunState(seedTask()),
+      praxisMsg("m1", "assistant"),
+      { type: "content_block_start", index: 0, content_block: { type: "text", data: { text: "" } } } as StreamEvent,
+      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "你好" } } as StreamEvent,
+      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "世界" } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
     );
-    s = runtimeEventReducer(s, { type: "tool_dispatch_ended", call_id: "c1", ok: true }, 1500, labels);
-    const tr = s.task.toolTraces.at(-1)!;
-    expect(tr.toolName).toBe("slides.render");
-    expect(tr.status).toBe("success");
-    expect(tr.durationMs).toBe(500);
-    expect(tr.summary).toContain("theme");
+    expect(s.task.messages.at(-1)!.blocks).toEqual([{ kind: "text", text: "你好世界" }]);
   });
 
-  it("tool end with ok=false marks the trace error", () => {
-    let s = runtimeEventReducer(
-      seed(),
-      { type: "tool_dispatch_started", call_id: "c1", tool_name: "x", args: {} },
-      1000,
-      labels,
+  it("assembles tool_use args from input_json_delta on content_block_stop and derives a running trace", () => {
+    const s = run(
+      initialTaskRunState(seedTask()),
+      praxisMsg("m1", "assistant"),
+      { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "c1", tool_name: "slides.render", args: {} } } } as StreamEvent,
+      { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: '{"theme":' } } as StreamEvent,
+      { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: '"x"}' } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
     );
-    s = runtimeEventReducer(
+    const block = s.task.messages.at(-1)!.blocks[0];
+    expect(block).toMatchObject({ kind: "tool_use", callId: "c1", args: { theme: "x" } });
+    expect(s.task.toolTraces).toHaveLength(1);
+    expect(s.task.toolTraces[0]).toMatchObject({ id: "c1", toolName: "slides.render", status: "running" });
+  });
+
+  it("resolves a tool trace to success when a tool_result block arrives in a later message", () => {
+    let s = run(
+      initialTaskRunState(seedTask()),
+      praxisMsg("m1", "assistant"),
+      { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "c1", tool_name: "x", args: {} } } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
+      { type: "message_stop" } as StreamEvent,
+    );
+    s = run(
       s,
-      { type: "tool_dispatch_ended", call_id: "c1", ok: false, error_message: "boom" },
-      1100,
-      labels,
+      praxisMsg("m2", "assistant"),
+      { type: "content_block_start", index: 0, content_block: { type: "tool_result", data: { call_id: "c1", ok: true, content: [{ type: "text", data: { text: "done" } }] } } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
     );
-    const tr = s.task.toolTraces.at(-1)!;
-    expect(tr.status).toBe("error");
-    expect(tr.summary).toBe("boom");
+    expect(s.task.toolTraces).toHaveLength(1);
+    expect(s.task.toolTraces[0]).toMatchObject({ id: "c1", status: "success", result: "done" });
   });
 
-  it("turn_completed finalizes the message, synthesizes an artifact, completes the task", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "text_delta", chunk: "done" },
-      { type: "turn_completed" },
-    ]);
-    expect(s.task.status).toBe("completed");
-    expect(s.task.completedAt).toBeDefined();
-    expect(s.task.messages.at(-1)!.isStreaming).toBe(false);
-    expect(s.task.artifacts).toHaveLength(1);
-    expect(s.task.artifacts[0].kind).toBe("document");
-    expect(s.task.artifacts[0].title).toContain(".pptx");
-    // Injected i18n labels render rather than hardcoded copy (IMPL-3).
-    expect(s.task.artifacts[0].preview).toBe("preview");
+  it("message_stop clears isStreaming; max_tokens appends a truncation notice", () => {
+    const s = run(
+      initialTaskRunState(seedTask()),
+      praxisMsg("m1", "assistant"),
+      { type: "message_delta", stop_reason: "max_tokens" } as StreamEvent,
+      { type: "message_stop" } as StreamEvent,
+    );
+    expect(s.task.messages[0].isStreaming).toBe(false);
+    expect(s.task.messages.at(-1)!.blocks).toEqual([{ kind: "text", text: labels.truncationNotice }]);
   });
 
-  it("falls back to the injected deck title when the task has none", () => {
-    let s = initialTaskRunState({ ...seed().task, title: "" });
-    s = run(s, [{ type: "turn_started" }, { type: "turn_completed" }]);
-    expect(s.task.artifacts[0].title).toBe("Presentation.pptx");
-  });
-
-  it("turn_failed surfaces the reason and does not synthesize an artifact", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "text_delta", chunk: "partial" },
-      { type: "turn_failed", reason: "model timeout" },
-    ]);
-    expect(s.task.status).toBe("failed");
-    expect(s.task.artifacts).toHaveLength(0);
-    // The partial assistant message is finalized (no longer streaming).
-    const partial = s.task.messages.find((m) => m.content === "partial");
-    expect(partial?.isStreaming).toBe(false);
-    // The failure reason is surfaced to the user via the injected label (IMPL-3).
-    expect(s.task.messages.at(-1)!.content).toBe("Task failed: model timeout");
-  });
-
-  it("turn_cancelled maps to failed", () => {
-    const s = run(seed(), [{ type: "turn_started" }, { type: "turn_cancelled" }]);
-    expect(s.task.status).toBe("failed");
-  });
-
-  it("turn_paused / turn_resumed do not change status", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "turn_paused" },
-      { type: "turn_resumed" },
-    ]);
-    expect(s.task.status).toBe("running");
-  });
-
-  it("ignores thinking_delta and skill_activation_requested", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "thinking_delta", chunk: "hmm" },
-      { type: "skill_activation_requested", skill_name: "deck" },
-    ]);
-    expect(s.task.messages.filter((m) => m.role === "assistant")).toHaveLength(0);
-  });
-
-  it("ask_user moves the task to awaiting_input with a pending question", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "ask_user", ask_id: "q1", text: "Which audience?", attachments: [] },
-    ]);
+  it("turn_paused sets pendingQuestion from a message_ask_user tool_use block", () => {
+    const s = run(
+      initialTaskRunState(seedTask()),
+      praxisMsg("m1", "assistant"),
+      { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "ask-1", tool_name: "message_ask_user", args: { question: "哪个受众？" } } } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
+      { type: "turn_paused" } as StreamEvent,
+    );
     expect(s.task.status).toBe("awaiting_input");
-    expect(s.task.pendingQuestion).toEqual({
-      askId: "q1",
-      text: "Which audience?",
-      attachments: [],
-    });
+    expect(s.task.pendingQuestion).toEqual({ askId: "ask-1", text: "哪个受众？", attachments: [] });
   });
 
-  it("turn_resumed clears the pending question and returns to running", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "ask_user", ask_id: "q1", text: "Which audience?", attachments: [] },
-      { type: "turn_resumed" },
-    ]);
+  it("turn_resumed clears the pending question and resumes running", () => {
+    let s = run(
+      initialTaskRunState(seedTask()),
+      praxisMsg("m1", "assistant"),
+      { type: "content_block_start", index: 0, content_block: { type: "tool_use", data: { call_id: "ask-1", tool_name: "message_ask_user", args: { question: "q" } } } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
+      { type: "turn_paused" } as StreamEvent,
+    );
+    s = run(s, { type: "turn_resumed" } as StreamEvent);
     expect(s.task.status).toBe("running");
     expect(s.task.pendingQuestion).toBeUndefined();
   });
 
-  it("notify_user appends an assistant message", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "notify_user", text: "Saved draft.pptx", attachments: ["draft.pptx"] },
-    ]);
-    const last = s.task.messages.at(-1)!;
-    expect(last.role).toBe("assistant");
-    expect(last.content).toContain("Saved draft.pptx");
-  });
-
-  it("stream_end with a completed status marks the task completed", () => {
-    const s = run(seed(), [{ type: "turn_started" }, { type: "stream_end", task_status: "completed" }]);
+  it("stream_end completed marks the task complete and synthesizes one artifact", () => {
+    const s = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"), { type: "stream_end", task_status: "completed" } as StreamEvent);
     expect(s.task.status).toBe("completed");
+    expect(s.task.artifacts).toHaveLength(1);
+    expect(s.task.completedAt).toBeDefined();
   });
 
-  it("stream_end with a failed status marks the task failed", () => {
-    const s = run(seed(), [{ type: "turn_started" }, { type: "stream_end", task_status: "failed" }]);
+  it("stream_end failed appends a failure notice and marks the task failed", () => {
+    const s = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"), { type: "stream_end", task_status: "failed" } as StreamEvent);
     expect(s.task.status).toBe("failed");
+    expect(s.task.messages.at(-1)!.blocks[0]).toEqual({ kind: "text", text: "Task failed: failed" });
   });
 
-  it("stream_end with a non-terminal status leaves the task as-is", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "ask_user", ask_id: "q1", text: "?", attachments: [] },
-      { type: "stream_end", task_status: "awaiting_input" },
-    ]);
-    expect(s.task.status).toBe("awaiting_input");
+  it("upserts a message_start for an existing id instead of duplicating (re-emit on subscribe)", () => {
+    let s = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"));
+    // praxis may re-emit in-flight state on (re)subscribe; the same message id
+    // must reconcile, not append a second bubble with a duplicate React key.
+    s = run(s, praxisMsg("m1", "assistant"));
+    expect(s.task.messages.filter((m) => m.id === "m1")).toHaveLength(1);
   });
 
-  it("turn_completed with stop_reason max_tokens appends a truncation notice", () => {
-    const s = run(seed(), [
-      { type: "turn_started" },
-      { type: "text_delta", chunk: "partial answer" },
-      { type: "turn_completed", stop_reason: "max_tokens" },
-    ]);
-    expect(s.task.status).toBe("completed");
-    expect(s.task.messages.some((m) => m.content.includes("truncated"))).toBe(true);
+  it("ping is a no-op", () => {
+    const before = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"));
+    const after = runtimeEventReducer(before, { type: "ping" } as StreamEvent, NOW, labels);
+    expect(after).toEqual(before);
   });
 });

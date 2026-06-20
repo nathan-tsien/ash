@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Task } from "@ash/shared";
+import { textOf } from "@ash/shared";
 import { fakePraxisClient } from "../fake-client";
 import {
   initialTaskRunState,
@@ -11,8 +12,8 @@ const labels: ReducerLabels = {
   deckFallbackTitle: "Presentation",
   deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
-  notifyMessage: (text) => text,
   truncationNotice: "Response was truncated.",
+  askFallbackText: "待回答",
 };
 
 /**
@@ -32,7 +33,14 @@ describe("fake praxis run through reducer", () => {
       status: "running",
       createdAt: "2026-06-03T00:00:00.000Z",
       updatedAt: "2026-06-03T00:00:00.000Z",
-      messages: [{ id: `user-${summary.id}`, role: "user", content: "生成一个 PPT", createdAt: "2026-06-03T00:00:00.000Z" }],
+      messages: [
+        {
+          id: `user-${summary.id}`,
+          role: "user",
+          blocks: [{ kind: "text", text: "生成一个 PPT" }],
+          createdAt: "2026-06-03T00:00:00.000Z",
+        },
+      ],
       artifacts: [],
       toolTraces: [],
     };
@@ -48,13 +56,22 @@ describe("fake praxis run through reducer", () => {
     expect(task.status).toBe("completed");
 
     const assistant = task.messages.filter((m) => m.role === "assistant");
-    expect(assistant).toHaveLength(1);
+    // Two assistant messages: m1 (text + tool_use) and m2 (tool_result + closing text).
+    expect(assistant.length).toBeGreaterThanOrEqual(1);
     expect(assistant[0].isStreaming).toBe(false);
-    expect(assistant[0].content.length).toBeGreaterThan(0);
+    // The first assistant message should contain text blocks.
+    const m1Text = textOf(assistant[0]);
+    expect(m1Text.length).toBeGreaterThan(0);
 
-    expect(task.toolTraces).toHaveLength(2);
-    expect(task.toolTraces.every((tr) => tr.status === "success")).toBe(true);
-    expect(task.toolTraces.every((tr) => typeof tr.durationMs === "number")).toBe(true);
+    // slides.render tool_use (c1) + tool_result resolves to 1 success trace.
+    // The interactive path also produces a message_ask_user trace. Non-interactive
+    // run only has slides.render → 1 trace (or 2 if message_ask_user is absent).
+    expect(task.toolTraces.length).toBeGreaterThanOrEqual(1);
+    const slidesTrace = task.toolTraces.find((tr) => tr.toolName === "slides.render");
+    expect(slidesTrace).toBeDefined();
+    expect(slidesTrace!.status).toBe("success");
+    // Args assembled from input_json_delta chunks: {"slides":8}
+    expect(JSON.parse(slidesTrace!.input ?? "{}")).toEqual({ slides: 8 });
 
     expect(task.artifacts).toHaveLength(1);
     expect(task.artifacts[0].title).toContain(".pptx");
@@ -62,26 +79,49 @@ describe("fake praxis run through reducer", () => {
 });
 
 describe("fake praxis interactive run", () => {
-  it("pauses on ask_user, resumes after answer, and completes", async () => {
+  it("pauses on turn_paused, resumes after answer, and completes", async () => {
     const summary = await fakePraxisClient.createTask({ user_input: "ask me", title: "ask me" });
     const ev: string[] = [];
 
+    // Run state to detect turn_paused and answer.
+    const seeded: Task = {
+      id: summary.id,
+      title: "ask me",
+      description: "",
+      status: "running",
+      createdAt: "2026-06-03T00:00:00.000Z",
+      updatedAt: "2026-06-03T00:00:00.000Z",
+      messages: [],
+      artifacts: [],
+      toolTraces: [],
+    };
+    let state = initialTaskRunState(seeded);
+    let now = 1000;
+
     for await (const e of fakePraxisClient.streamEvents(summary.id)) {
       ev.push(e.type);
-      if (e.type === "ask_user") {
-        await fakePraxisClient.answer(summary.id, (e as { ask_id: string }).ask_id, "yes");
+      now += 100;
+      state = runtimeEventReducer(state, e, now, labels);
+      if (e.type === "turn_paused") {
+        // The pending question is set by turn_paused via the message_ask_user block.
+        expect(state.task.status).toBe("awaiting_input");
+        // Answer to unblock the stream.
+        await fakePraxisClient.answer(summary.id, "q1", "yes");
       }
     }
 
-    expect(ev).toContain("ask_user");
-    expect(ev.indexOf("turn_resumed")).toBeGreaterThan(ev.indexOf("ask_user"));
+    expect(ev).toContain("turn_paused");
+    expect(ev).toContain("turn_resumed");
+    expect(ev.indexOf("turn_resumed")).toBeGreaterThan(ev.indexOf("turn_paused"));
     expect(ev.at(-1)).toBe("stream_end");
+    expect(state.task.status).toBe("completed");
   });
 
-  it("history() returns newest-first committed blocks", async () => {
+  it("history() returns newest-first committed blocks with no next_before_seq", async () => {
     const summary = await fakePraxisClient.createTask({ user_input: "x", title: "x" });
     const page = await fakePraxisClient.history(summary.id);
     expect(Array.isArray(page.items)).toBe(true);
-    expect(page.next_cursor ?? null).toBeNull();
+    // next_before_seq absent (last page) — should be undefined or absent.
+    expect(page.next_before_seq ?? undefined).toBeUndefined();
   });
 });

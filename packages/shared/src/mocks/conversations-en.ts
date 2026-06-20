@@ -13,22 +13,19 @@ export const mockConversationsEn: Conversation[] = [
       {
         id: "msg-1",
         role: "user",
-        content:
-          "Research 2026 AI Agent product trends, focusing on Manus, Cursor Agent, and Claude Code. Output a structured report outline.",
+        blocks: [{ kind: "text", text: "Research 2026 AI Agent product trends, focusing on Manus, Cursor Agent, and Claude Code. Output a structured report outline." }],
         createdAt: "2026-05-23T10:38:00+08:00",
       },
       {
         id: "msg-2",
         role: "assistant",
-        content:
-          "I'll start from public docs and announcements, summarize Agent UX patterns, then propose an outline and next writing steps.",
+        blocks: [{ kind: "text", text: "I'll start from public docs and announcements, summarize Agent UX patterns, then propose an outline and next writing steps." }],
         createdAt: "2026-05-23T10:38:12+08:00",
       },
       {
         id: "msg-3",
         role: "assistant",
-        content:
-          "Initial retrieval is done; I'm comparing task orchestration, Plan panels, and workspace design. Next I'll draft the TOC and executive summary bullets.",
+        blocks: [{ kind: "text", text: "Initial retrieval is done; I'm comparing task orchestration, Plan panels, and workspace design. Next I'll draft the TOC and executive summary bullets." }],
         createdAt: "2026-05-23T10:41:30+08:00",
         isStreaming: true,
       },
@@ -91,13 +88,13 @@ export const mockConversationsEn: Conversation[] = [
       {
         id: "msg-4",
         role: "user",
-        content: "Plan five AI-tool channel topics for this week.",
+        blocks: [{ kind: "text", text: "Plan five AI-tool channel topics for this week." }],
         createdAt: "2026-05-22T18:10:00+08:00",
       },
       {
         id: "msg-5",
         role: "assistant",
-        content: "Drafted five topics with advice split across short video, posts, and long-form.",
+        blocks: [{ kind: "text", text: "Drafted five topics with advice split across short video, posts, and long-form." }],
         createdAt: "2026-05-22T18:18:00+08:00",
       },
     ],
@@ -136,7 +133,7 @@ export const mockConversationsEn: Conversation[] = [
       {
         id: "msg-6",
         role: "assistant",
-        content: "Upload a Slack export or paste channel summaries and I'll assemble a weekly report.",
+        blocks: [{ kind: "text", text: "Upload a Slack export or paste channel summaries and I'll assemble a weekly report." }],
         createdAt: "2026-05-21T09:05:00+08:00",
       },
     ],
@@ -154,15 +151,13 @@ export const mockConversationsEn: Conversation[] = [
       {
         id: "msg-7",
         role: "user",
-        content:
-          "What gaps exist between Acme Cloud's contract terms and our compliance checklist? Provide risk levels and remediation advice.",
+        blocks: [{ kind: "text", text: "What gaps exist between Acme Cloud's contract terms and our compliance checklist? Provide risk levels and remediation advice." }],
         createdAt: "2026-05-20T16:05:00+08:00",
       },
       {
         id: "msg-8",
         role: "assistant",
-        content:
-          "Clause-by-clause comparison complete — three high-risk gaps found (data residency, audit rights, sub-processor disclosure). A diff summary document is ready.",
+        blocks: [{ kind: "text", text: "Clause-by-clause comparison complete — three high-risk gaps found (data residency, audit rights, sub-processor disclosure). A diff summary document is ready." }],
         createdAt: "2026-05-20T16:28:00+08:00",
       },
     ],

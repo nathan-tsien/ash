@@ -1,11 +1,26 @@
 export type MessageRole = "user" | "assistant" | "system";
 
+/**
+ * ash view-model content block — mirrors praxis 0.3.0 `ContentBlock` but decoupled
+ * from the generated wire types so UI/packages never import `generated.ts`
+ * (ADR-0018). The projection layer maps praxis blocks to these.
+ */
+export type AshContentBlock =
+  | { kind: "text"; text: string }
+  | { kind: "thinking"; text: string; redacted?: boolean }
+  | { kind: "tool_use"; callId: string; toolName: string; args: Record<string, unknown> }
+  | { kind: "tool_result"; callId: string; ok: boolean; detail?: string }
+  | { kind: "image"; alt?: string };
+
 export interface Message {
   id: string;
   role: MessageRole;
-  content: string;
+  /** Typed content blocks making up the message body (praxis 0.3.0 block model). */
+  blocks: AshContentBlock[];
   createdAt: string;
   isStreaming?: boolean;
+  /** Reason the model stopped, when the message is complete (praxis StopReason). */
+  stopReason?: string;
   /**
    * Stable client-side correlation key for an optimistically-rendered message.
    * Set on the locally-seeded user bubble at send time so the history projection
@@ -13,6 +28,14 @@ export interface Message {
    * appending a duplicate when the persisted turn is folded back in.
    */
   clientId?: string;
+}
+
+/** Concatenate the text of a message's text blocks (ignores thinking/tool/image). */
+export function textOf(message: Message): string {
+  return message.blocks
+    .filter((b): b is Extract<AshContentBlock, { kind: "text" }> => b.kind === "text")
+    .map((b) => b.text)
+    .join("");
 }
 
 export type ConversationStatus = "idle" | "running" | "completed" | "failed";

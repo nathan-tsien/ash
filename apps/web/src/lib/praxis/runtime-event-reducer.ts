@@ -1,25 +1,30 @@
-import type { Artifact, Message, Task, ToolTrace } from "@ash/shared";
-import type { RuntimeEvent } from "./runtime-events";
-import { serializeDetail, summarizeArgs, upsertToolTrace } from "./tool-trace";
+import type { Artifact, AshContentBlock, Message, Task } from "@ash/shared";
+import type { StreamEvent } from "./runtime-events";
+import { applyDelta, finalizeToolArgs, pendingQuestionFromMessages, praxisBlockToAsh } from "./block-fold";
+import { tracesFromBlocks } from "./tool-trace";
 
 /**
- * Folds the praxis SSE `RuntimeEvent` stream into ash's `Task` view-model.
+ * Folds the praxis 0.3.0 `StreamEvent` block stream into ash's `Task` view-model
+ * (ADR-0018). The turn lifecycle is `message_start` -> (`content_block_start` /
+ * `content_block_delta` / `content_block_stop`)* -> `message_delta` ->
+ * `message_stop`, interleaved with control events (`turn_paused`, `turn_resumed`,
+ * `stream_end`, `ping`, `skill_activation_requested`).
  *
- * Pure and deterministic: timestamps are derived from the injected `nowMs` and
- * ids from a monotonic `seq`, so there is no `Date.now()`/`Math.random()` here
- * and the reducer is fully unit-testable. The provider supplies `Date.now()`.
+ * Pure and deterministic: timestamps come from the injected `nowMs`, ids from a
+ * monotonic `seq` (for synthetic notices) — no `Date.now()`/`Math.random()` here.
  *
- * This is the single place the praxis wire shape meets the UI model. When praxis
- * revises the contract, change the reducer (and `runtime-events.ts`) only.
- *
- * App-authored, user-facing copy (artifact placeholders, failure notices) is
- * injected via `ReducerLabels` rather than hardcoded, so the reducer stays pure
- * and i18n-clean (IMPL-3). The provider resolves these from next-intl catalogs.
+ * Tool traces are DERIVED from message blocks (`tracesFromBlocks`) rather than
+ * maintained incrementally, so a `tool_result` block resolves its `tool_use`
+ * regardless of which message carries it. App-authored copy is injected via
+ * `ReducerLabels` to keep the reducer i18n-clean (IMPL-3).
  */
 export interface TaskRunState {
   task: Task;
-  currentAssistantId: string | null;
-  toolStartMs: Record<string, number>;
+  /** Id of the in-flight (streaming) message, or null between turns. */
+  currentMessageId: string | null;
+  /** Per content-block-index accumulator for input_json_delta (tool args). */
+  blockJsonAcc: Record<number, string>;
+  /** Monotonic counter for synthetic notice message ids. */
   seq: number;
 }
 
@@ -31,21 +36,21 @@ export interface ReducerLabels {
   deckPreview: string;
   /** Builds the user-facing failure notice from the praxis reason. */
   failureNotice: (reason: string) => string;
-  /** Builds an assistant message from a praxis notify_user event. */
-  notifyMessage: (text: string) => string;
-  /** Notice appended when a turn completed with stop_reason "max_tokens". */
+  /** Notice appended when a turn stopped with stop_reason "max_tokens". */
   truncationNotice: string;
+  /** Shown as the question text when a message_ask_user block carries none. */
+  askFallbackText: string;
 }
 
 export function initialTaskRunState(task: Task): TaskRunState {
-  return { task, currentAssistantId: null, toolStartMs: {}, seq: 0 };
+  return { task, currentMessageId: null, blockJsonAcc: {}, seq: 0 };
 }
 
 const iso = (ms: number): string => new Date(ms).toISOString();
 
-// TODO(ash): replace synthesized artifact with praxis task_outputs mapping when
-// praxis Sprint 3d ships output artifacts. praxis currently emits no artifact
-// event, so ash synthesizes a placeholder deck on turn completion.
+// TODO(ash): replace the synthesized placeholder deck with praxis task_outputs
+// when that contract ships. praxis emits no artifact event, so ash synthesizes a
+// placeholder on terminal completion.
 function synthesizePptArtifact(task: Task, nowMs: number, labels: ReducerLabels): Artifact {
   const base = (task.title || labels.deckFallbackTitle).replace(/\.pptx$/i, "");
   return {
@@ -59,188 +64,209 @@ function synthesizePptArtifact(task: Task, nowMs: number, labels: ReducerLabels)
 
 export function runtimeEventReducer(
   state: TaskRunState,
-  event: RuntimeEvent,
+  event: StreamEvent,
   nowMs: number,
   labels: ReducerLabels,
 ): TaskRunState {
   const task = state.task;
   switch (event.type) {
-    case "turn_started":
-      return patch(state, { status: "running", updatedAt: iso(nowMs) });
+    case "message_start": {
+      const pm = event.message;
+      const msg: Message = {
+        id: pm.id,
+        role: pm.role === "user" ? "user" : "assistant",
+        blocks: (pm.content ?? []).map(praxisBlockToAsh),
+        createdAt: pm.created_at,
+        isStreaming: true,
+        stopReason: pm.stop_reason,
+      };
+      // Upsert by id: praxis may re-emit in-flight state on (re)subscribe, so a
+      // repeated message_start for the same id must replace, not append a
+      // duplicate-keyed bubble.
+      const existingIdx = task.messages.findIndex((m) => m.id === pm.id);
+      const messages =
+        existingIdx === -1
+          ? [...task.messages, msg]
+          : task.messages.map((m, i) => (i === existingIdx ? msg : m));
+      return {
+        ...state,
+        currentMessageId: pm.id,
+        blockJsonAcc: {},
+        task: withMessages(task, messages, nowMs),
+      };
+    }
 
-    case "text_delta": {
-      let next = state;
-      let id = state.currentAssistantId;
-      let messages = task.messages;
-      if (!id) {
-        id = `assistant-${task.id}-${state.seq}`;
-        const msg: Message = {
-          id,
-          role: "assistant",
-          content: "",
-          createdAt: iso(nowMs),
-          isStreaming: true,
-        };
-        messages = [...messages, msg];
-        next = { ...state, currentAssistantId: id, seq: state.seq + 1 };
+    case "content_block_start": {
+      const ash = praxisBlockToAsh(event.content_block);
+      const messages = mapCurrent(task.messages, state.currentMessageId, (m) => ({
+        ...m,
+        blocks: setBlock(m.blocks, event.index, ash),
+      }));
+      return {
+        ...state,
+        blockJsonAcc: { ...state.blockJsonAcc, [event.index]: "" },
+        task: withMessages(task, messages, nowMs),
+      };
+    }
+
+    case "content_block_delta": {
+      let nextAcc = state.blockJsonAcc[event.index] ?? "";
+      const messages = mapCurrent(task.messages, state.currentMessageId, (m) => {
+        const block = m.blocks[event.index];
+        if (!block) return m;
+        const res = applyDelta(block, event.delta, nextAcc);
+        nextAcc = res.jsonAcc;
+        return { ...m, blocks: setBlock(m.blocks, event.index, res.block) };
+      });
+      return {
+        ...state,
+        blockJsonAcc: { ...state.blockJsonAcc, [event.index]: nextAcc },
+        // Deltas append text/thinking or accumulate tool-arg JSON — none change
+        // the tool trace set, so skip re-derivation on every token (perf).
+        task: setMessages(task, messages, nowMs),
+      };
+    }
+
+    case "content_block_stop": {
+      // Finalize streamed tool args ONLY when input_json_delta accumulated
+      // something. An empty accumulator means the block already carried complete
+      // args in content_block_start (re-emit / history catch-up) — overwriting
+      // with {} would wipe them.
+      const acc = state.blockJsonAcc[event.index];
+      if (!acc) return state;
+      const messages = mapCurrent(task.messages, state.currentMessageId, (m) => {
+        const block = m.blocks[event.index];
+        if (!block || block.kind !== "tool_use") return m;
+        return { ...m, blocks: setBlock(m.blocks, event.index, { ...block, args: finalizeToolArgs(acc) }) };
+      });
+      return { ...state, task: withMessages(task, messages, nowMs) };
+    }
+
+    case "message_delta": {
+      const messages = mapCurrent(task.messages, state.currentMessageId, (m) => ({
+        ...m,
+        stopReason: event.stop_reason ?? m.stopReason,
+      }));
+      return { ...state, task: setMessages(task, messages, nowMs) };
+    }
+
+    case "message_stop": {
+      const stop = currentStopReason(task.messages, state.currentMessageId);
+      let messages = mapCurrent(task.messages, state.currentMessageId, (m) => ({ ...m, isStreaming: false }));
+      let seq = state.seq;
+      if (stop === "max_tokens") {
+        messages = [...messages, noticeMessage(task.id, `trunc-${seq}`, labels.truncationNotice, nowMs)];
+        seq += 1;
       }
-      const updated = messages.map((m) =>
-        m.id === id ? { ...m, content: m.content + event.chunk } : m,
-      );
-      return { ...next, task: { ...task, messages: updated, updatedAt: iso(nowMs) } };
-    }
-
-    case "thinking_delta":
-    case "skill_activation_requested":
-      // Not surfaced this slice (optional reasoning/skill channels).
-      return state;
-
-    case "tool_dispatch_started": {
-      const trace: ToolTrace = {
-        id: event.call_id,
-        toolName: event.tool_name,
-        summary: summarizeArgs(event.args),
-        // Full serialized args for the expandable trace detail. praxis emits no
-        // live tool output, so `result` is populated only from /history.
-        input: serializeDetail(event.args),
-        status: "running",
-        startedAt: iso(nowMs),
-      };
       return {
         ...state,
-        toolStartMs: { ...state.toolStartMs, [event.call_id]: nowMs },
-        task: { ...task, toolTraces: upsertToolTrace(task.toolTraces, trace), updatedAt: iso(nowMs) },
+        currentMessageId: null,
+        blockJsonAcc: {},
+        seq,
+        // Clearing isStreaming / appending a truncation notice changes no tool
+        // trace — keep the derived traces as-is.
+        task: setMessages(task, messages, nowMs),
       };
     }
 
-    case "tool_dispatch_ended": {
-      const startMs = state.toolStartMs[event.call_id] ?? nowMs;
-      const traces = task.toolTraces.map((tr) =>
-        tr.id === event.call_id
-          ? {
-              ...tr,
-              status: event.ok ? ("success" as const) : ("error" as const),
-              durationMs: nowMs - startMs,
-              summary: event.ok ? tr.summary : event.error_message || tr.summary,
-            }
-          : tr,
-      );
-      return { ...state, task: { ...task, toolTraces: traces, updatedAt: iso(nowMs) } };
-    }
-
-    case "turn_completed": {
-      const finalized = finalizeStreaming(task.messages, state.currentAssistantId);
-      const artifact = synthesizePptArtifact(task, nowMs, labels);
-      const truncated = event.stop_reason === "max_tokens";
-      const messages = truncated
-        ? [
-            ...finalized,
-            {
-              id: `assistant-${task.id}-trunc-${state.seq}`,
-              role: "assistant" as const,
-              content: labels.truncationNotice,
-              createdAt: iso(nowMs),
-            },
-          ]
-        : finalized;
-      return {
-        ...state,
-        currentAssistantId: null,
-        seq: truncated ? state.seq + 1 : state.seq,
-        task: {
-          ...task,
-          messages,
-          // Upsert the single synthesized deck: a multi-turn task (follow-ups)
-          // sees several turn_completed events; appending the fixed-id artifact
-          // each time produces duplicate React keys. See history-projection.ts.
-          artifacts: upsertArtifact(task.artifacts, artifact),
-          status: "completed",
-          completedAt: iso(nowMs),
-          updatedAt: iso(nowMs),
-        },
-      };
-    }
-
-    case "turn_failed": {
-      const finalized = finalizeStreaming(task.messages, state.currentAssistantId);
-      // Surface the failure reason to the user instead of silently dropping it.
-      const notice: Message = {
-        id: `assistant-${task.id}-fail-${state.seq}`,
-        role: "assistant",
-        content: labels.failureNotice(event.reason),
-        createdAt: iso(nowMs),
-      };
-      return {
-        ...state,
-        currentAssistantId: null,
-        seq: state.seq + 1,
-        task: {
-          ...task,
-          messages: [...finalized, notice],
-          status: "failed",
-          updatedAt: iso(nowMs),
-        },
-      };
-    }
-
-    case "turn_cancelled":
-      return patch(state, { status: "failed", updatedAt: iso(nowMs) });
-
-    case "ask_user":
+    case "turn_paused": {
+      const pending = pendingQuestionFromMessages(task.messages, labels.askFallbackText);
       return {
         ...state,
         task: {
           ...task,
           status: "awaiting_input",
-          pendingQuestion: {
-            askId: event.ask_id,
-            text: event.text,
-            attachments: event.attachments ?? [],
-          },
+          ...(pending ? { pendingQuestion: pending } : {}),
           updatedAt: iso(nowMs),
         },
       };
+    }
 
     case "turn_resumed": {
       const { pendingQuestion: _cleared, ...rest } = task;
       return { ...state, task: { ...rest, status: "running", updatedAt: iso(nowMs) } };
     }
 
-    case "turn_paused":
-      return state;
-
-    case "notify_user": {
-      const notice: Message = {
-        id: `assistant-${task.id}-notify-${state.seq}`,
-        role: "assistant",
-        content: labels.notifyMessage(event.text),
-        createdAt: iso(nowMs),
-      };
-      return {
-        ...state,
-        seq: state.seq + 1,
-        task: { ...task, messages: [...task.messages, notice], updatedAt: iso(nowMs) },
-      };
-    }
-
     case "stream_end": {
-      const mapped =
-        event.task_status === "completed"
-          ? "completed"
-          : event.task_status === "failed" || event.task_status === "cancelled"
-            ? "failed"
-            : null;
-      if (!mapped) return state; // non-terminal (e.g. awaiting_input): leave as-is
-      return patch(state, {
-        status: mapped,
-        ...(mapped === "completed" ? { completedAt: iso(nowMs) } : {}),
-        updatedAt: iso(nowMs),
-      });
+      if (event.task_status === "completed") {
+        return {
+          ...state,
+          currentMessageId: null,
+          task: {
+            ...task,
+            artifacts: upsertArtifact(task.artifacts, synthesizePptArtifact(task, nowMs, labels)),
+            status: "completed",
+            completedAt: iso(nowMs),
+            updatedAt: iso(nowMs),
+          },
+        };
+      }
+      if (event.task_status === "failed" || event.task_status === "cancelled") {
+        const messages = [...task.messages, noticeMessage(task.id, `fail-${state.seq}`, labels.failureNotice(event.task_status), nowMs)];
+        return {
+          ...state,
+          seq: state.seq + 1,
+          currentMessageId: null,
+          task: { ...setMessages(task, messages, nowMs), status: "failed" },
+        };
+      }
+      return state; // non-terminal (e.g. awaiting_input): leave as-is
     }
+
+    case "ping":
+    case "skill_activation_requested":
+      // Keep-alive / advisory skill signal — not surfaced this slice.
+      return state;
 
     default:
       return state;
   }
+}
+
+/** Rebuild the task with new messages + freshly derived tool traces. */
+/**
+ * Set messages + bump updatedAt, AND re-derive tool traces. Use only on events
+ * that can change the block set's tool_use/tool_result shape (block start/stop,
+ * message_start whose seed content may carry tool blocks).
+ */
+function withMessages(task: Task, messages: Message[], nowMs: number): Task {
+  return { ...task, messages, toolTraces: tracesFromBlocks(messages), updatedAt: iso(nowMs) };
+}
+
+/**
+ * Set messages + bump updatedAt, KEEPING the existing tool traces. Use on events
+ * that cannot change tool traces (text/thinking deltas, input_json accumulation,
+ * stopReason, isStreaming clear, appended notices) so the O(messages×blocks)
+ * trace derivation does not run on every streamed token.
+ */
+function setMessages(task: Task, messages: Message[], nowMs: number): Task {
+  return { ...task, messages, updatedAt: iso(nowMs) };
+}
+
+function mapCurrent(messages: Message[], id: string | null, fn: (m: Message) => Message): Message[] {
+  if (!id) return messages;
+  return messages.map((m) => (m.id === id ? fn(m) : m));
+}
+
+/** Set the block at `index`, padding with empty text blocks if the stream skips. */
+function setBlock(blocks: AshContentBlock[], index: number, block: AshContentBlock): AshContentBlock[] {
+  const copy = blocks.slice();
+  while (copy.length < index) copy.push({ kind: "text", text: "" });
+  copy[index] = block;
+  return copy;
+}
+
+function currentStopReason(messages: Message[], id: string | null): string | undefined {
+  return id ? messages.find((m) => m.id === id)?.stopReason : undefined;
+}
+
+function noticeMessage(taskId: string, suffix: string, text: string, nowMs: number): Message {
+  return {
+    id: `assistant-${taskId}-${suffix}`,
+    role: "assistant",
+    blocks: [{ kind: "text", text }],
+    createdAt: iso(nowMs),
+  };
 }
 
 /** Replace an artifact with the same id, else append. Keeps deck ids unique. */
@@ -250,13 +276,4 @@ function upsertArtifact(artifacts: Artifact[], next: Artifact): Artifact[] {
   const copy = [...artifacts];
   copy[i] = next;
   return copy;
-}
-
-function patch(state: TaskRunState, fields: Partial<Task>): TaskRunState {
-  return { ...state, task: { ...state.task, ...fields } };
-}
-
-function finalizeStreaming(messages: Message[], id: string | null): Message[] {
-  if (!id) return messages;
-  return messages.map((m) => (m.id === id ? { ...m, isStreaming: false } : m));
 }

@@ -151,7 +151,9 @@ export interface paths {
         };
         /**
          * Server-sent event stream of a task's runtime events.
-         * @description SSE stream (text/event-stream). Each event's `data` is a JSON RuntimeEvent (tagged union, discriminator `type`; see components.schemas.RuntimeEvent).
+         * @description SSE stream (text/event-stream). Each event's `data` is a JSON StreamEvent (block-oriented tagged union, discriminator `type`; see components.schemas.StreamEvent).
+         *     Block-oriented stream model (0.3.0): the stream follows the Anthropic message-turn lifecycle — `message_start` opens a message shell, one or more `content_block_start` / `content_block_delta` / `content_block_stop` triplets carry incremental block content (text, thinking, tool_use, image), `message_delta` supplies the final stop_reason and cumulative usage, and `message_stop` closes the turn. Praxis-owned control events (`turn_paused`, `turn_resumed`, `skill_activation_requested`, `stream_end`, `ping`) are interleaved as they occur.
+         *     ContentBlock uses adjacent tagging: `{"type":"<variant>","data":{...}}`. BlockDelta uses internal tagging: `{"type":"<variant>",...fields...}`.
          *     Stream semantics (v0.1.0, stable): 1. This is a READ-ONLY window onto the server-side session driver. Closing the
          *        stream (tab close, network drop) does NOT stop or affect task execution —
          *        the driver runs server-side, maintained by the session lease and recovered
@@ -159,18 +161,17 @@ export interface paths {
          *     2. Closing the stream is NOT a cancel. Termination is only POST /v1/tasks/{id}/cancel. 3. The stream is LIVE-ONLY: it delivers events from the moment of subscription.
          *        There is no event id, no Last-Event-ID, and no replay; events emitted while a
          *        client is disconnected are not redelivered. The reconnect/catch-up story
-         *        (a session snapshot read endpoint, then re-subscribe) is a planned 0.1.x
-         *        additive item and is intentionally not part of v0.1.0.
+         *        is GET /v1/tasks/{id}/history (render history, then re-subscribe).
          *     4. The stream always TERMINATES (0.1.4): the server emits a final
          *        `stream_end{task_status}` frame and closes the connection. It is sent
          *        immediately when subscribing to a task already in a terminal status
-         *        (without reviving its session), after a `turn_failed`/`turn_cancelled`
-         *        is delivered, or on server-side session teardown (complete, cancel,
-         *        lease loss). A client may treat `stream_end` as authoritative
-         *        end-of-stream; reconnect only if `task_status` is non-terminal.
-         *        Comment-line keep-alive frames are sent on idle streams.
+         *        (without reviving its session), after message_stop or a task failure,
+         *        or on server-side session teardown (complete, cancel, lease loss).
+         *        A client may treat `stream_end` as authoritative end-of-stream; reconnect
+         *        only if `task_status` is non-terminal. Comment-line keep-alive frames
+         *        are sent on idle streams.
          *
-         *     On subscribe, the server re-emits any currently-pending `ask_user` events (questions awaiting an answer) ahead of the live stream, so a reconnecting client recovers their `ask_id`. Clients MUST dedup `ask_user` by `ask_id`.
+         *     On subscribe, the server re-emits any currently-pending ask_user content blocks (ToolUse blocks with tool_name `message_ask_user`) ahead of the live stream, so a reconnecting client recovers the `call_id` (ask_id). Clients MUST dedup by `call_id` (= `ask_id` in AnswerRequest).
          *     The event union is marked beta (x-praxis-stability): variant fields may change while cogito is pre-1.0; the set of variants only grows (consumers MUST ignore unknown `type`).
          */
         get: operations["taskEvents"];
@@ -191,7 +192,8 @@ export interface paths {
         };
         /**
          * A page of a task's historical conversation events (newest first).
-         * @description Returns persisted conversation events projected into the HistoryEvent union, newest-first, paginated by an opaque seq cursor. This is the catch-up half of the reconnect story: a client renders history here, then subscribes to GET /v1/tasks/{id}/events for the live stream. History carries completed blocks (assistant_message, thinking, tool_use, tool_result, notify_user, ask_user, user_message, turn_completed, turn_failed); the live stream carries deltas and turn boundaries. The two do not overlap. A historical ask_user carries no ask_id (the live correlation id is delivered only over the event stream, re-emitted on subscribe for still-pending questions). A task with no session yet (draft) returns an empty page. Each page is newest-first; to render the conversation top-to-bottom (oldest at the top, newest at the bottom) the client reverses each page and prepends older pages as the user scrolls up. Following next_cursor backward until it is null walks the entire session into view.
+         * @description Returns a page of persisted Message objects for a task, newest-first, paginated by a seq cursor. This is the catch-up half of the reconnect story: a client renders history here (see MessagePage / Message / ContentBlock), then subscribes to GET /v1/tasks/{id}/events for the live stream. History carries complete Message objects (all ContentBlock variants, stop_reason, usage, attachments); the live stream carries block-lifecycle deltas (BlockDelta) and turn-boundary events. The two do not overlap. A task with no session yet (draft) returns an empty page.
+         *     Each page is newest-first; to render the conversation top-to-bottom (oldest at the top, newest at the bottom) the client reverses each page and prepends older pages as the user scrolls up. Following next_before_seq backward until it is absent walks the entire session into view. Pass the returned next_before_seq as the `cursor` query parameter to fetch the next (older) page.
          */
         get: operations["taskHistory"];
         put?: never;
@@ -245,7 +247,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Answer a pending message_ask_user question. */
+        /**
+         * Answer a pending message_ask_user question.
+         * @description Submits an answer for a paused message_ask_user question. `ask_id` in AnswerRequest is the `call_id` of the `ToolUse` ContentBlock with `tool_name == "message_ask_user"` that initiated the pause. The `call_id` is delivered over the live event stream (in a `content_block_start` event) and re-emitted on subscribe so a reconnecting client can recover it. Clients MUST NOT hardcode ask_ids; always source them from the live stream or history.
+         */
         post: operations["answerQuestion"];
         delete?: never;
         options?: never;
@@ -257,10 +262,285 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description Praxis-owned mirror of cogito's session stream events, delivered as SSE data frames. Internally tagged by `type` (snake_case). The real type lives in praxis-protocol. */
-        RuntimeEvent: {
+        /**
+         * @description Kind of citation source. Open set; consumers tolerate unknown values.
+         * @enum {string}
+         */
+        CitationSourceKind: "knowledge" | "web" | "file";
+        /** @description Source attribution for a span within a Text content block. */
+        Citation: {
+            source_kind: components["schemas"]["CitationSourceKind"];
+            /** @description Human-facing title of the cited source. */
+            title?: string;
+            /** @description Source URL. */
+            url?: string;
+            /** @description Source document id (knowledge base or file reference). */
+            document_id?: string;
+            /** @description The exact text excerpted from the source. */
+            cited_text?: string;
+            /** @description Inclusive start char offset into the citing Text block's text. */
+            text_start?: number;
+            /** @description Exclusive end char offset into the citing Text block's text. */
+            text_end?: number;
+        };
+        /**
+         * @description Provenance kind of a tool. Open set; consumers tolerate unknown values.
+         * @enum {string}
+         */
+        SourceKind: "builtin" | "mcp" | "plugin" | "skill";
+        /** @description Provenance of a tool invocation. */
+        Source: {
+            kind: components["schemas"]["SourceKind"];
+            /** @description Provider name (e.g. MCP server id, plugin id). Absent for builtin. */
+            name?: string;
+        };
+        /** @description Human-facing display metadata for a tool call. All fields are optional. */
+        Display: {
+            /** @description Short title to show instead of the raw tool name. */
+            title?: string;
+            /** @description Icon hint. */
+            icon?: string;
+            /** @description One-line human summary of the call. */
+            summary?: string;
+        };
+        /**
+         * @description Image source discriminant. Open set; consumers tolerate unknown values.
+         * @enum {string}
+         */
+        ImageSourceKind: "base64" | "url" | "file_ref";
+        /** @description Image bytes source (reserved; spec D5 — not yet populated). */
+        ImageSource: {
+            kind: components["schemas"]["ImageSourceKind"];
+            /** @description MIME type, e.g. image/png. */
+            media_type: string;
+            /** @description Base64-encoded image bytes. Present when kind == base64. */
+            data?: string;
+            /** @description External image URL. Present when kind == url. */
+            url?: string;
+            /** @description Workspace file reference. Present when kind == file_ref. */
+            file_id?: string;
+        };
+        /** @description One unit of message content. Adjacently tagged: {"type":"<variant>","data":{...}}. The set of variants only grows; consumers MUST ignore unknown type values. */
+        ContentBlock: {
             /** @constant */
-            type: "turn_started";
+            type: "text";
+            data: {
+                /** @description The text content. */
+                text: string;
+                /** @description Source citations referencing spans of the text field. Omitted when empty. */
+                citations?: components["schemas"]["Citation"][];
+            };
+        } | {
+            /** @constant */
+            type: "thinking";
+            data: {
+                /** @description Reasoning text; empty when redacted. */
+                text: string;
+                /** @description True when the provider redacted or encrypted the reasoning. Omitted when false. */
+                redacted?: boolean;
+            };
+        } | {
+            /** @constant */
+            type: "tool_use";
+            data: {
+                /** @description Opaque tool-call id; correlates with the matching ToolResult. */
+                call_id: string;
+                /** @description Tool name. */
+                tool_name: string;
+                /** @description Tool arguments as a JSON object. */
+                args: unknown;
+                /** @description Provenance of the tool (builtin / mcp / plugin / skill). Omitted when absent. */
+                source?: components["schemas"]["Source"];
+                /** @description Optional human-facing display metadata. Omitted when absent. */
+                display?: components["schemas"]["Display"];
+            };
+        } | {
+            /** @constant */
+            type: "tool_result";
+            data: {
+                /** @description Id matching the originating ToolUse.call_id. */
+                call_id: string;
+                /** @description Whether the tool succeeded. */
+                ok: boolean;
+                /** @description Result content blocks (multimodal-capable). Absent when the tool produced no output; present otherwise. Independent of `ok`. */
+                content?: components["schemas"]["ContentBlock"][];
+                /** @description Error message; present when not ok. */
+                error_message?: string;
+            };
+        } | {
+            /** @constant */
+            type: "image";
+            data: {
+                /** @description Where the image bytes come from. */
+                source: components["schemas"]["ImageSource"];
+            };
+        };
+        /** @description Incremental delta carried by a content_block_delta stream event. Internally tagged by `type` (snake_case). The set of variants only grows; consumers MUST ignore unknown type values. */
+        BlockDelta: {
+            /** @constant */
+            type: "text_delta";
+            /** @description Text chunk appended to the current Text content block. */
+            text: string;
+        } | {
+            /** @constant */
+            type: "thinking_delta";
+            /** @description Thinking chunk appended to the current Thinking content block. */
+            thinking: string;
+        } | {
+            /** @constant */
+            type: "input_json_delta";
+            /** @description Partial JSON string to be concatenated into the final args object. */
+            partial_json: string;
+        } | {
+            /** @constant */
+            type: "signature_delta";
+            /** @description Signature chunk. */
+            signature: string;
+        } | {
+            /** @constant */
+            type: "citations_delta";
+            /** @description The citation being appended. */
+            citation: components["schemas"]["Citation"];
+        };
+        /**
+         * @description Role of the message author.
+         * @enum {string}
+         */
+        MessageRole: "user" | "assistant";
+        /**
+         * @description Reason the model stopped generating. Open set; consumers tolerate unknown values. end_turn: natural stopping point. max_tokens: context or output token limit hit. stop_sequence: configured stop sequence matched. awaiting_input: HITL pause (message_ask_user). cancelled: task was cancelled. failed: task failed with error.
+         * @enum {string}
+         */
+        StopReason: "end_turn" | "max_tokens" | "stop_sequence" | "awaiting_input" | "cancelled" | "failed";
+        /** @description Token accounting for a completed message. */
+        Usage: {
+            /**
+             * Format: int64
+             * @description Tokens consumed by the prompt/context.
+             */
+            input_tokens: number;
+            /**
+             * Format: int64
+             * @description Tokens produced by the model.
+             */
+            output_tokens: number;
+        };
+        /**
+         * @description Physical kind of an attachment.
+         * @enum {string}
+         */
+        AttachmentKind: "file" | "image";
+        /**
+         * @description Where an attachment came from.
+         * @enum {string}
+         */
+        AttachmentSource: "user_upload" | "agent_generated";
+        /** @description A file or image attached to a message. */
+        Attachment: {
+            /** @description Opaque attachment identifier. */
+            id: string;
+            /** @description Human-facing file name. */
+            name: string;
+            /** @description MIME type, e.g. image/png. */
+            mime_type: string;
+            /**
+             * Format: int64
+             * @description File size in bytes.
+             */
+            size_bytes: number;
+            /** @description Download or reference URI. */
+            uri: string;
+            /** @description Text extracted from the file, if available. Omitted when absent. */
+            extracted_text?: string;
+            kind: components["schemas"]["AttachmentKind"];
+            source: components["schemas"]["AttachmentSource"];
+        };
+        /** @description Structured error attached to a failed message. */
+        MessageError: {
+            /** @description Machine-readable error code. */
+            code: string;
+            /** @description Human-readable description. */
+            message: string;
+        };
+        /** @description The message envelope: the unit of history and the live-stream accumulation. Returned by GET /v1/tasks/{id}/history; also opened by message_start and finalized by message_stop on the live stream. */
+        Message: {
+            /** @description Opaque message identifier. */
+            id: string;
+            /** @description Id of the task this message belongs to. */
+            task_id: string;
+            /**
+             * Format: int64
+             * @description Monotonically increasing sequence number within the task.
+             */
+            seq: number;
+            role: components["schemas"]["MessageRole"];
+            /** @description Typed content blocks making up the message body. Omitted when empty (e.g. the shell opened by message_start). */
+            content?: components["schemas"]["ContentBlock"][];
+            /** @description Reason the model stopped, if the message is complete. Omitted while streaming. */
+            stop_reason?: components["schemas"]["StopReason"];
+            /** @description Token usage for this message, if available. Omitted when absent. */
+            usage?: components["schemas"]["Usage"];
+            /** @description Model identifier that generated this message. Omitted when absent. */
+            model?: string;
+            /** @description Files or images attached to this message. Omitted when empty. */
+            attachments?: components["schemas"]["Attachment"][];
+            /** @description Structured error, if the message represents a failure. Omitted when absent. */
+            error?: components["schemas"]["MessageError"];
+            /**
+             * Format: date-time
+             * @description ISO 8601 creation timestamp.
+             */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 completion timestamp; absent while the message is streaming.
+             */
+            completed_at?: string;
+        };
+        /** @description A paginated slice of messages from a task's history. Pages are newest-first. Pass next_before_seq as the `cursor` query parameter to fetch the next (older) page. Absent next_before_seq means the log is exhausted. */
+        MessagePage: {
+            /** @description Messages in this page. */
+            items: components["schemas"]["Message"][];
+            /**
+             * Format: int64
+             * @description Cursor: pass as the `cursor` query parameter to fetch the previous (older) page. Absent on the last page.
+             */
+            next_before_seq?: number;
+        };
+        /** @description Block-oriented praxis stream event. Internally tagged by `type` (snake_case). Replaces the old RuntimeEvent. The cogito-to-praxis mapping lives in praxis-runtime. The set of variants only grows; consumers MUST ignore unknown type values. */
+        StreamEvent: {
+            /** @constant */
+            type: "message_start";
+            message: components["schemas"]["Message"];
+        } | {
+            /** @constant */
+            type: "content_block_start";
+            /** @description Zero-based index of this block within the message. */
+            index: number;
+            /** @description The block shell (no content yet). */
+            content_block: components["schemas"]["ContentBlock"];
+        } | {
+            /** @constant */
+            type: "content_block_delta";
+            /** @description Zero-based index of the block being updated. */
+            index: number;
+            /** @description The delta to apply. */
+            delta: components["schemas"]["BlockDelta"];
+        } | {
+            /** @constant */
+            type: "content_block_stop";
+            /** @description Zero-based index of the completed block. */
+            index: number;
+        } | {
+            /** @constant */
+            type: "message_delta";
+            /** @description Reason the model stopped, if known at this point. Omitted when absent. */
+            stop_reason?: components["schemas"]["StopReason"];
+            /** @description Cumulative token usage for the message, if provided. Omitted when absent. */
+            usage?: components["schemas"]["Usage"];
+        } | {
+            /** @constant */
+            type: "message_stop";
         } | {
             /** @constant */
             type: "turn_paused";
@@ -269,112 +549,16 @@ export interface components {
             type: "turn_resumed";
         } | {
             /** @constant */
-            type: "turn_cancelled";
-        } | {
-            /** @constant */
-            type: "turn_completed";
-            /** @description Final model call's stop reason (snake_case open set: end_turn, tool_use, max_tokens, stop_sequence). max_tokens flags a truncated turn presented as completed. Absent on legacy/replay-reconstructed events (live-only signal). Consumers tolerate unknown values. */
-            stop_reason?: string;
-        } | {
-            /** @constant */
-            type: "turn_failed";
-            reason: string;
-        } | {
-            /** @constant */
-            type: "text_delta";
-            chunk: string;
-        } | {
-            /** @constant */
-            type: "thinking_delta";
-            chunk: string;
-        } | {
-            /** @constant */
             type: "skill_activation_requested";
+            /** @description The name of the skill the model wants to activate. */
             skill_name: string;
-        } | {
-            /** @constant */
-            type: "tool_dispatch_started";
-            call_id: string;
-            tool_name: string;
-            args: unknown;
-        } | {
-            /** @constant */
-            type: "tool_dispatch_ended";
-            call_id: string;
-            ok: boolean;
-            error_message?: string | null;
-        } | {
-            /** @constant */
-            type: "notify_user";
-            text: string;
-            attachments?: string[];
-        } | {
-            /** @constant */
-            type: "ask_user";
-            ask_id: string;
-            text: string;
-            attachments?: string[];
         } | {
             /** @constant */
             type: "stream_end";
             task_status: components["schemas"]["TaskStatus"];
-        };
-        /** @description A projected historical conversation event, internally tagged by `type` (snake_case). Historical sibling of RuntimeEvent: completed blocks rather than deltas. The set of variants only grows; consumers MUST ignore unknown `type`. */
-        HistoryEvent: {
-            /** @constant */
-            type: "user_message";
-            content: unknown;
         } | {
             /** @constant */
-            type: "assistant_message";
-            text: string;
-        } | {
-            /** @constant */
-            type: "thinking";
-            text: string;
-        } | {
-            /** @constant */
-            type: "tool_use";
-            call_id: string;
-            tool_name: string;
-            args: unknown;
-        } | {
-            /** @constant */
-            type: "tool_result";
-            call_id: string;
-            ok: boolean;
-            output?: unknown;
-            error_message?: string;
-        } | {
-            /** @constant */
-            type: "notify_user";
-            text: string;
-            attachments: string[];
-        } | {
-            /** @constant */
-            type: "ask_user";
-            text: string;
-            attachments: string[];
-        } | {
-            /** @constant */
-            type: "turn_completed";
-        } | {
-            /** @constant */
-            type: "turn_failed";
-            reason: unknown;
-        };
-        HistoryItem: {
-            /** Format: int64 */
-            seq: number;
-            turn_id?: string;
-            /** Format: date-time */
-            ts: string;
-            event: components["schemas"]["HistoryEvent"];
-        };
-        /** @description A page of history, newest-first. `next_cursor` (opaque) fetches the next older page; null/absent means the log is exhausted. */
-        TaskHistoryPage: {
-            items: components["schemas"]["HistoryItem"][];
-            next_cursor?: string | null;
+            type: "ping";
         };
         /**
          * @description Lifecycle states for a praxis task.
@@ -482,6 +666,7 @@ export interface components {
         };
         /** @description Body for answering a pending message_ask_user question. */
         AnswerRequest: {
+            /** @description The `tool_use.call_id` of the pending `message_ask_user` block to answer. */
             ask_id: string;
             answer: string;
         };
@@ -784,13 +969,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description SSE stream of RuntimeEvent frames. */
+            /** @description SSE stream of StreamEvent frames. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["RuntimeEvent"];
+                    "text/event-stream": components["schemas"]["StreamEvent"];
                 };
             };
             401: components["responses"]["Error"];
@@ -814,13 +999,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description A page of history, newest first. */
+            /** @description A page of Message objects, newest first. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskHistoryPage"];
+                    "application/json": components["schemas"]["MessagePage"];
                 };
             };
             400: components["responses"]["Error"];

@@ -1,11 +1,12 @@
-import type { Message, AshLocale } from "@ash/shared";
-import { formatRelativeTime } from "@ash/shared";
+import type { AshContentBlock, AshLocale, Message } from "@ash/shared";
+import { formatRelativeTime, textOf } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
 import { Check, Copy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { forwardRef, useCallback, useRef, useState } from "react";
+import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -18,15 +19,70 @@ export interface MessageBubbleProps {
   locale: AshLocale;
 }
 
+const MARKDOWN_COMPONENTS: Components = {
+  a: ({ href, children, ...props }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+      {children}
+    </a>
+  ),
+  pre: ({ children, ...props }) => (
+    <pre className="relative" {...props}>
+      {children}
+    </pre>
+  ),
+};
+
+/** Render one assistant content block by kind (ADR-0018 block model). */
+function AssistantBlock({
+  block,
+  t,
+}: {
+  block: AshContentBlock;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  switch (block.kind) {
+    case "text":
+      return (
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={MARKDOWN_COMPONENTS}>
+          {block.text}
+        </ReactMarkdown>
+      );
+    case "thinking":
+      // Reasoning is secondary: collapsed by default, muted (PRIN-2).
+      return (
+        <details className="rounded-md bg-muted/40 px-2 py-1 text-body-sm text-muted-foreground">
+          <summary className="cursor-pointer select-none text-label font-medium">
+            {t("messageThinking")}
+          </summary>
+          <p className="mt-1 whitespace-pre-wrap">{block.text}</p>
+        </details>
+      );
+    case "tool_use":
+      // Compact marker in the conversation; full args/result live in the
+      // workspace tool-trace timeline.
+      return (
+        <span className="inline-flex w-fit items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-caption font-mono text-muted-foreground">
+          {t("messageToolCall", { tool: block.toolName })}
+        </span>
+      );
+    case "tool_result":
+      // Surfaced in the workspace tool trace, not echoed in the chat stream.
+      return null;
+    case "image":
+      return <span className="text-body-sm text-muted-foreground">{block.alt ?? t("messageImage")}</span>;
+  }
+}
+
 export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
   function MessageBubble({ message, locale }, ref) {
     const isUser = message.role === "user";
     const t = useTranslations("Workbench");
     const [copied, setCopied] = useState(false);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const text = textOf(message);
 
     const handleCopy = useCallback(async () => {
-      await navigator.clipboard.writeText(message.content);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
 
       // GSAP bounce animation
@@ -46,7 +102,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
       }
 
       setTimeout(() => setCopied(false), 2000);
-    }, [message.content]);
+    }, [text]);
 
     return (
       <div
@@ -76,32 +132,12 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
             )}
           >
             {isUser ? (
-              <p className="whitespace-pre-wrap text-left">{message.content}</p>
+              <p className="whitespace-pre-wrap text-left">{text}</p>
             ) : (
-              <div className="prose-chat text-left">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeHighlight]}
-                  components={{
-                    a: ({ href, children, ...props }) => (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        {...props}
-                      >
-                        {children}
-                      </a>
-                    ),
-                    pre: ({ children, ...props }) => (
-                      <pre className="relative" {...props}>
-                        {children}
-                      </pre>
-                    ),
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+              <div className="prose-chat flex flex-col gap-2 text-left">
+                {message.blocks.map((block, i) => (
+                  <AssistantBlock key={i} block={block} t={t} />
+                ))}
               </div>
             )}
           </div>

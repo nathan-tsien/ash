@@ -1,14 +1,23 @@
 import type { PraxisTaskClient } from "./client";
-import type { CreateTaskRequest, RuntimeEvent, SkillList, TaskHistoryPage, TaskList, TaskSummary } from "./runtime-events";
+import type {
+  CreateTaskRequest,
+  MessagePage,
+  PraxisMessage,
+  SkillList,
+  StreamEvent,
+  TaskList,
+  TaskSummary,
+} from "./runtime-events";
 
 /**
- * Local fake praxis client. Emits real-shaped events for a scripted run, with
- * timing so the UI streams believably. No network. Fixture, not a contract.
+ * Local fake praxis client. Emits real-shaped praxis 0.3.0 `StreamEvent`s for a
+ * scripted block-oriented run, with timing so the UI streams believably. No
+ * network. Fixture, not a contract.
  *
  * Two scripts: the default "generate a PPT" one-shot, and an interactive one
- * (when the task's user_input contains "ask") that pauses on `ask_user` until
- * `answer()` resolves, then resumes and completes. zh-CN chunks are simulated
- * agent output, not UI chrome (IMPL-3; deviation D-12).
+ * (when the task's user_input contains "ask") that pauses on a `message_ask_user`
+ * tool block + `turn_paused` until `answer()` resolves, then resumes and
+ * completes. zh-CN chunks are simulated agent output, not UI chrome (IMPL-3).
  */
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -19,6 +28,10 @@ interface FakeRun {
 }
 
 const runs = new Map<string, FakeRun>();
+
+function fakeMessage(id: string, role: "user" | "assistant"): PraxisMessage {
+  return { id, task_id: "fake", seq: 0, role, created_at: "2026-06-20T00:00:00.000Z" };
+}
 
 // Two+ seeded pages so the list UI exercises cursor pagination without a backend.
 const SEED: TaskSummary[] = [
@@ -77,42 +90,66 @@ export const fakePraxisClient: PraxisTaskClient = {
     };
   },
 
-  async *streamEvents(id: string): AsyncIterable<RuntimeEvent> {
+  async *streamEvents(id: string): AsyncIterable<StreamEvent> {
     const run = runs.get(id);
-    yield { type: "turn_started" };
-    for (const chunk of ["好的，", "我来为你生成", "一份演示文稿。", "先梳理大纲…"]) {
-      await delay(160);
-      yield { type: "text_delta", chunk };
-    }
+    yield { type: "message_start", message: fakeMessage("m1", "assistant") };
 
+    // Text block, streamed token by token.
+    yield { type: "content_block_start", index: 0, content_block: { type: "text", data: { text: "" } } };
+    for (const chunk of ["好的，", "我来为你生成", "一份演示文稿。"]) {
+      await delay(160);
+      yield { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: chunk } };
+    }
+    yield { type: "content_block_stop", index: 0 };
+
+    let nextIndex = 1;
     if (run?.interactive) {
-      // Pause until answer() is called.
       let resolve!: () => void;
       const promise = new Promise<void>((r) => (resolve = r));
       run.answered = { resolve, promise };
-      yield { type: "ask_user", ask_id: "q1", text: "需要面向什么受众？", attachments: [] };
+      yield {
+        type: "content_block_start",
+        index: nextIndex,
+        content_block: { type: "tool_use", data: { call_id: "q1", tool_name: "message_ask_user", args: { question: "需要面向什么受众？" } } },
+      };
+      yield { type: "content_block_stop", index: nextIndex };
+      yield { type: "turn_paused" };
       await promise;
       yield { type: "turn_resumed" };
+      nextIndex += 1;
     }
 
-    yield { type: "tool_dispatch_started", call_id: "c1", tool_name: "outline.generate", args: { slides: 8 } };
-    await delay(500);
-    yield { type: "tool_dispatch_ended", call_id: "c1", ok: true };
-
-    // Second tool call preserved so the one-shot reducer test keeps its 2-trace assertion.
-    for (const chunk of ["大纲就绪，", "正在排版每一页…"]) {
-      await delay(180);
-      yield { type: "text_delta", chunk };
+    // Tool call: args arrive as input_json_delta, assembled on stop.
+    const toolIndex = nextIndex;
+    yield {
+      type: "content_block_start",
+      index: toolIndex,
+      content_block: { type: "tool_use", data: { call_id: "c1", tool_name: "slides.render", args: {} } },
+    };
+    for (const part of ['{"slides":', "8}"]) {
+      await delay(120);
+      yield { type: "content_block_delta", index: toolIndex, delta: { type: "input_json_delta", partial_json: part } };
     }
-
-    yield { type: "tool_dispatch_started", call_id: "c2", tool_name: "slides.render", args: { theme: "minimal" } };
-    await delay(900);
-    yield { type: "tool_dispatch_ended", call_id: "c2", ok: true };
+    yield { type: "content_block_stop", index: toolIndex };
 
     await delay(160);
-    yield { type: "text_delta", chunk: "已完成，演示文稿见右侧工作区。" };
-    await delay(80);
-    yield { type: "turn_completed" };
+    yield { type: "message_delta", stop_reason: "end_turn" };
+    yield { type: "message_stop" };
+
+    // Tool result + closing remark in a second assistant message.
+    yield { type: "message_start", message: fakeMessage("m2", "assistant") };
+    yield {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "tool_result", data: { call_id: "c1", ok: true, content: [{ type: "text", data: { text: "大纲已生成" } }] } },
+    };
+    yield { type: "content_block_stop", index: 0 };
+    yield { type: "content_block_start", index: 1, content_block: { type: "text", data: { text: "" } } };
+    await delay(120);
+    yield { type: "content_block_delta", index: 1, delta: { type: "text_delta", text: "已完成，演示文稿见右侧工作区。" } };
+    yield { type: "content_block_stop", index: 1 };
+    yield { type: "message_stop" };
+
     yield { type: "stream_end", task_status: "completed" };
   },
 
@@ -125,14 +162,13 @@ export const fakePraxisClient: PraxisTaskClient = {
     runs.get(id)?.answered?.resolve();
   },
 
-  async history(): Promise<TaskHistoryPage> {
-    // Scripted committed blocks (newest-first), enough to exercise the projector.
+  async history(): Promise<MessagePage> {
+    // Scripted persisted Messages (newest-first), enough to exercise the projector.
     return {
       items: [
-        { seq: 1, ts: "2026-06-13T00:00:01.000Z", event: { type: "assistant_message", text: "好的" } },
-        { seq: 0, ts: "2026-06-13T00:00:00.000Z", event: { type: "user_message", content: "生成 PPT" } },
+        { id: "m1", task_id: "fake", seq: 1, role: "assistant", created_at: "2026-06-13T00:00:01.000Z", content: [{ type: "text", data: { text: "好的" } }] },
+        { id: "m0", task_id: "fake", seq: 0, role: "user", created_at: "2026-06-13T00:00:00.000Z", content: [{ type: "text", data: { text: "生成 PPT" } }] },
       ],
-      next_cursor: null,
     };
   },
 

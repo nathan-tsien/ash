@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { textOf } from "@ash/shared";
 import { TaskRunProvider, useSendFollowUp, useSeedTask, useTaskRun } from "../task-run-provider";
 
 const sendMessage = vi.fn(async () => {});
@@ -23,6 +24,6 @@ describe("sendFollowUp", () => {
     rerender();
     expect(sendMessage).toHaveBeenCalledWith("f-1", "再补一页结尾");
     const msgs = result.current.run?.messages ?? [];
-    expect(msgs.some((m) => m.role === "user" && m.content === "再补一页结尾")).toBe(true);
+    expect(msgs.some((m) => m.role === "user" && textOf(m) === "再补一页结尾")).toBe(true);
   });
 });
