@@ -146,11 +146,13 @@ describe("historyToTask — optimistic user-message reconcile", () => {
   });
 
   it("reconciles repeated identical turns to their own seed in order", () => {
+    // Optimistic ids are client-prefixed (never equal praxis ids m0/m1…), so the
+    // id-keyed path does not fire — reconcile is by trimmed text, in order.
     const base: Task = {
       ...seed(),
       messages: [
-        { id: "m1", role: "user", blocks: [{ kind: "text", text: "ok" }], createdAt: "2026-06-13T00:00:00.000Z", clientId: "c1" },
-        { id: "m2", role: "user", blocks: [{ kind: "text", text: "ok" }], createdAt: "2026-06-13T00:00:01.000Z", clientId: "c2" },
+        { id: "local-1", role: "user", blocks: [{ kind: "text", text: "ok" }], createdAt: "2026-06-13T00:00:00.000Z", clientId: "local-1" },
+        { id: "local-2", role: "user", blocks: [{ kind: "text", text: "ok" }], createdAt: "2026-06-13T00:00:01.000Z", clientId: "local-2" },
       ],
     };
     const task = historyToTask(
@@ -162,7 +164,7 @@ describe("historyToTask — optimistic user-message reconcile", () => {
       labels,
     );
     // Both seeds reconciled, none appended; ids preserved in order.
-    expect(task.messages.map((m) => m.id)).toEqual(["m1", "m2"]);
+    expect(task.messages.map((m) => m.id)).toEqual(["local-1", "local-2"]);
     expect(task.messages.every((m) => m.clientId === undefined)).toBe(true);
   });
 
@@ -174,5 +176,34 @@ describe("historyToTask — optimistic user-message reconcile", () => {
     );
     expect(task.messages).toHaveLength(1);
     expect(task.messages[0].clientId).toBeUndefined();
+  });
+});
+
+describe("historyToTask — id-keyed dedupe on re-attach", () => {
+  // On re-attach the seed already holds live-streamed messages keyed by their
+  // stable praxis id; the same ids come back from /history. They MUST reconcile
+  // in place (not append a duplicate id → duplicate React key).
+  it("reconciles a persisted assistant message by stable id instead of duplicating", () => {
+    const base: Task = {
+      ...seed(),
+      messages: [
+        {
+          id: "m0",
+          role: "assistant",
+          blocks: [{ kind: "text", text: "partial" }],
+          createdAt: "2026-06-13T00:00:00.000Z",
+          isStreaming: true,
+        },
+      ],
+    };
+    const task = historyToTask(
+      base,
+      msgs([{ role: "assistant", content: [{ type: "text", data: { text: "final answer" } }] }]),
+      labels,
+    );
+    expect(task.messages.filter((m) => m.id === "m0")).toHaveLength(1);
+    expect(textOf(task.messages.find((m) => m.id === "m0")!)).toBe("final answer");
+    // Authoritative history message replaces the streaming seed (no isStreaming).
+    expect(task.messages.find((m) => m.id === "m0")!.isStreaming).toBeUndefined();
   });
 });

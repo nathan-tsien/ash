@@ -71,6 +71,15 @@ function praxisMessageToView(pm: PraxisMessage): Message {
  * turn (PR #37 dedupe, re-expressed on the block model via `textOf`).
  */
 function reconcileOrAppend(messages: Message[], incoming: Message): Message[] {
+  // Stable praxis id already present (re-attach, or a repeated /history page):
+  // replace in place with the authoritative history message — keeps the React
+  // key and prevents a duplicate-id collision against a live-streamed bubble.
+  const byId = messages.findIndex((m) => m.id === incoming.id);
+  if (byId !== -1) {
+    const copy = [...messages];
+    copy[byId] = incoming;
+    return copy;
+  }
   if (incoming.role === "user") {
     const target = textOf(incoming).trim();
     const i = messages.findIndex(

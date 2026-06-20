@@ -145,6 +145,14 @@ describe("runtimeEventReducer — 0.3.0 block stream", () => {
     expect(s.task.messages.at(-1)!.blocks[0]).toEqual({ kind: "text", text: "Task failed: failed" });
   });
 
+  it("upserts a message_start for an existing id instead of duplicating (re-emit on subscribe)", () => {
+    let s = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"));
+    // praxis may re-emit in-flight state on (re)subscribe; the same message id
+    // must reconcile, not append a second bubble with a duplicate React key.
+    s = run(s, praxisMsg("m1", "assistant"));
+    expect(s.task.messages.filter((m) => m.id === "m1")).toHaveLength(1);
+  });
+
   it("ping is a no-op", () => {
     const before = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"));
     const after = runtimeEventReducer(before, { type: "ping" } as StreamEvent, NOW, labels);

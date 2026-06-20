@@ -80,7 +80,14 @@ export function runtimeEventReducer(
         isStreaming: true,
         stopReason: pm.stop_reason,
       };
-      const messages = [...task.messages, msg];
+      // Upsert by id: praxis may re-emit in-flight state on (re)subscribe, so a
+      // repeated message_start for the same id must replace, not append a
+      // duplicate-keyed bubble.
+      const existingIdx = task.messages.findIndex((m) => m.id === pm.id);
+      const messages =
+        existingIdx === -1
+          ? [...task.messages, msg]
+          : task.messages.map((m, i) => (i === existingIdx ? msg : m));
       return {
         ...state,
         currentMessageId: pm.id,
