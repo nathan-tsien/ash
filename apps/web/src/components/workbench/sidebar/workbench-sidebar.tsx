@@ -179,7 +179,7 @@ export function WorkbenchSidebar({
 
         <div className="space-y-2 px-3 py-3">
           <Button variant="pill" size="sm" className="w-full justify-center gap-2" asChild>
-            <Link href="/">
+            <Link href="/app">
               <Plus className="size-4" aria-hidden />
               {t("newTask")}
             </Link>
@@ -213,36 +213,49 @@ export function WorkbenchSidebar({
           </div>
         </div>
         <Separator />
-        <ScrollArea className="min-h-0 flex-1">
-          <nav aria-label={t("sidebarItemsAria")} id={sidebarListId}>
-            {viewMode === "project" && activeProject ? (
+        <nav
+          aria-label={t("sidebarItemsAria")}
+          id={sidebarListId}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          {viewMode === "project" && activeProject ? (
+            // Project-nav view: single scroll covers the whole region.
+            <ScrollArea className="min-h-0 flex-1">
               <ProjectNav
                 locale={locale}
                 project={activeProject}
                 activeTaskId={activeTaskId}
               />
-            ) : (
-              <div className="flex flex-col gap-2 py-2 pr-2">
-                <TaskSection
-                  locale={locale}
-                  tasks={filteredTasks}
-                  activeTaskId={activeTaskId}
-                />
-                <Separator />
-                <ProjectSection
-                  locale={locale}
-                  projects={filteredProjects}
-                  activeProjectId={activeProjectId}
-                />
-                {filteredTasks.length === 0 && filteredProjects.length === 0 && (
-                  <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-                    {t("emptySearch")}
-                  </p>
-                )}
-              </div>
-            )}
-          </nav>
-        </ScrollArea>
+            </ScrollArea>
+          ) : (
+            <>
+              {/* Tasks region — grows to fill available space and scrolls independently. */}
+              <ScrollArea className="min-h-0 flex-1">
+                <div className="py-2 pr-2">
+                  <TaskSection
+                    tasks={filteredTasks}
+                    activeTaskId={activeTaskId}
+                  />
+                </div>
+              </ScrollArea>
+              <Separator />
+              {/* Projects region — capped height so it stays visible even with many tasks. */}
+              <ScrollArea className="max-h-[38%] shrink-0">
+                <div className="py-2 pr-2">
+                  <ProjectSection
+                    projects={filteredProjects}
+                    activeProjectId={activeProjectId}
+                  />
+                </div>
+              </ScrollArea>
+              {filteredTasks.length === 0 && filteredProjects.length === 0 && (
+                <p className="px-4 py-6 text-center text-xs text-muted-foreground">
+                  {t("emptySearch")}
+                </p>
+              )}
+            </>
+          )}
+        </nav>
         <div className="mt-auto">
           <FooterAccount />
         </div>
@@ -257,7 +270,7 @@ export function WorkbenchSidebar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="size-10 rounded-xl active:bg-sidebar-accent" asChild>
-              <Link href="/" aria-label={t("newTask")}>
+              <Link href="/app" aria-label={t("newTask")}>
                 <Plus className="size-[18px]" />
               </Link>
             </Button>

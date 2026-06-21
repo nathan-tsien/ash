@@ -1,6 +1,6 @@
 "use client";
 
-import type { AshLocale, Task } from "@ash/shared";
+import type { Task } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
 import { StatusDot } from "@ash/ui/status-dot";
@@ -22,14 +22,12 @@ import {
 import { taskHref } from "@/lib/workbench-href";
 
 export interface TaskSectionProps {
-  locale: AshLocale;
   tasks: Task[];
   activeTaskId?: string;
   onNewTask?: () => void;
 }
 
 export function TaskSection({
-  locale,
   tasks,
   activeTaskId,
   onNewTask,
@@ -38,10 +36,10 @@ export function TaskSection({
   // Deterministic ordering: stable sort by status bucket, preserving the
   // server's LIFO order within each bucket so the list never looks shuffled
   // (PRIN-1). `sort` is stable in modern engines; copy first to avoid mutating
-  // the prop array.
+  // the prop array. No truncation: the parent ScrollArea handles overflow so
+  // all tasks are reachable via scroll.
   const displayTasks = [...tasks]
-    .sort((a, b) => taskStatusSortRank(a.status) - taskStatusSortRank(b.status))
-    .slice(0, 10);
+    .sort((a, b) => taskStatusSortRank(a.status) - taskStatusSortRank(b.status));
 
   return (
     <div>
@@ -123,16 +121,6 @@ export function TaskSection({
           </li>
         )}
       </ul>
-      {displayTasks.length > 0 && (
-        <div className="px-3 pb-1 pt-0.5">
-          <Link
-            href={`/${locale}/app/tasks`}
-            className="text-label text-muted-foreground hover:text-foreground"
-          >
-            {t("viewAllTasks")}
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
