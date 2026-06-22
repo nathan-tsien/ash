@@ -2,16 +2,17 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@ash/ui/input";
 import { Button } from "@ash/ui/button";
 import { useAuth } from "@/context/auth-context";
-import { Link } from "@/i18n/navigation";
 
 export function LoginForm() {
   const t = useTranslations("Auth");
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +24,17 @@ export function LoginForm() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/app");
+      // Honor a `callbackUrl` from the auth gate, but only accept a relative
+      // path (starts with "/", not "//") to avoid an open-redirect; otherwise
+      // land on the app home. The plain next/navigation router keeps the target
+      // non-prefixed (the app/auth zones resolve locale from the cookie).
+      const callbackUrl = searchParams.get("callbackUrl");
+      // Accept only a path starting with a single "/" NOT followed by another "/"
+      // or a backslash — rejects protocol-relative ("//evil") and the backslash
+      // vector ("/\evil") that some browsers normalise to "//evil".
+      const isSafe = typeof callbackUrl === "string" && /^\/(?![/\\])/.test(callbackUrl);
+      const target = isSafe ? callbackUrl : "/app";
+      router.push(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errorNetwork"));
     } finally {

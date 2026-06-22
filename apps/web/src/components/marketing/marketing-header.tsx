@@ -14,6 +14,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
 import { Wordmark } from "@ash/ui/wordmark";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+// Cross-zone links (app zone is non-prefixed) must use the plain next/link to
+// avoid the locale-prefixing router emitting /zh/app, which 404s.
+import NextLink from "next/link";
 import { LocaleSwitcher } from "@/components/marketing/locale-switcher";
 
 export function MarketingHeader() {
@@ -122,7 +125,8 @@ export function MarketingHeader() {
         <div className="ml-auto flex items-center gap-2">
           <LocaleSwitcher />
           <Button variant="pill" size="sm" className="hidden sm:inline-flex shadow-sm" asChild>
-            <Link href="/app">{t("startExperience")}</Link>
+            {/* Non-prefixing: /app is in the app zone (no locale segment) */}
+            <NextLink href="/app">{t("startExperience")}</NextLink>
           </Button>
           {/* Mobile menu — Radix DropdownMenu per UX-4 (native disclosure elements are forbidden for interactive menus) */}
           <DropdownMenu>
@@ -198,9 +202,10 @@ export function MarketingHeader() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/app" className="cursor-pointer font-medium">
+                {/* Non-prefixing: /app is in the app zone (no locale segment) */}
+                <NextLink href="/app" className="cursor-pointer font-medium">
                   {t("startExperience")}
-                </Link>
+                </NextLink>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

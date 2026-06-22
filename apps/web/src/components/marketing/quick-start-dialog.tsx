@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+// Use the plain next/navigation router so router.push("/app") stays non-prefixed
+// (the app zone has no locale segment — using the i18n router would emit /zh/app).
+import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@ash/ui/button";
 import { Input } from "@ash/ui/input";

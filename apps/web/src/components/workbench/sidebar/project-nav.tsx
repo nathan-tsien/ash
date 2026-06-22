@@ -11,7 +11,7 @@ import {
 } from "@ash/ui/tooltip";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 import {
   taskStatusDotVariant,
   taskStatusLabelKey,

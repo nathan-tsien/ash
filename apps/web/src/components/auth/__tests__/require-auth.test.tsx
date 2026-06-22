@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Override the global navigation mock (src/__tests__/setup.tsx) with a stable
 // `replace` we can assert on, and a protected pathname.
 const replace = vi.fn();
-vi.mock("@/i18n/navigation", () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, push: vi.fn(), prefetch: vi.fn() }),
   usePathname: () => "/app",
 }));
@@ -53,9 +53,7 @@ describe("RequireAuth", () => {
       </RequireAuth>,
     );
     expect(screen.queryByText("secret")).toBeNull();
-    expect(replace).toHaveBeenCalledWith({
-      pathname: "/login",
-      query: { callbackUrl: "/app" },
-    });
+    // /login lives in the non-prefixed cookie zone — no locale segment.
+    expect(replace).toHaveBeenCalledWith("/login?callbackUrl=%2Fapp");
   });
 });

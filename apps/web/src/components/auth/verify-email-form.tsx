@@ -2,11 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@ash/ui/input";
 import { Button } from "@ash/ui/button";
-import { Link } from "@/i18n/navigation";
 
 export function VerifyEmailForm() {
   const t = useTranslations("Auth");

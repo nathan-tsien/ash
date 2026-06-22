@@ -1,7 +1,7 @@
 import type { AshLocale, Conversation } from "@ash/shared";
 import { formatRelativeTime } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 
 export function SidebarRow({
   locale,

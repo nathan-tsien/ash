@@ -36,6 +36,10 @@ vi.mock("@/components/command-palette/command-palette-provider", () => ({
 // Footer mounts auth context — stub it out so tests don't need the full auth tree.
 vi.mock("../footer-account", () => ({ FooterAccount: () => <div data-testid="footer-account" /> }));
 
+// Stub the in-app locale switcher (cookie-routed app zone) — its internals
+// (Globe icon, locale cookie action) are out of scope for the sidebar layout test.
+vi.mock("../app-locale-switcher", () => ({ AppLocaleSwitcher: () => <div data-testid="app-locale-switcher" /> }));
+
 // Wordmark is a brand mark package; stub to avoid bundling issues
 vi.mock("@ash/ui/wordmark", () => ({ Wordmark: () => <span>Ash</span> }));
 
@@ -49,6 +53,8 @@ vi.mock("lucide-react", () => ({
   Search: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="search" {...props} />,
   Settings: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="settings" {...props} />,
   Sparkles: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="sparkles" {...props} />,
+  Globe: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="globe" {...props} />,
+  ChevronDown: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="chevron-down" {...props} />,
 }));
 
 // Stub @ash/ui components used in sidebar sections

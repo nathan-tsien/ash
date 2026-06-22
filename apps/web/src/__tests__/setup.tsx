@@ -35,10 +35,23 @@ vi.mock("next-intl", () => ({
     // Simple ICU-style {key} substitution for test assertions.
     return raw.replace(/\{(\w+)\}/g, (_: string, k: string) => String(params[k] ?? `{${k}}`));
   },
+  // Cookie-routed app-zone components (e.g. AppLocaleSwitcher) read the active
+  // locale via useLocale; default to the zh baseline in tests.
+  useLocale: () => "zh",
 }));
 
-// Mock next-intl/navigation
+// Mock next-intl/navigation (localized site zone components)
 vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => "/",
+}));
+
+// Mock next/navigation (app zone components after the cookie-locale migration)
+vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -159,6 +172,18 @@ vi.mock("lucide-react", () => ({
   ),
   ChevronDown: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="chevron-down" {...props} />
+  ),
+  ChevronLeft: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="chevron-left" {...props} />
+  ),
+  ChevronRight: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="chevron-right" {...props} />
+  ),
+  Plus: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="plus" {...props} />
+  ),
+  Globe: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="globe" {...props} />
   ),
 }));
 

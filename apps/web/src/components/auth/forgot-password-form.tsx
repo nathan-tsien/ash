@@ -2,10 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@ash/ui/input";
 import { Button } from "@ash/ui/button";
-import { Link } from "@/i18n/navigation";
 
 export function ForgotPasswordForm() {
   const t = useTranslations("Auth");

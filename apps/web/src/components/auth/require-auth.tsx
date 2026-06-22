@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter, usePathname } from "@/i18n/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
 /**
@@ -25,7 +25,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace({ pathname: "/login", query: { callbackUrl: pathname } });
+      // /login lives in the non-prefixed cookie zone now, so the plain
+      // next/navigation router targets it directly (no locale segment).
+      const target = `/login?callbackUrl=${encodeURIComponent(pathname)}`;
+      router.replace(target);
     }
   }, [status, pathname, router]);
 

@@ -3,7 +3,7 @@ import { Button } from "@ash/ui/button";
 import { Badge } from "@ash/ui/badge";
 import { X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 
 interface DemoBannerProps {
   caseId: ShowcaseCaseId;
