@@ -1,4 +1,5 @@
 import type { AshContentBlock, AshLocale, Message } from "@ash/shared";
+import { Reasoning } from "./reasoning";
 import { formatRelativeTime, textOf } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
@@ -36,9 +37,12 @@ const MARKDOWN_COMPONENTS: Components = {
 function AssistantBlock({
   block,
   t,
+  isStreaming,
 }: {
   block: AshContentBlock;
   t: ReturnType<typeof useTranslations>;
+  /** True while the owning message is actively streaming (from Message.isStreaming). */
+  isStreaming: boolean;
 }) {
   switch (block.kind) {
     case "text":
@@ -48,14 +52,12 @@ function AssistantBlock({
         </ReactMarkdown>
       );
     case "thinking":
-      // Reasoning is secondary: collapsed by default, muted (PRIN-2).
+      // Reasoning surface — polished disclosure with streaming state (PRIN-2).
       return (
-        <details className="rounded-md bg-muted/40 px-2 py-1 text-body-sm text-muted-foreground">
-          <summary className="cursor-pointer select-none text-label font-medium">
-            {t("messageThinking")}
-          </summary>
-          <p className="mt-1 whitespace-pre-wrap">{block.text}</p>
-        </details>
+        <Reasoning
+          text={block.text}
+          isStreaming={isStreaming}
+        />
       );
     case "tool_use":
       // Compact marker in the conversation; full args/result live in the
@@ -136,7 +138,7 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
             ) : (
               <div className="prose-chat flex flex-col gap-2 text-left">
                 {message.blocks.map((block, i) => (
-                  <AssistantBlock key={i} block={block} t={t} />
+                  <AssistantBlock key={i} block={block} t={t} isStreaming={message.isStreaming ?? false} />
                 ))}
               </div>
             )}

@@ -28,9 +28,12 @@ vi.mock("next-intl", () => ({
     if (messages) _intlMessages = messages;
     return <>{children}</>;
   },
-  useTranslations: (namespace: string) => (key: string) => {
+  useTranslations: (namespace: string) => (key: string, params?: Record<string, string | number>) => {
     const ns = _intlMessages[namespace];
-    return ns?.[key] ?? `${namespace}.${key}`;
+    const raw = ns?.[key] ?? `${namespace}.${key}`;
+    if (!params) return raw;
+    // Simple ICU-style {key} substitution for test assertions.
+    return raw.replace(/\{(\w+)\}/g, (_: string, k: string) => String(params[k] ?? `{${k}}`));
   },
 }));
 
@@ -153,6 +156,9 @@ vi.mock("lucide-react", () => ({
   ),
   ArrowRight: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="arrow-right" {...props} />
+  ),
+  ChevronDown: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="chevron-down" {...props} />
   ),
 }));
 
