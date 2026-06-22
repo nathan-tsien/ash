@@ -61,4 +61,18 @@ describe("LoginForm post-login redirect", () => {
     submit();
     await waitFor(() => expect(push).toHaveBeenCalledWith("/app"));
   });
+
+  it("rejects a backslash open-redirect (/\\evil.com) and falls back to /app", async () => {
+    searchParams = new URLSearchParams("callbackUrl=/\\evil.com");
+    render(<LoginForm />);
+    submit();
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/app"));
+  });
+
+  it("rejects a double-backslash open-redirect (/\\/evil.com) and falls back to /app", async () => {
+    searchParams = new URLSearchParams("callbackUrl=/\\/evil.com");
+    render(<LoginForm />);
+    submit();
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/app"));
+  });
 });

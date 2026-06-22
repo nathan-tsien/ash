@@ -29,10 +29,11 @@ export function LoginForm() {
       // land on the app home. The plain next/navigation router keeps the target
       // non-prefixed (the app/auth zones resolve locale from the cookie).
       const callbackUrl = searchParams.get("callbackUrl");
-      const target =
-        callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
-          ? callbackUrl
-          : "/app";
+      // Accept only a path starting with a single "/" NOT followed by another "/"
+      // or a backslash — rejects protocol-relative ("//evil") and the backslash
+      // vector ("/\evil") that some browsers normalise to "//evil".
+      const isSafe = typeof callbackUrl === "string" && /^\/(?![/\\])/.test(callbackUrl);
+      const target = isSafe ? callbackUrl : "/app";
       router.push(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errorNetwork"));
