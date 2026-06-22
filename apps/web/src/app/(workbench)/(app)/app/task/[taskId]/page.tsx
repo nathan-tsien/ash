@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import { isAshLocale, type AshLocale } from "@ash/shared";
 import { WorkbenchApp } from "@/components/workbench/workbench-app";
 import { TaskSeeder } from "@/components/workbench/task-seeder";
@@ -6,11 +7,13 @@ import { listProjects } from "@/server/projects";
 import { getActiveTask } from "@/server/tasks";
 
 type PageProps = {
-  params: Promise<{ locale: string; taskId: string }>;
+  params: Promise<{ taskId: string }>;
 };
 
 export default async function TaskPage({ params }: PageProps) {
-  const { locale, taskId } = await params;
+  const { taskId } = await params;
+  // Locale comes from the `ash_locale` cookie via the i18n request config.
+  const locale = await getLocale();
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
   const tasks = await listTasks(ashLocale);
   const projects = await listProjects(ashLocale);

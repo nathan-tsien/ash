@@ -1,12 +1,28 @@
+import { cookies } from "next/headers";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
 
+/** Cookie the app zone uses to persist the user's locale (no `/[locale]/` prefix). */
+export const LOCALE_COOKIE = "ash_locale";
+
 export default getRequestConfig(async ({ requestLocale }) => {
+  // 1. Prefer the path-resolved locale (the localized `/[locale]/` site zone).
   const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested)
-    ? requested
-    : routing.defaultLocale;
+  let locale = hasLocale(routing.locales, requested) ? requested : undefined;
+
+  // 2. App zone (`/app`, `/c`) has no path locale: fall back to the cookie.
+  if (!locale) {
+    const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;
+    if (hasLocale(routing.locales, cookieLocale)) {
+      locale = cookieLocale;
+    }
+  }
+
+  // 3. Otherwise use the configured default.
+  if (!locale) {
+    locale = routing.defaultLocale;
+  }
 
   return {
     locale,

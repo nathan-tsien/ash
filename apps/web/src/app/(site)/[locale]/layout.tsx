@@ -11,7 +11,7 @@ import { ThemeProvider } from "@ash/ui/lib/theme-provider";
 import { routing } from "@/i18n/routing";
 import { AuthProvider } from "@/context/auth-context";
 
-import "../globals.css";
+import "../../globals.css";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",

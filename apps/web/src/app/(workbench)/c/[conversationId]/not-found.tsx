@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 
 export default async function ConversationNotFound() {
   const t = await getTranslations("NotFoundWorkbench");

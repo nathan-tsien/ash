@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import {
   isAshLocale,
   isShowcaseCaseId,
@@ -13,13 +14,15 @@ import {
 } from "@/server/conversations";
 
 type PageProps = {
-  params: Promise<{ locale: string; conversationId: string }>;
+  params: Promise<{ conversationId: string }>;
   searchParams: Promise<{ demo?: string }>;
 };
 
 export default async function ConversationPage({ params, searchParams }: PageProps) {
-  const { locale, conversationId } = await params;
+  const { conversationId } = await params;
   const { demo } = await searchParams;
+  // Locale comes from the `ash_locale` cookie via the i18n request config.
+  const locale = await getLocale();
   const ashLocale: AshLocale = isAshLocale(locale) ? locale : "zh";
   const conversations = await listConversations(ashLocale);
   const active = await getActiveConversation(conversationId, ashLocale);
