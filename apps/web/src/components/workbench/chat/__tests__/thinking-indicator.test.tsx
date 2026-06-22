@@ -1,13 +1,14 @@
 /**
- * A4 — "Agent thinking" indicator disappearance tests.
+ * A4/A5 — "Agent thinking" indicator visibility tests.
  *
  * Verifies that the running/thinking placeholder:
- *   1. Disappears when the task transitions to a terminal status (completed, failed).
- *   2. Disappears when the task transitions to awaiting_input.
+ *   1. Disappears when the task transitions to a terminal status (completed, failed, idle/cancelled).
+ *   2. Disappears when the task is in awaiting_input (agent is paused waiting for user input).
  *   3. Does NOT appear while an assistant message is actively streaming visible content
  *      (i.e. has a non-empty text block and isStreaming=true), so it doesn't look stuck
  *      below live streamed text.
  *   4. Appears when running with no streaming assistant message (the initial "thinking" phase).
+ *   5. Appears when pending (A5: task started but agent hasn't streamed yet).
  */
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
@@ -104,7 +105,8 @@ describe("Thinking indicator — terminal transitions", () => {
     expect(screen.queryByText("Ash is working…")).toBeNull();
   });
 
-  it("hides indicator when status is 'idle' (not running)", () => {
+  it("hides indicator when status is 'cancelled' (maps to idle — non-terminal run)", () => {
+    // mapTaskStatus collapses cancelled -> 'idle'; the indicator must be absent.
     render(
       wrap(
         <WorkbenchChat
@@ -119,13 +121,27 @@ describe("Thinking indicator — terminal transitions", () => {
 });
 
 describe("Thinking indicator — awaiting_input transition", () => {
-  it("hides indicator when status is 'idle' (maps from awaiting_input via workbench-app)", () => {
-    // workbench-app.tsx maps awaiting_input -> 'idle'; confirm the indicator is absent.
+  it("hides indicator when status is 'awaiting_input' (agent is paused waiting for user)", () => {
+    // awaiting_input: the agent is paused; no thinking indicator should appear.
     render(
       wrap(
         <WorkbenchChat
           locale="en"
-          active={makeConversation("idle", [finishedAssistantMessage])}
+          active={makeConversation("awaiting_input", [finishedAssistantMessage])}
+          workspace={workspace}
+        />,
+      ),
+    );
+    expect(screen.queryByText("Ash is working…")).toBeNull();
+  });
+
+  it("hides indicator when status is 'idle' (cancelled or unknown — non-actionable terminal)", () => {
+    // 'idle' is the fallback for cancelled tasks and unknown statuses.
+    render(
+      wrap(
+        <WorkbenchChat
+          locale="en"
+          active={makeConversation("idle", [])}
           workspace={workspace}
         />,
       ),
@@ -179,12 +195,10 @@ describe("Thinking indicator — streaming content visibility", () => {
     expect(screen.getByText("Ash is working…")).toBeTruthy();
   });
 
-  it("hides indicator when running but a previously-finished assistant message exists (stream done)", () => {
-    // After message_stop, isStreaming=false. Between turns the indicator can reappear
-    // (running with no in-flight stream). But if the last message is done streaming
-    // with visible text, there's no pre-content gap that needs the indicator, so we
-    // only show it if there's no currently-streaming assistant message with content.
-    // This case: running + finished message = show the indicator (new turn starting).
+  it("shows indicator when running with a finished message (between-turn gap — waiting for next turn)", () => {
+    // After message_stop, isStreaming=false. Between turns the indicator reappears
+    // because running + no active streaming content = pre-content gap for the next turn.
+    // This is correct: the indicator shows while waiting, not when content is flowing.
     render(
       wrap(
         <WorkbenchChat
@@ -196,5 +210,36 @@ describe("Thinking indicator — streaming content visibility", () => {
     );
     // Between turns: running + finished messages → indicator should show (waiting for next turn).
     expect(screen.getByText("Ash is working…")).toBeTruthy();
+  });
+});
+
+describe("Thinking indicator — pending status (A5)", () => {
+  it("shows indicator when status is 'pending' (task started, agent not yet streaming)", () => {
+    // A5 fix: pending was previously mapped to idle, causing no indicator.
+    // After the fix, pending shows the indicator (same as the initial running gap).
+    render(
+      wrap(
+        <WorkbenchChat
+          locale="en"
+          active={makeConversation("pending", [])}
+          workspace={workspace}
+        />,
+      ),
+    );
+    expect(screen.getByText("Ash is working…")).toBeTruthy();
+  });
+
+  it("hides indicator when status is 'pending' but content is already streaming", () => {
+    // Edge case: if somehow content arrives while still technically pending.
+    render(
+      wrap(
+        <WorkbenchChat
+          locale="en"
+          active={makeConversation("pending", [streamingAssistantMessage])}
+          workspace={workspace}
+        />,
+      ),
+    );
+    expect(screen.queryByText("Ash is working…")).toBeNull();
   });
 });

@@ -84,10 +84,15 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
     [messages],
   );
 
-  /** Show the thinking indicator only when the task is running AND no visible
-   *  assistant content is streaming yet (the pre-content gap between turns). */
+  /**
+   * Show the thinking indicator during the whole non-terminal pre-content window:
+   * - "pending": task has been started but the agent hasn't yet begun streaming
+   * - "running": agent is active but no visible content has arrived yet
+   * Once real content is streaming the indicator yields (A4 behaviour preserved).
+   */
   const showThinkingIndicator =
-    active.status === "running" && !assistantIsStreamingContent;
+    (active.status === "pending" || active.status === "running") &&
+    !assistantIsStreamingContent;
 
   const sendDraft = useCallback(() => {
     const text = draft.trim();
@@ -179,7 +184,11 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onCancel && (active.status === "running" || Boolean(pendingQuestion)) ? (
+          {onCancel &&
+          (active.status === "pending" ||
+            active.status === "running" ||
+            active.status === "awaiting_input" ||
+            Boolean(pendingQuestion)) ? (
             <Button
               variant="ghost"
               size="sm"

@@ -20,11 +20,16 @@ import { Button } from "@ash/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
 import { useTranslations } from "next-intl";
 
-function mapTaskStatus(status: string): "idle" | "running" | "completed" | "failed" {
+function mapTaskStatus(
+  status: string,
+): "idle" | "pending" | "running" | "awaiting_input" | "completed" | "failed" {
   switch (status) {
+    case "pending": return "pending";
     case "running": return "running";
+    case "awaiting_input": return "awaiting_input";
     case "completed": return "completed";
     case "failed": return "failed";
+    // "cancelled" and any unknown status collapse to idle (non-actionable terminal).
     default: return "idle";
   }
 }

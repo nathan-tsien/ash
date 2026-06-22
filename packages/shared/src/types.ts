@@ -38,7 +38,7 @@ export function textOf(message: Message): string {
     .join("");
 }
 
-export type ConversationStatus = "idle" | "running" | "completed" | "failed";
+export type ConversationStatus = "idle" | "pending" | "running" | "awaiting_input" | "completed" | "failed";
 
 export interface Conversation {
   id: string;
