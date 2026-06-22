@@ -34,8 +34,18 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-// Mock next-intl/navigation
+// Mock next-intl/navigation (localized site zone components)
 vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => "/",
+}));
+
+// Mock next/navigation (app zone components after the cookie-locale migration)
+vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),

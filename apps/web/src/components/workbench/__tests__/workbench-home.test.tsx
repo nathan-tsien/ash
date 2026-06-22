@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 vi.mock("next-intl", () => ({ useTranslations: () => (k: string) => k }));
 const push = vi.fn();
-vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 const start = vi.fn().mockResolvedValue("t1");
 vi.mock("../task-run-provider", () => ({ useStartTask: () => start }));
 vi.mock("@/lib/praxis/use-skill-catalog", () => ({

@@ -26,7 +26,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useSettingsModal } from "@/components/settings/settings-modal-provider";
 import { useCommandPalette } from "@/components/command-palette/command-palette-provider";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 import { PANE_WIDTH } from "@/lib/layout-constants";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkbenchViewMode } from "../workbench-types";

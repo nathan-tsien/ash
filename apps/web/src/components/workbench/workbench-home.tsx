@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useState, useCallback, useSyncExternalStore } from "react";
 import { taskHref, projectHref } from "@/lib/workbench-href";
 import { formatRelativeTime } from "@ash/shared";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import { useStartTask } from "./task-run-provider";
 import { SkillPicker } from "./skill-picker";
 

@@ -4,9 +4,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Override the global navigation mock (src/__tests__/setup.tsx) with a stable
 // `replace` we can assert on, and a protected pathname.
 const replace = vi.fn();
-vi.mock("@/i18n/navigation", () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, push: vi.fn(), prefetch: vi.fn() }),
   usePathname: () => "/app",
+}));
+
+// Locale resolves from the ash_locale cookie via next-intl; stub it to "zh".
+vi.mock("next-intl", () => ({
+  useLocale: () => "zh",
 }));
 
 let authValue: { status: string; user: unknown };
@@ -53,9 +58,7 @@ describe("RequireAuth", () => {
       </RequireAuth>,
     );
     expect(screen.queryByText("secret")).toBeNull();
-    expect(replace).toHaveBeenCalledWith({
-      pathname: "/login",
-      query: { callbackUrl: "/app" },
-    });
+    // /login is in the localized (site) zone, so the cookie locale is prefixed.
+    expect(replace).toHaveBeenCalledWith("/zh/login?callbackUrl=%2Fapp");
   });
 });

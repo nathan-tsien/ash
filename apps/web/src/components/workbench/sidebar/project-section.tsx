@@ -10,7 +10,7 @@ import {
 } from "@ash/ui/tooltip";
 import { Folder, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 import { projectHref } from "@/lib/workbench-href";
 
 export interface ProjectSectionProps {

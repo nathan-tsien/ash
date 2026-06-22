@@ -3,7 +3,7 @@
 import { useCommandPalette } from "./command-palette-provider";
 import { useSettingsModal } from "@/components/settings/settings-modal-provider";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
   FolderPlus,

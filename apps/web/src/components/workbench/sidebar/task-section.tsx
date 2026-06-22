@@ -11,7 +11,7 @@ import {
 } from "@ash/ui/tooltip";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 import {
   taskStatusChipClass,
   taskStatusDotVariant,
@@ -126,7 +126,7 @@ export function TaskSection({
       {displayTasks.length > 0 && (
         <div className="px-3 pb-1 pt-0.5">
           <Link
-            href={`/${locale}/app/tasks`}
+            href="/app/tasks"
             className="text-label text-muted-foreground hover:text-foreground"
           >
             {t("viewAllTasks")}
