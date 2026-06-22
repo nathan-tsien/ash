@@ -62,6 +62,38 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
     [active.messages, extraMessages],
   );
 
+  /**
+   * True when an assistant message is actively streaming visible content —
+   * i.e. it has `isStreaming=true` and at least one block with non-empty text
+   * (or a non-redacted thinking block). Once real content is flowing the
+   * running indicator should yield; it only needs to show during the initial
+   * pre-content "thinking" phase.
+   */
+  const assistantIsStreamingContent = useMemo(
+    () =>
+      messages.some(
+        (m) =>
+          m.role === "assistant" &&
+          m.isStreaming === true &&
+          m.blocks.some(
+            (b) =>
+              (b.kind === "text" && b.text.length > 0) ||
+              (b.kind === "thinking" && !b.redacted && b.text.length > 0),
+          ),
+      ),
+    [messages],
+  );
+
+  /**
+   * Show the thinking indicator during the whole non-terminal pre-content window:
+   * - "pending": task has been started but the agent hasn't yet begun streaming
+   * - "running": agent is active but no visible content has arrived yet
+   * Once real content is streaming the indicator yields (A4 behaviour preserved).
+   */
+  const showThinkingIndicator =
+    (active.status === "pending" || active.status === "running") &&
+    !assistantIsStreamingContent;
+
   const sendDraft = useCallback(() => {
     const text = draft.trim();
     if (!text) return;
@@ -152,7 +184,11 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {onCancel && (active.status === "running" || Boolean(pendingQuestion)) ? (
+          {onCancel &&
+          (active.status === "pending" ||
+            active.status === "running" ||
+            active.status === "awaiting_input" ||
+            Boolean(pendingQuestion)) ? (
             <Button
               variant="ghost"
               size="sm"
@@ -220,7 +256,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
                 <AnswerPrompt question={pendingQuestion} onAnswer={onAnswer} />
               </div>
             )}
-            {active.status === "running" && (
+            {showThinkingIndicator && (
               <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-label font-normal text-muted-foreground">
                 <Loader2
                   ref={(el) => {
