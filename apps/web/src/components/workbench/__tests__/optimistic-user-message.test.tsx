@@ -8,10 +8,14 @@
  *      the provider run right away — before any /history is fetched.
  *   3. After a subsequent /history projection, exactly ONE matching user bubble
  *      is present (the clientId dedupe in reconcileOrAppend holds).
+ *   6. (E2E render guard) After sendFollowUp, the text is queryable in the DOM
+ *      immediately through the real provider→useTaskRun→WorkbenchChat path — this
+ *      test FAILS if the optimistic upsert in sendFollowUp is removed.
  */
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { useEffect } from "react";
 import type { PraxisTaskClient } from "@/lib/praxis/client";
 import type { StreamEvent } from "@/lib/praxis/runtime-events";
 import { TaskRunProvider, useSendFollowUp, useSeedTask, useStartTask, useTaskRun } from "../task-run-provider";
@@ -335,5 +339,101 @@ describe("A6 — WorkbenchChat renders optimistic user message from active prop"
     // rendered chat yet (only appears once active.messages updates).
     // This confirms the routing is correct: no double-append.
     expect(screen.queryByText("做一页摘要")).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 6. E2E render guard: provider → useTaskRun → WorkbenchChat DOM
+//
+// This is the genuine end-to-end path that was missing.  It mounts the real
+// provider and a harness that wires useTaskRun → WorkbenchChat exactly as
+// workbench-app.tsx does (liveTask = useTaskRun(id) ?? initial), then drives
+// a follow-up via the UI and asserts the text is in the DOM immediately.
+//
+// Anti-tautology: if upsert(next) were removed from sendFollowUp in
+// task-run-provider.tsx, useTaskRun("t1") would still return the old task
+// (messages unchanged), WorkbenchChat would receive the old active.messages,
+// and screen.getByText("做一页摘要") would throw — so this test WOULD FAIL.
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Minimal harness that mirrors the workbench-app.tsx wiring:
+ *   liveTask = useTaskRun(taskId) ?? initialTask
+ *   <WorkbenchChat active={{ messages: liveTask.messages, ... }}
+ *                  onFollowUp={text => sendFollowUp(taskId, text)} />
+ *
+ * Seeding happens inside the component (once, on mount) so the provider is
+ * already populated before the first render and useTaskRun returns the task.
+ */
+function LiveChatHarness({ initialTask }: { initialTask: Task }) {
+  const seed = useSeedTask();
+  const sendFollowUp = useSendFollowUp();
+  // Mirror workbench-app line 60: useTaskRun(id) ?? activeTask
+  const liveTask = useTaskRun(initialTask.id) ?? initialTask;
+
+  useEffect(() => {
+    seed(initialTask);
+    // Only runs once on mount; initialTask is stable across renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const active: Conversation = {
+    id: liveTask.id,
+    title: liveTask.title ?? "Test task",
+    preview: liveTask.description,
+    updatedAt: liveTask.updatedAt,
+    // Cast: Task.status is a superset; Conversation.status is a union subset.
+    status: liveTask.status as Conversation["status"],
+    messages: liveTask.messages,
+    plan: [],
+    toolTraces: liveTask.toolTraces,
+    artifacts: liveTask.artifacts,
+  };
+
+  return (
+    <WorkbenchChat
+      locale="zh"
+      active={active}
+      workspace={{ collapsed: false, onToggle: vi.fn() }}
+      onFollowUp={(text) => sendFollowUp(liveTask.id, text)}
+    />
+  );
+}
+
+describe("A6 — E2E render guard: provider optimistic upsert drives WorkbenchChat DOM", () => {
+  beforeEach(() => {
+    mockClient = makeBaseClient();
+  });
+
+  it("renders the user message in the DOM immediately after sendFollowUp, driven by the real provider upsert", async () => {
+    // seededTask.status is "completed" (terminal) so useReattachOnView no-ops —
+    // no /history call is issued.  The guard is purely: does the optimistic
+    // upsert in sendFollowUp flow through useTaskRun into the rendered chat?
+    render(
+      <NextIntlClientProvider locale="zh" messages={i18nMessages}>
+        <TaskRunProvider>
+          <LiveChatHarness initialTask={seededTask} />
+        </TaskRunProvider>
+      </NextIntlClientProvider>,
+    );
+
+    // The chat starts with zero messages (seededTask.messages is empty).
+    expect(screen.queryByText("做一页摘要")).toBeNull();
+
+    // Type the follow-up message and submit via Enter — this calls
+    // WorkbenchChat's sendDraft → onFollowUp → provider.sendFollowUp →
+    // upsert(next) which writes the optimistic bubble into runs["t1"] →
+    // context update → useTaskRun("t1") returns updated task →
+    // WorkbenchChat re-renders with new active.messages containing the bubble.
+    const textarea = screen.getByLabelText("compose-input");
+    await act(async () => {
+      fireEvent.change(textarea, { target: { value: "做一页摘要" } });
+      fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
+    });
+
+    // The optimistic user bubble must be visible in the DOM immediately —
+    // no /history round-trip has occurred (mock client sendMessage is a no-op).
+    // If upsert(next) were removed from sendFollowUp, this assertion would fail.
+    expect(screen.getByText("做一页摘要")).toBeTruthy();
   });
 });
