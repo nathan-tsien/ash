@@ -304,7 +304,7 @@
     "expandWorkbenchTooltip": "Expand workspace rail",
     "collapseWorkbenchTooltip": "Collapse workspace rail",
     "thinkingPlaceholder": "Ash is working…",
-    "textareaPlaceholder": "Tell the Agent what to do…",
+    "textareaPlaceholder": "Tell Ash what to do…",
     "textareaAria": "Message composer",
     "shortcutHint": "Enter send · Shift+Enter newline",
     "send": "Send",
@@ -393,7 +393,6 @@
     "loadMore": "Load more",
     "tasksEmpty": "No tasks yet",
     "tasksError": "Failed to load, click to retry",
-    "viewAllTasks": "View all tasks",
     "cancelTask": "Cancel task"
   },
   "CommandPalette": {

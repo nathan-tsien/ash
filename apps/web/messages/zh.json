@@ -303,8 +303,8 @@
     "collapseWorkbenchAria": "折叠工作台",
     "expandWorkbenchTooltip": "展开工作台",
     "collapseWorkbenchTooltip": "折叠工作台",
-    "thinkingPlaceholder": "Ash 正在思考…",
-    "textareaPlaceholder": "向 Agent 描述你的任务…",
+    "thinkingPlaceholder": "Ash 工作中…",
+    "textareaPlaceholder": "向 Ash 描述你的任务…",
     "textareaAria": "消息输入框",
     "shortcutHint": "Enter 发送 · Shift+Enter 换行",
     "send": "发送",
@@ -393,7 +393,6 @@
     "loadMore": "加载更多",
     "tasksEmpty": "还没有任务",
     "tasksError": "加载失败，点击重试",
-    "viewAllTasks": "查看全部任务",
     "cancelTask": "取消任务"
   },
   "CommandPalette": {
