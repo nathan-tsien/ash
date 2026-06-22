@@ -58,7 +58,9 @@ describe("fake praxis run through reducer", () => {
     const assistant = task.messages.filter((m) => m.role === "assistant");
     // Two assistant messages: m1 (text + tool_use) and m2 (tool_result + closing text).
     expect(assistant.length).toBeGreaterThanOrEqual(1);
-    expect(assistant[0].isStreaming).toBe(false);
+    // isStreaming is absent (undefined) after message_stop — not false — so the
+    // settled state is deep-equal to history projection output (A7 parity fix).
+    expect(assistant[0].isStreaming).toBeUndefined();
     // The first assistant message should contain text blocks.
     const m1Text = textOf(assistant[0]);
     expect(m1Text.length).toBeGreaterThan(0);

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AshLocale, Project } from "@ash/shared";
+import type { Project } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
 import {
@@ -14,20 +14,19 @@ import Link from "next/link";
 import { projectHref } from "@/lib/workbench-href";
 
 export interface ProjectSectionProps {
-  locale: AshLocale;
   projects: Project[];
   activeProjectId?: string;
   onNewProject?: () => void;
 }
 
 export function ProjectSection({
-  locale,
   projects,
   activeProjectId,
   onNewProject,
 }: ProjectSectionProps) {
   const t = useTranslations("Workbench");
-  const displayProjects = projects.slice(0, 10);
+  // No truncation: the parent ScrollArea handles overflow so all projects are reachable via scroll.
+  const displayProjects = projects;
 
   return (
     <div>

@@ -96,14 +96,16 @@ describe("runtimeEventReducer — 0.3.0 block stream", () => {
     expect(s.task.toolTraces[0]).toMatchObject({ id: "c1", status: "success", result: "done" });
   });
 
-  it("message_stop clears isStreaming; max_tokens appends a truncation notice", () => {
+  it("message_stop clears isStreaming (to undefined, matching history projection); max_tokens appends a truncation notice", () => {
     const s = run(
       initialTaskRunState(seedTask()),
       praxisMsg("m1", "assistant"),
       { type: "message_delta", stop_reason: "max_tokens" } as StreamEvent,
       { type: "message_stop" } as StreamEvent,
     );
-    expect(s.task.messages[0].isStreaming).toBe(false);
+    // isStreaming must be absent (undefined) after message_stop so the settled
+    // message is deep-equal to what history projection produces (A7 parity).
+    expect(s.task.messages[0].isStreaming).toBeUndefined();
     expect(s.task.messages.at(-1)!.blocks).toEqual([{ kind: "text", text: labels.truncationNotice }]);
   });
 

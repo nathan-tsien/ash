@@ -152,7 +152,12 @@ export function runtimeEventReducer(
 
     case "message_stop": {
       const stop = currentStopReason(task.messages, state.currentMessageId);
-      let messages = mapCurrent(task.messages, state.currentMessageId, (m) => ({ ...m, isStreaming: false }));
+      // Clear isStreaming by omitting the property (not setting it to false) so
+      // the settled message is structurally identical to what history projection
+      // produces — history never sets isStreaming on a completed message. This
+      // eliminates the A7 post-stream visual jump when history replaces the live
+      // state (deep-equality holds, no spurious re-render).
+      let messages = mapCurrent(task.messages, state.currentMessageId, omitIsStreaming);
       let seq = state.seq;
       if (stop === "max_tokens") {
         messages = [...messages, noticeMessage(task.id, `trunc-${seq}`, labels.truncationNotice, nowMs)];
@@ -253,6 +258,18 @@ function setBlock(blocks: AshContentBlock[], index: number, block: AshContentBlo
   const copy = blocks.slice();
   while (copy.length < index) copy.push({ kind: "text", text: "" });
   copy[index] = block;
+  return copy;
+}
+
+/**
+ * Return a copy of a message with `isStreaming` removed. Used by the
+ * `message_stop` handler so the settled message carries no `isStreaming` field
+ * (undefined), matching what history projection produces and making the two
+ * paths deep-equal for parity (A7 fix).
+ */
+function omitIsStreaming(m: Message): Message {
+  const copy: Message = { ...m };
+  delete copy.isStreaming;
   return copy;
 }
 
