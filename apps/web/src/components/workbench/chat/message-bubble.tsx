@@ -38,11 +38,14 @@ function AssistantBlock({
   block,
   t,
   isStreaming,
+  isLastBlock,
 }: {
   block: AshContentBlock;
   t: ReturnType<typeof useTranslations>;
   /** True while the owning message is actively streaming (from Message.isStreaming). */
   isStreaming: boolean;
+  /** True when this block is the last block in the message's blocks array. */
+  isLastBlock: boolean;
 }) {
   switch (block.kind) {
     case "text":
@@ -53,10 +56,13 @@ function AssistantBlock({
       );
     case "thinking":
       // Reasoning surface — polished disclosure with streaming state (PRIN-2).
+      // A thinking block is only "still streaming" when the message is streaming
+      // AND this block is the last block — once a subsequent block (e.g. text)
+      // has arrived, thinking is semantically complete.
       return (
         <Reasoning
           text={block.text}
-          isStreaming={isStreaming}
+          isStreaming={isStreaming && isLastBlock}
         />
       );
     case "tool_use":
@@ -138,7 +144,13 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
             ) : (
               <div className="prose-chat flex flex-col gap-2 text-left">
                 {message.blocks.map((block, i) => (
-                  <AssistantBlock key={i} block={block} t={t} isStreaming={message.isStreaming ?? false} />
+                  <AssistantBlock
+                    key={i}
+                    block={block}
+                    t={t}
+                    isStreaming={message.isStreaming ?? false}
+                    isLastBlock={i === message.blocks.length - 1}
+                  />
                 ))}
               </div>
             )}

@@ -1,13 +1,19 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { NextIntlClientProvider } from "next-intl";
+import type { Message } from "@ash/shared";
 import { Reasoning } from "../reasoning";
+import { MessageBubble } from "../message-bubble";
 
 // Provide real translated strings so header text assertions are exact.
 const messages = {
   Workbench: {
     reasoningStreaming: "Ash 思考中…",
     reasoningDone: "已思考 {n} 秒",
+    messageToolCall: "Tool: {tool}",
+    messageImage: "[image]",
+    copyMessage: "Copy",
+    copiedMessage: "Copied",
   },
 };
 
@@ -95,5 +101,70 @@ describe("Reasoning component", () => {
 
     // Now expanded
     expect(body.closest("[data-state]")).toHaveAttribute("data-state", "open");
+  });
+});
+
+/**
+ * MessageBubble integration: last-block isStreaming fix (A3 follow-up).
+ *
+ * When a streaming assistant message has blocks [thinking, text], the thinking
+ * block is no longer the last block, so it must show the DONE state — NOT "Ash
+ * 思考中…". Conversely, when thinking IS the last block it must show the
+ * streaming state.
+ */
+describe("MessageBubble — thinking isStreaming only for last block", () => {
+  const makeMessage = (
+    blocks: Message["blocks"],
+    isStreaming: boolean,
+  ): Message => ({
+    id: "m1",
+    role: "assistant",
+    blocks,
+    createdAt: new Date(0).toISOString(),
+    isStreaming,
+  });
+
+  it("streaming message with [thinking, text] — thinking shows DONE state (not streaming)", () => {
+    const message = makeMessage(
+      [
+        { kind: "thinking", text: "internal reasoning" },
+        { kind: "text", text: "Hello user" },
+      ],
+      true,
+    );
+
+    render(
+      <NextIntlClientProvider locale="zh" messages={messages}>
+        <MessageBubble message={message} locale="zh" />
+      </NextIntlClientProvider>,
+    );
+
+    // The thinking header must NOT show "Ash 思考中…" — thinking is done
+    // because a subsequent text block has arrived.
+    expect(screen.queryByText("Ash 思考中…")).not.toBeInTheDocument();
+
+    // The done state renders "已思考 N 秒" (0 seconds in test, timer not
+    // injected via durationSeconds so elapsed stays 0).
+    expect(screen.getByText("已思考 0 秒")).toBeInTheDocument();
+
+    // The body collapses in the done state.
+    const body = screen.getByText("internal reasoning");
+    expect(body.closest("[data-state]")).toHaveAttribute("data-state", "closed");
+  });
+
+  it("streaming message with [thinking] only — thinking shows streaming state", () => {
+    const message = makeMessage(
+      [{ kind: "thinking", text: "still reasoning" }],
+      true,
+    );
+
+    render(
+      <NextIntlClientProvider locale="zh" messages={messages}>
+        <MessageBubble message={message} locale="zh" />
+      </NextIntlClientProvider>,
+    );
+
+    // Thinking is the last (and only) block — must show the streaming header.
+    expect(screen.getByText("Ash 思考中…")).toBeInTheDocument();
   });
 });
