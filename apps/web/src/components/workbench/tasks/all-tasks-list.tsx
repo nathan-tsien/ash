@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { AshLocale } from "@ash/shared";
 import type { PraxisTaskClient } from "@/lib/praxis/client";
 import type { TaskSummary } from "@/lib/praxis/runtime-events";
+import { taskHref } from "@/lib/workbench-href";
 import { Button } from "@ash/ui/button";
 
 type LoadState = "idle" | "loading" | "error";
@@ -72,7 +73,7 @@ export function AllTasksList({
       {items.map((task) => (
         <Link
           key={task.id}
-          href={`/${locale}/app/task/${task.id}`}
+          href={taskHref(task.id)}
           className="rounded-md px-3 py-2 text-sm hover:bg-muted"
         >
           {task.title ?? "—"}

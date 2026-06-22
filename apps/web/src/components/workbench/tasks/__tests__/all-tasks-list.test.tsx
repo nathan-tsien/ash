@@ -25,4 +25,19 @@ describe("AllTasksList", () => {
     render(wrap(<AllTasksList locale="zh" client={client as never} />));
     await waitFor(() => screen.getByText("还没有任务"));
   });
+
+  it("renders task links as non-prefixed app-zone hrefs (no locale prefix)", async () => {
+    const taskId = "task-xyz-123";
+    const client = {
+      listTasks: vi.fn().mockResolvedValue({
+        items: [{ id: taskId, title: "测试任务", status: "running", project_id: null }],
+        next_cursor: null,
+      }),
+    };
+    render(wrap(<AllTasksList locale="zh" client={client as never} />));
+    const link = await waitFor(() => screen.getByRole("link", { name: "测试任务" }));
+    expect(link).toHaveAttribute("href", `/app/task/${taskId}`);
+    // Explicitly confirm there is no locale prefix — would 404 in app-zone routing
+    expect(link).not.toHaveAttribute("href", `/zh/app/task/${taskId}`);
+  });
 });
