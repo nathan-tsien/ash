@@ -1,21 +1,15 @@
-import { setRequestLocale } from "next-intl/server";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 
-type Props = {
-  params: Promise<{ locale: string }>;
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata(): Promise<Metadata> {
+  // Locale resolves from the `ash_locale` cookie via the i18n request config.
+  const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: "Auth" });
   return { title: t("loginTitle") };
 }
 
-export default async function LoginPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+export default async function LoginPage() {
   const t = await getTranslations("Auth");
 
   return (

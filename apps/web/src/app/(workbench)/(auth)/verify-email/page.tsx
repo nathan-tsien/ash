@@ -1,22 +1,16 @@
 import { Suspense } from "react";
-import { setRequestLocale } from "next-intl/server";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { VerifyEmailForm } from "@/components/auth/verify-email-form";
 
-type Props = {
-  params: Promise<{ locale: string }>;
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata(): Promise<Metadata> {
+  // Locale resolves from the `ash_locale` cookie via the i18n request config.
+  const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: "Auth" });
   return { title: t("verifyEmailTitle") };
 }
 
-export default async function VerifyEmailPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+export default async function VerifyEmailPage() {
   const t = await getTranslations("Auth");
 
   return (

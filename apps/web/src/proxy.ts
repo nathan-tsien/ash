@@ -22,13 +22,28 @@ function isAppZonePath(pathname: string): boolean {
   );
 }
 
-const PUBLIC_PATHS = [
-  "/",
+/**
+ * The non-prefixed auth zone: `(workbench)/(auth)` serves these without a
+ * `/[locale]/` segment (locale from the `ash_locale` cookie). They are PUBLIC
+ * (a logged-out user must reach `/login`) and must SKIP the next-intl
+ * middleware — a locale redirect (`/login` -> `/zh/login`) would 404.
+ */
+const AUTH_ZONE_PATHS = [
   "/login",
   "/register",
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+];
+
+function isAuthZonePath(pathname: string): boolean {
+  return AUTH_ZONE_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
+
+const PUBLIC_PATHS = [
+  "/",
   "/product",
   "/showcase",
   "/pricing",
@@ -76,21 +91,28 @@ export function proxy(request: NextRequest) {
   // the renewability signal.
   const hasSession = request.cookies.has("ash_refresh_token");
 
+  // Auth zone (`/login`, `/register`, ...): non-prefixed cookie zone, PUBLIC.
+  // Skip the next-intl middleware (no locale redirect) and the session gate so a
+  // logged-out user can reach these pages. Locale comes from the `ash_locale`
+  // cookie via the i18n request config.
+  if (isAuthZonePath(pathname)) {
+    return NextResponse.next();
+  }
+
   // App zone (`/app`, `/c`): NO locale redirect. Keep the auth gate, then let
   // the request through — locale comes from the `ash_locale` cookie, resolved
   // inside the i18n request config, not from the path.
   if (isAppZonePath(pathname)) {
     if (!hasSession) {
-      // /login is in the localized (site) zone; send the user to the default
-      // locale and let the middleware/site handle further locale negotiation.
-      const loginUrl = new URL(`/${routing.defaultLocale}/login`, request.url);
+      // /login lives in the non-prefixed cookie zone; redirect there directly.
+      const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
   }
 
-  // Localized site zone (marketing + auth): gate protected paths, then run the
+  // Localized site zone (marketing): gate any protected path, then run the
   // next-intl middleware so `/[locale]/` prefixing + negotiation apply.
   if (!isPublicPath(pathname) && !hasSession) {
     const loginUrl = new URL("/login", request.url);

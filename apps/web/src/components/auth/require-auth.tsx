@@ -2,7 +2,6 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
 import { useAuth } from "@/context/auth-context";
 
 /**
@@ -23,16 +22,15 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const locale = useLocale();
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      // /login lives in the localized (site) zone, so prefix the cookie locale
-      // explicitly — the plain next/navigation router does not inject it.
-      const target = `/${locale}/login?callbackUrl=${encodeURIComponent(pathname)}`;
+      // /login lives in the non-prefixed cookie zone now, so the plain
+      // next/navigation router targets it directly (no locale segment).
+      const target = `/login?callbackUrl=${encodeURIComponent(pathname)}`;
       router.replace(target);
     }
-  }, [status, pathname, router, locale]);
+  }, [status, pathname, router]);
 
   if (status === "unauthenticated") return null;
   return <>{children}</>;
