@@ -4,6 +4,10 @@ import { Button } from "@ash/ui/button";
 import { isAshLocale, type AshLocale } from "@ash/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+// Cross-zone link into the cookie-routed app zone: use the non-prefixing
+// next/link so it renders bare `/app` (the locale-prefixing Link would emit
+// `/zh/app`, which 404s since the app zone has no `[locale]` segment).
+import NextLink from "next/link";
 import { HeroTimeline } from "@/components/animations/hero-timeline";
 import { StaggerGroup } from "@/components/animations/stagger-group";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
@@ -179,7 +183,7 @@ export default async function MarketingHomePage({ params }: Props) {
               className="border border-primary-foreground/25 bg-card text-foreground hover:bg-accent"
               asChild
             >
-              <Link href="/app">{t("bottomCta")}</Link>
+              <NextLink href="/app">{t("bottomCta")}</NextLink>
             </Button>
           </div>
         </ScrollReveal>
