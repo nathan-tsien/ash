@@ -303,7 +303,7 @@
     "collapseWorkbenchAria": "Collapse workspace rail",
     "expandWorkbenchTooltip": "Expand workspace rail",
     "collapseWorkbenchTooltip": "Collapse workspace rail",
-    "thinkingPlaceholder": "Agent thinking…",
+    "thinkingPlaceholder": "Ash is working…",
     "textareaPlaceholder": "Tell the Agent what to do…",
     "textareaAria": "Message composer",
     "shortcutHint": "Enter send · Shift+Enter newline",

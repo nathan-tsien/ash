@@ -62,6 +62,33 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
     [active.messages, extraMessages],
   );
 
+  /**
+   * True when an assistant message is actively streaming visible content —
+   * i.e. it has `isStreaming=true` and at least one block with non-empty text
+   * (or a non-redacted thinking block). Once real content is flowing the
+   * running indicator should yield; it only needs to show during the initial
+   * pre-content "thinking" phase.
+   */
+  const assistantIsStreamingContent = useMemo(
+    () =>
+      messages.some(
+        (m) =>
+          m.role === "assistant" &&
+          m.isStreaming === true &&
+          m.blocks.some(
+            (b) =>
+              (b.kind === "text" && b.text.length > 0) ||
+              (b.kind === "thinking" && !b.redacted && b.text.length > 0),
+          ),
+      ),
+    [messages],
+  );
+
+  /** Show the thinking indicator only when the task is running AND no visible
+   *  assistant content is streaming yet (the pre-content gap between turns). */
+  const showThinkingIndicator =
+    active.status === "running" && !assistantIsStreamingContent;
+
   const sendDraft = useCallback(() => {
     const text = draft.trim();
     if (!text) return;
@@ -220,7 +247,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
                 <AnswerPrompt question={pendingQuestion} onAnswer={onAnswer} />
               </div>
             )}
-            {active.status === "running" && (
+            {showThinkingIndicator && (
               <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-label font-normal text-muted-foreground">
                 <Loader2
                   ref={(el) => {
