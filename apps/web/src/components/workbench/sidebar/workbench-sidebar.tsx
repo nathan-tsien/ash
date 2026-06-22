@@ -31,6 +31,7 @@ import { PANE_WIDTH } from "@/lib/layout-constants";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkbenchViewMode } from "../workbench-types";
 import { FooterAccount } from "./footer-account";
+import { AppLocaleSwitcher } from "../app-locale-switcher";
 import { TaskSection } from "./task-section";
 import { ProjectSection } from "./project-section";
 import { ProjectNav } from "./project-nav";
@@ -224,7 +225,6 @@ export function WorkbenchSidebar({
             ) : (
               <div className="flex flex-col gap-2 py-2 pr-2">
                 <TaskSection
-                  locale={locale}
                   tasks={filteredTasks}
                   activeTaskId={activeTaskId}
                 />
@@ -244,6 +244,9 @@ export function WorkbenchSidebar({
           </nav>
         </ScrollArea>
         <div className="mt-auto">
+          <div className="flex justify-end border-t border-sidebar-border px-3 py-2">
+            <AppLocaleSwitcher />
+          </div>
           <FooterAccount />
         </div>
       </div>

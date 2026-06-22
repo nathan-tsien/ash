@@ -1,6 +1,6 @@
 "use client";
 
-import type { AshLocale, Task } from "@ash/shared";
+import type { Task } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
 import { StatusDot } from "@ash/ui/status-dot";
@@ -22,14 +22,12 @@ import {
 import { taskHref } from "@/lib/workbench-href";
 
 export interface TaskSectionProps {
-  locale: AshLocale;
   tasks: Task[];
   activeTaskId?: string;
   onNewTask?: () => void;
 }
 
 export function TaskSection({
-  locale,
   tasks,
   activeTaskId,
   onNewTask,
