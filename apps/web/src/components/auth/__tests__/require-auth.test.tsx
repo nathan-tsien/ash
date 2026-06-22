@@ -9,11 +9,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/app",
 }));
 
-// Locale resolves from the ash_locale cookie via next-intl; stub it to "zh".
-vi.mock("next-intl", () => ({
-  useLocale: () => "zh",
-}));
-
 let authValue: { status: string; user: unknown };
 vi.mock("@/context/auth-context", () => ({
   useAuth: () => authValue,
@@ -58,7 +53,7 @@ describe("RequireAuth", () => {
       </RequireAuth>,
     );
     expect(screen.queryByText("secret")).toBeNull();
-    // /login is in the localized (site) zone, so the cookie locale is prefixed.
-    expect(replace).toHaveBeenCalledWith("/zh/login?callbackUrl=%2Fapp");
+    // /login lives in the non-prefixed cookie zone — no locale segment.
+    expect(replace).toHaveBeenCalledWith("/login?callbackUrl=%2Fapp");
   });
 });

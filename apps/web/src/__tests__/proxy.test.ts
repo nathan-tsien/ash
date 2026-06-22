@@ -23,10 +23,14 @@ function redirectsToLogin(res: Response): boolean {
 }
 
 describe("proxy auth guard", () => {
-  it("redirects to /login when there is no session at all", () => {
+  it("redirects to a bare /login when there is no session at all", () => {
     // App zone is non-prefixed (/app); the unauthenticated bounce targets the
-    // localized /login (default locale prefix).
-    expect(redirectsToLogin(proxy(request("/app")))).toBe(true);
+    // non-prefixed /login (auth now lives in the cookie zone, no locale prefix).
+    const res = proxy(request("/app"));
+    expect(redirectsToLogin(res)).toBe(true);
+    const loc = res.headers.get("location");
+    expect(new URL(loc!).pathname).toBe("/login");
+    expect(new URL(loc!).searchParams.get("callbackUrl")).toBe("/app");
   });
 
   it("does NOT redirect when the access token expired but a refresh token remains", () => {
@@ -56,7 +60,29 @@ describe("proxy auth guard", () => {
     ).toBe(false);
   });
 
-  it("never gates public paths", () => {
-    expect(redirectsToLogin(proxy(request("/zh/login")))).toBe(false);
+  it("never gates the localized marketing public paths", () => {
+    expect(redirectsToLogin(proxy(request("/zh")))).toBe(false);
+    expect(redirectsToLogin(proxy(request("/zh/pricing")))).toBe(false);
+  });
+
+  it("treats the bare auth paths as non-prefixed public (no redirect, no intl)", () => {
+    // Auth lives in the cookie zone now: /login etc. are public and must NOT be
+    // locale-redirected (a /zh/login rewrite would 404 — no such route exists).
+    for (const path of [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/verify-email",
+    ]) {
+      const res = proxy(request(path));
+      expect(redirectsToLogin(res)).toBe(false);
+      expect(res.headers.get("location")).toBeNull();
+    }
+  });
+
+  it("does not gate the auth zone even with a callbackUrl query", () => {
+    const res = proxy(request("/login?callbackUrl=%2Fapp"));
+    expect(res.headers.get("location")).toBeNull();
   });
 });
