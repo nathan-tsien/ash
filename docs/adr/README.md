@@ -38,10 +38,11 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0018](./0018-praxis-0.3.0-block-model.md) | praxis 0.3.0 block-oriented stream + history model (`StreamEvent` / `MessagePage`) |
 | [0019](./0019-praxis-0.4.0-history-chronological-ordering.md) | praxis 0.4.0 history chronological (ascending) page ordering |
 | [0020](./0020-workspace-process-and-deliverables.md) | workspace IA — pinned plan + Process/Deliverables tabs (amends 0004) |
+| [0021](./0021-praxis-task-outputs-contract.md) | praxis `task_outputs` typed-deliverable contract (Proposed, upstream-gated) |
 
 ### Reserved band
 
-Next free IDs (**0020+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
+Next free IDs (**0022+**) cover workspace extension packs, mobile IA, etc. — claim sequentially here when filing.
 
 ## Template
 
