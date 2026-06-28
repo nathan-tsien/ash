@@ -34,6 +34,7 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
               <span
                 className={cn(
                   "flex-1",
+                  // -ml-[2px]: optical alignment against the border-l-2 rail (SPACE-1 documented).
                   step.status === "running" && "border-l-2 border-primary pl-3 -ml-[2px]",
                 )}
               >

@@ -150,7 +150,7 @@
 }
 
 /*
- * Dark palette — smoke series anchored at #191817, mirrored tonal relationships.
+ * Dark palette — smoke series anchored at #1a1a19, mirrored tonal relationships.
  * Applied via .dark class on <html>, toggled by ThemeProvider.
  * See: docs/adr/0010-dark-mode-theme-toggle.md
  */

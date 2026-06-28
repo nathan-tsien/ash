@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v1.2.0 |
+| Version | v2.0.0 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -38,14 +38,16 @@ Surfaces present work, provenance, and control; decoration that does not serve t
 remove an element rather than add one.
 
 **PRIN-3 (MUST)** The visual identity is "Ash & Ember" (ADR-0014, spec
-`docs/superpowers/specs/2026-06-13-ash-identity-design.md`): a warm mineral-neutral system
-anchored on the ash-native foundation trio — charcoal ink `#2A2825`, ash-paper canvas
-`#F7F6F4`, white sheets `#FFFFFF` — plus derived neutrals on the same warm axis (no cold
-grays), and a single brand accent, ember (COLOR-10). Any further saturated hue is a
-brand-posture change requiring an ADR and a MAJOR revision of this document.
+`docs/superpowers/specs/2026-06-13-ash-identity-design.md`): a near-neutral stone system
+anchored on the ash-native foundation trio — charcoal ink `#1C1C1A`, stone paper canvas
+`#F5F5F4`, white sheets `#FFFFFF` — plus derived neutrals on the same near-neutral stone axis
+(warmth pulled almost out for a modern, premium read; no cold-gray drift), and a single brand
+accent, ember (COLOR-10). Any further saturated hue is a brand-posture change requiring an ADR
+and a MAJOR revision of this document. (Neutral Stone ramp retune — 2026-06: ADR-0014 amendment.)
 
 Provenance: v0.x bootstrapped on the public Manus brand trio (`#34322D`/`#F8F8F8`/`#FFFFFF`,
-ADR-0005); retired by ADR-0014.
+ADR-0005); retired by ADR-0014. Original "Ash & Ember" launch used warm-beige ramp
+(`#2A2825`/`#F7F6F4`); retuned to Neutral Stone (2026-06) per ADR-0014 amendment.
 
 **PRIN-4 (MUST)** Hierarchy comes from structure (borders, spacing, typography weight), not from
 color or shadow. Color carries meaning only for status and destructive intent.
@@ -64,7 +66,7 @@ dilution of signatures.
 |-----------|----------------|---------|
 | Grain texture overlay | Marketing hero (`grain` keyframes) | Cultivate; MAY extend to other marketing surfaces |
 | Ink monochrome CTA | `--primary` ink-on-white pill buttons | Protect; no colored primary buttons — ember does not touch buttons |
-| Warm neutral palette | `#2a2825`-family warm grays throughout | Protect; no cold-gray drift |
+| Near-neutral stone palette | `#1c1c1a`-family near-neutral stone grays throughout | Protect; no cold-gray drift, no warm-beige regression |
 | Ember mark | Wordmark "ash." ember period + marketing accents | Cultivate within COLOR-10 scope |
 | Display voice | Bricolage Grotesque marketing headlines (TYPE-6) | Cultivate; never inside workbench panes |
 
@@ -356,7 +358,9 @@ zh-CN baseline. No ornamental Unicode glyphs as list bullets.
 in the same PR.
 
 **IMPL-7 (SHOULD)** New shared visual primitives (status dot, named type scale helpers) land in
-`packages/ui`, not copy-pasted across `apps/web` features.
+`packages/ui`, not copy-pasted across `apps/web` features. Current registered status primitives:
+`StatusDot` (animated running dot + settled status dot) and `StatusChip` (compact labeled chip for
+plan progress, artifact count, and similar summary headers); both route through COLOR-3 tokens.
 
 ## 9. Review protocol (REV)
 
@@ -442,6 +446,7 @@ Changelog:
 | v1.1.0 | 2026-06-13 | REV-3 audit outcomes: MOTION-1/2/3 codify as-built conventions (status keyframes, 200-300ms base, 350-500ms slow, power2/power3 dichotomy, symmetric overlay exits), SPACE-3 marketing shadow carve-out, UX-9 scale rewrite (closes D-10 via REV-4), IA-3 portal note, TYPE-2 stock-utility equivalence, --overlay token, D-9 closed, D-11/12/13 registered |
 | v1.1.1 | 2026-06-13 | Post-v1 a11y/i18n pass: D-13 closed (focus-within rings on composer/home/palette inputs, UX-3), D-12 closed (reducer copy via next-intl `ReducerLabels`, IMPL-3; fake-client fixture chunks scoped out), D-11 closed (command palette rebuilt on cmdk `Command.Dialog` / Radix Dialog, UX-4 + MOTION-2). Deviation-register bookkeeping only — no rule semantics changed |
 | v1.2.0 | 2026-06-16 | MINOR — visual-language weight/density upgrade: TYPE-2 ladder bumped one rung (label 13/18, body-sm 14/20, body 15/22, body-lg 16/24; caption held at 11/16 floor) with weight-500 token defaults on `body-sm`/`body` so running copy stops being DM Sans 400; `--muted-foreground` darkened for crisper secondary text (light `#6e6a63`→`#5c5851`, dark `#a39f99`→`#b3afa8`, WCAG AA held); new `--sidebar-rail` chrome token (ink, COLOR-7, both themes) for the active-row / live-timeline accent rail. D-14 registered (ladder move by design) |
+| v2.0.0 | 2026-06-28 | MAJOR — Neutral Stone ramp retune (ADR-0014 amendment): workbench neutral ramp moved from warm-beige (`#2A2825`/`#F7F6F4`) to near-neutral stone (`#1C1C1A`/`#F5F5F4`) for a modern, premium posture; full light+dark palette regenerated (Appendix C); PRIN-3 rewritten on new foundation trio; PRIN-6 signature updated; ember + status hues unchanged (PRIN-3 not re-triggered by new saturated hue — ramp retune only). Workbench visual/UX pass: chat ink user bubble (asymmetric radius, `bg-primary`), assistant role label, hairline turn dividers, ink send button; sidebar ink primary CTA; workspace shared card shell + `StatusChip` headers. IMPL-7: `StatusChip` registered as status presentation primitive alongside `StatusDot`. |
 
 ## Appendix C. Token reference snapshot
 
@@ -450,30 +455,30 @@ This snapshot is a convenience matrix and MUST be regenerated when tokens change
 
 | Token | Light | Dark | Role |
 |-------|-------|------|------|
-| `--background` | `#f7f6f4` | `#191817` | App canvas (ash paper / smoke) |
-| `--foreground` | `#2a2825` | `#efedea` | Primary ink (charcoal) |
-| `--card` | `#ffffff` | `#232220` | Raised panels, assistant bubbles |
-| `--card-foreground` | `#2a2825` | `#efedea` | Text on card surfaces |
-| `--popover` | `#ffffff` | `#232220` | Floating sheets |
-| `--popover-foreground` | `#2a2825` | `#efedea` | Text on floating sheets |
-| `--primary` | `#2a2825` | `#efedea` | Solid CTA fill (ink-on-white inversion) |
-| `--primary-foreground` | `#ffffff` | `#191817` | Text on primary |
-| `--secondary` | `#eceae6` | `#2b2a27` | User bubble fill, ghost surfaces |
-| `--secondary-foreground` | `#2a2825` | `#efedea` | Text on secondary fills |
-| `--muted` | `#f0eeea` | `#232220` | Inset trays |
-| `--muted-foreground` | `#5c5851` | `#b3afa8` | Secondary labels, captions |
-| `--accent` | `#eae7e2` | `#2b2a27` | Row hover washes |
-| `--accent-foreground` | `#2a2825` | `#efedea` | Text on accent washes |
+| `--background` | `#f5f5f4` | `#1a1a19` | App canvas (stone paper / deep smoke) |
+| `--foreground` | `#1c1c1a` | `#ededeb` | Primary ink (deep charcoal) |
+| `--card` | `#ffffff` | `#232322` | Raised panels, assistant bubbles |
+| `--card-foreground` | `#1c1c1a` | `#ededeb` | Text on card surfaces |
+| `--popover` | `#ffffff` | `#232322` | Floating sheets |
+| `--popover-foreground` | `#1c1c1a` | `#ededeb` | Text on floating sheets |
+| `--primary` | `#1c1c1a` | `#ededeb` | Solid CTA fill (ink-on-white inversion) |
+| `--primary-foreground` | `#ffffff` | `#1a1a19` | Text on primary |
+| `--secondary` | `#ececeb` | `#2b2b29` | User bubble fill, ghost surfaces |
+| `--secondary-foreground` | `#1c1c1a` | `#ededeb` | Text on secondary fills |
+| `--muted` | `#f0f0ee` | `#232322` | Inset trays |
+| `--muted-foreground` | `#6a6a66` | `#b1b1ab` | Secondary labels, captions |
+| `--accent` | `#ececeb` | `#2b2b29` | Row hover washes |
+| `--accent-foreground` | `#1c1c1a` | `#ededeb` | Text on accent washes |
 | `--destructive` | `#c53030` | `#e55050` | Destructive intent only |
-| `--border` / `--input` | `#e3e1dc` | `#343230` | Hairlines, field chrome |
-| `--ring` | `rgba(42,40,37,0.55)` | `rgba(239,237,234,0.55)` | Focus rings (3:1 non-text, D-8) |
-| `--sidebar` | `#ffffff` | `#1d1c1b` | Sidebar chrome |
-| `--sidebar-foreground` | `#2a2825` | `#efedea` | Sidebar text |
-| `--sidebar-border` | `#eae8e4` | `#2b2a27` | Sidebar hairlines |
-| `--sidebar-accent` | `#f2f0ec` | `#2b2a27` | Sidebar row hover |
+| `--border` / `--input` | `#e6e5e2` | `#343432` | Hairlines, field chrome |
+| `--ring` | `rgba(28,28,26,0.55)` | `rgba(237,237,235,0.55)` | Focus rings (3:1 non-text, D-8) |
+| `--sidebar` | `#ffffff` | `#1c1c1b` | Sidebar chrome |
+| `--sidebar-foreground` | `#1c1c1a` | `#ededeb` | Sidebar text |
+| `--sidebar-border` | `#eceae8` | `#2b2b29` | Sidebar hairlines |
+| `--sidebar-accent` | `#f1f1ef` | `#2b2b29` | Sidebar row hover |
 | `--sidebar-rail` | `var(--primary)` | `var(--primary)` | Active-row / live-timeline accent rail (ink, COLOR-10-exempt) |
-| `--workspace` | `#faf9f7` | `#1f1e1c` | Right audit rail |
-| `--overlay` | `rgba(42,40,37,0.45)` | `rgba(12,11,10,0.6)` | Modal/backdrop scrim (COLOR-2) |
+| `--workspace` | `#fafafa` | `#1f1f1e` | Right audit rail |
+| `--overlay` | `rgba(28,28,26,0.45)` | `rgba(11,11,10,0.6)` | Modal/backdrop scrim (COLOR-2) |
 | `--ember` | `#b8441f` | `#e07b52` | Brand accent (COLOR-10 scope only) |
 | `--ember-soft` | `#f8e8e0` | `#36211a` | Marketing washes behind ember text |
 | `--radius` | `0.75rem` | same | Radius core (sm/md/lg/xl derived) |

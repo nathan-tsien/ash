@@ -14,6 +14,8 @@ Forbidden: pretending mock objects equal persisted Rust event logs -- label mock
 
 Both workspace variants share the same outer chrome: `w-[380px]`, `border-l border-border`, `bg-workspace`, with a header bar displaying a panel icon + title.
 
+**Shared card shell.** Every section card inside both workspace variants uses a single shared surface: `rounded-lg border border-border bg-card p-3`. Section cards do not use `<Separator>` between them; vertical rhythm comes from `space-y-3` / `gap-3` in the scroll container (SPACE-5, PRIN-2). Card headers use a `StatusChip` (from `packages/ui`) to surface compact progress or count summaries (IMPL-7).
+
 ## TaskWorkspace
 
 Displays artifacts and execution details for a single Task. Reuses existing `ArtifactsCard` and `ToolsCard` components.
@@ -55,9 +57,21 @@ interface TaskWorkspaceProps {
 }
 ```
 
+### PlanCard
+
+Renders `PlanStep[]` from the active Task as an ordered checklist within the shared card shell
+(`rounded-lg border border-border bg-card p-3`). The card header shows a `StatusChip` (IMPL-7)
+summarizing plan progress: `running` variant while any step is running, `success` variant once all
+steps are done, `neutral` otherwise — with the fraction `done/total` as content. The running step
+carries a 2px left accent rail (`border-l-2 border-primary`, `-ml-[2px]` optical alignment, SPACE-1
+documented) to visually track in-progress work against the stepped list.
+
+**Deferred to sub-project A:** plan timeline/playback controls (step-by-step history scrubbing,
+re-run from step) remain out of scope for this phase.
+
 ### ArtifactsCard
 
-Renders `Artifact[]` from the active Task. Each artifact displays `title`, `preview`, `kind`, and `updatedAt`. Interactions per `kind`:
+Renders `Artifact[]` from the active Task. Each artifact displays `title`, `preview`, `kind`, and `updatedAt`. The card header shows a `StatusChip` (IMPL-7) with the artifact count. Interactions per `kind`:
 
 | `kind` | Behavior |
 |--------|----------|
@@ -155,7 +169,9 @@ interface ProjectWorkspaceProps {
 | **Artifacts** | `ArtifactsCard` | `Artifact[]` -- same rendering as TaskWorkspace ArtifactsCard. Consolidated from all project tasks. |
 | **Project Settings** | `ProjectSettingsCard` | Name, description, connector configuration. Editable fields. |
 
-Sections are separated by `<Separator />` components and wrapped in a `ScrollArea` with `space-y-4 p-4` padding.
+Sections are wrapped in a `ScrollArea` with `space-y-3 p-3` padding. `<Separator />` dividers between cards are removed; the card shell border (`border border-border`) provides sufficient surface separation without a redundant rule (SPACE-5, PRIN-2).
+
+**Deferred to sub-project A:** real deliverable preview/download (replacing the placeholder stub action), and connector-fetched material preview.
 
 ## Shared conventions
 
