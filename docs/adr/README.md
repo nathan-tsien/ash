@@ -37,6 +37,7 @@ Cross-link cogito runtime ADRs (**[nathan-tsien/cogito](https://github.com/natha
 | [0017](./0017-praxis-0.2.0-skill-discovery-and-hints.md) | praxis 0.2.0 skill discovery + hints at task start |
 | [0018](./0018-praxis-0.3.0-block-model.md) | praxis 0.3.0 block-oriented stream + history model (`StreamEvent` / `MessagePage`) |
 | [0019](./0019-praxis-0.4.0-history-chronological-ordering.md) | praxis 0.4.0 history chronological (ascending) page ordering |
+| [0020](./0020-workspace-process-and-deliverables.md) | workspace IA — pinned plan + Process/Deliverables tabs (amends 0004) |
 
 ### Reserved band
 
