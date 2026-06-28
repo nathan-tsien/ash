@@ -86,3 +86,42 @@ Topology is unchanged: still three panes; the plan stays in the workspace; the t
 
 This ADR is a decision record only; it ships no application code. Sub-project A turns it into a
 spec → plan → implementation cycle.
+
+---
+
+## Amendment (2026-06): plan strip deferred
+
+**Status:** Partial implementation — the `Process | Deliverables` tabs shipped; the pinned plan
+strip is deferred.
+
+**Reason.** The original decision (§Decision, point 1) called for a pinned plan strip fed by
+`task.plan: PlanStep[]`. After inspection, praxis emits **no plan, todo, or step data** on any
+stream event or history endpoint today. Constructing an empty or synthetic plan strip would
+directly violate the project's no-fake discipline ("Forbidden: pretending mock objects equal
+persisted Rust event logs" — `docs/components/workbench-workspace.md`). An invisible or
+placeholder strip also provides no navigability benefit, which was the strip's sole purpose.
+
+**What shipped (sub-project A).**
+
+- The task workspace (`apps/web/src/components/workbench/workspace/task-workspace.tsx`) renders
+  a `Process | Deliverables` tab switcher with no plan strip above it.
+- **Process tab** — a clickable event timeline derived from real `tool_use`/`tool_result` content
+  blocks and terminal completion events. Selecting a timeline row scrolls the chat to the
+  corresponding turn (`data-message-id` scroll via `onSelectMessage`).
+- **Deliverables tab** — bound to real `source: agent_generated` `Attachment`s projected from
+  `task.deliverables`. Images render inline; other files offer a download link through the
+  `/api/praxis` BFF proxy. A count badge sits on the tab header.
+- The synthesized `.pptx` placeholder artifact (`synthesizePptArtifact`) is **retired**.
+- The legacy `/c/[conversationId]` container (`workbench-shell.tsx / ConversationWorkspace`) is
+  **consolidated** into a thin read-only variant that renders plan + tool traces using existing
+  shared card components; it is not maintained as a separate feature path.
+
+**Plan strip return condition.** The pinned plan strip will be restored once praxis exposes a
+real plan/step data source (e.g. a `plan_step` stream event or equivalent history field). No
+synthetic or empty plan strip may ship in the interim. This condition supersedes the "always
+visible" claim in the original Decision §1.
+
+**Unchanged.** Points 2–4 of the Decision are unchanged: the tab switcher, view-model types
+(`ProcessEvent`, `Deliverable`), and scope boundary (task workspace vs. project workspace) all
+shipped as specified. Rich in-app deliverable preview (sub-project B) and the `task_outputs`
+contract (sub-project D) remain deferred.
