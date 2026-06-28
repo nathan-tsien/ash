@@ -1,13 +1,12 @@
 "use client";
 
-import type { AshLocale, Deliverable } from "@ash/shared";
+import type { Deliverable } from "@ash/shared";
 import { useTranslations } from "next-intl";
 import { DeliverableRow } from "./deliverable-row";
 
 export function DeliverablesTab({
   deliverables,
 }: {
-  locale: AshLocale;
   deliverables: Deliverable[];
 }) {
   const t = useTranslations("Workbench");

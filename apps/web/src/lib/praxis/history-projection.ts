@@ -45,13 +45,14 @@ export function nextBeforeSeq(page: MessagePage): number | undefined {
 }
 
 function praxisMessageToView(pm: PraxisMessage): Message {
+  const atts = attachmentsToAsh(pm.attachments);
   return {
     id: pm.id,
     role: pm.role === "user" ? "user" : "assistant",
     blocks: (pm.content ?? []).map(praxisBlockToAsh),
     createdAt: pm.created_at,
     stopReason: pm.stop_reason,
-    ...(attachmentsToAsh(pm.attachments) ? { attachments: attachmentsToAsh(pm.attachments) } : {}),
+    ...(atts ? { attachments: atts } : {}),
   };
 }
 

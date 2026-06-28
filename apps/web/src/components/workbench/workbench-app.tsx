@@ -171,7 +171,7 @@ export function WorkbenchApp({
           style={{ width: PANE_WIDTH.workspace }}
         >
           {liveTask ? (
-            <TaskWorkspace locale={locale} task={liveTask} onSelectMessage={onSelectMessage} />
+            <TaskWorkspace task={liveTask} onSelectMessage={onSelectMessage} />
           ) : activeProject ? (
             <ProjectWorkspace locale={locale} project={activeProject} />
           ) : null}

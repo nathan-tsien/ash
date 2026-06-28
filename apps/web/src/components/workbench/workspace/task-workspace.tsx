@@ -1,6 +1,6 @@
 "use client";
 
-import type { AshLocale, Task } from "@ash/shared";
+import type { Task } from "@ash/shared";
 import { processEvents } from "@ash/shared";
 import { ScrollArea } from "@ash/ui/scroll-area";
 import { StatusChip } from "@ash/ui/status-chip";
@@ -15,12 +15,11 @@ import { DeliverablesTab } from "./deliverables-tab";
 type Tab = "process" | "deliverables";
 
 export interface TaskWorkspaceProps {
-  locale: AshLocale;
   task: Task;
   onSelectMessage?: (messageId: string) => void;
 }
 
-export function TaskWorkspace({ locale, task, onSelectMessage }: TaskWorkspaceProps) {
+export function TaskWorkspace({ task, onSelectMessage }: TaskWorkspaceProps) {
   const t = useTranslations("Workbench");
   const [tab, setTab] = useState<Tab>("process");
 
@@ -28,7 +27,7 @@ export function TaskWorkspace({ locale, task, onSelectMessage }: TaskWorkspacePr
     task.status === "completed"
       ? { status: "success" as const, at: task.completedAt ?? task.updatedAt, label: t("processDone") }
       : task.status === "failed"
-        ? { status: "error" as const, at: task.updatedAt, label: t("processDone") }
+        ? { status: "error" as const, at: task.updatedAt, label: t("processFailed") }
         : undefined;
   const events = processEvents(task.messages, { askToolName: ASK_USER_TOOL, done });
   const deliverables = task.deliverables;
@@ -63,7 +62,7 @@ export function TaskWorkspace({ locale, task, onSelectMessage }: TaskWorkspacePr
           {tab === "process" ? (
             <ProcessTab events={events} onSelect={onSelectMessage} />
           ) : (
-            <DeliverablesTab locale={locale} deliverables={deliverables} />
+            <DeliverablesTab deliverables={deliverables} />
           )}
         </div>
       </ScrollArea>

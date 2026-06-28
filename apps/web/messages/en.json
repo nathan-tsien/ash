@@ -399,7 +399,8 @@
     "processEmpty": "No activity yet",
     "tabProcess": "Process",
     "tabDeliverables": "Deliverables",
-    "processDone": "Completed"
+    "processDone": "Completed",
+    "processFailed": "Failed"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

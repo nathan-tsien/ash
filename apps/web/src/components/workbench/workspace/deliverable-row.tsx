@@ -21,6 +21,7 @@ export function DeliverableRow({ deliverable }: { deliverable: Deliverable }) {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        aria-label={t("deliverableOpen")}
         className="block overflow-hidden rounded-lg border border-border bg-card"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -399,7 +399,8 @@
     "processEmpty": "暂无活动",
     "tabProcess": "过程",
     "tabDeliverables": "交付物",
-    "processDone": "已完成"
+    "processDone": "已完成",
+    "processFailed": "失败"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",

@@ -57,6 +57,7 @@ export function runtimeEventReducer(
   switch (event.type) {
     case "message_start": {
       const pm = event.message;
+      const atts = attachmentsToAsh(pm.attachments);
       const msg: Message = {
         id: pm.id,
         role: pm.role === "user" ? "user" : "assistant",
@@ -64,7 +65,7 @@ export function runtimeEventReducer(
         createdAt: pm.created_at,
         isStreaming: true,
         stopReason: pm.stop_reason,
-        ...(attachmentsToAsh(pm.attachments) ? { attachments: attachmentsToAsh(pm.attachments) } : {}),
+        ...(atts ? { attachments: atts } : {}),
       };
       // Upsert by id: praxis may re-emit in-flight state on (re)subscribe, so a
       // repeated message_start for the same id must replace, not append a
