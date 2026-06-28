@@ -68,6 +68,12 @@ export function WorkbenchApp({
 
   const onToggle = useCallback(() => setWorkspaceCollapsed((v) => !v), []);
   const onExpand = useCallback(() => setWorkspaceCollapsed(false), []);
+  const onSelectMessage = useCallback((messageId: string) => {
+    if (typeof document === "undefined") return;
+    document
+      .querySelector(`[data-message-id="${messageId}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
   useGSAP(
     () => {
@@ -165,7 +171,7 @@ export function WorkbenchApp({
           style={{ width: PANE_WIDTH.workspace }}
         >
           {liveTask ? (
-            <TaskWorkspace locale={locale} task={liveTask} />
+            <TaskWorkspace locale={locale} task={liveTask} onSelectMessage={onSelectMessage} />
           ) : activeProject ? (
             <ProjectWorkspace locale={locale} project={activeProject} />
           ) : null}
