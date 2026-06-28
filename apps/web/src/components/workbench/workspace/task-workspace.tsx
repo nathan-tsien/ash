@@ -42,10 +42,10 @@ export function TaskWorkspace({ locale, task, onSelectMessage }: TaskWorkspacePr
 
       {/* Tab switcher */}
       <div role="tablist" className="flex items-center gap-1 border-b border-border px-3 py-2">
-        <TabButton active={tab === "process"} onClick={() => setTab("process")}>
+        <TabButton id="tab-process" controls="panel-process" active={tab === "process"} onClick={() => setTab("process")}>
           {t("tabProcess")}
         </TabButton>
-        <TabButton active={tab === "deliverables"} onClick={() => setTab("deliverables")}>
+        <TabButton id="tab-deliverables" controls="panel-deliverables" active={tab === "deliverables"} onClick={() => setTab("deliverables")}>
           <span className="flex items-center gap-1.5">
             {t("tabDeliverables")}
             {deliverables.length > 0 ? <StatusChip variant="success">{deliverables.length}</StatusChip> : null}
@@ -54,7 +54,12 @@ export function TaskWorkspace({ locale, task, onSelectMessage }: TaskWorkspacePr
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="p-4">
+        <div
+          role="tabpanel"
+          id={tab === "process" ? "panel-process" : "panel-deliverables"}
+          aria-labelledby={tab === "process" ? "tab-process" : "tab-deliverables"}
+          className="p-4"
+        >
           {tab === "process" ? (
             <ProcessTab events={events} onSelect={onSelectMessage} />
           ) : (
@@ -66,11 +71,13 @@ export function TaskWorkspace({ locale, task, onSelectMessage }: TaskWorkspacePr
   );
 }
 
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function TabButton({ id, controls, active, onClick, children }: { id: string; controls: string; active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       role="tab"
+      id={id}
+      aria-controls={controls}
       aria-selected={active}
       onClick={onClick}
       className={cn(
