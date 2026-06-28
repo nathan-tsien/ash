@@ -58,6 +58,7 @@ function Harness() {
       <span data-testid="status">{run?.status ?? "none"}</span>
       <span data-testid="pq">{run?.pendingQuestion?.text ?? ""}</span>
       <span data-testid="msgs">{run?.messages.map((m) => m.id).join(",") ?? ""}</span>
+      <span data-testid="deliverables">{run?.deliverables.map((d) => d.id).join(",") ?? ""}</span>
     </div>
   );
 }
@@ -268,7 +269,7 @@ describe("TaskRunProvider", () => {
     await waitFor(() => expect(startSpy).toHaveBeenCalledWith("t1", "do it", ["web-search"]));
   });
 
-  it("attach is a no-op for a terminal task", async () => {
+  it("fetches /history once on completion; attach is then a no-op for the loaded terminal task", async () => {
     let historyCalls = 0;
     mockClient = baseClient({
       async *streamEvents(): AsyncIterable<StreamEvent> {
@@ -284,9 +285,45 @@ describe("TaskRunProvider", () => {
 
     renderHarness();
     await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("completed"));
+    // The terminal run pulls /history once to surface persisted attachments/messages.
+    await waitFor(() => expect(historyCalls).toBe(1));
 
+    // attach on the already-loaded terminal task (it now has messages) does nothing:
+    // no extra /history fetch and no live re-subscribe.
     fireEvent.click(screen.getByText("attach"));
     await new Promise((r) => setTimeout(r, 0));
-    expect(historyCalls).toBe(0); // guard skipped: task is terminal
+    expect(historyCalls).toBe(1);
+    expect(screen.getByTestId("status")).toHaveTextContent("completed");
+  });
+
+  it("surfaces deliverables from /history after a run completes", async () => {
+    mockClient = baseClient({
+      async *streamEvents(): AsyncIterable<StreamEvent> {
+        // Live stream carries no attachments (empty message envelope), as in praxis.
+        yield { type: "message_start", message: { id: "m1", task_id: "t1", seq: 0, role: "assistant", created_at: "2026-06-13T00:00:00.000Z" } };
+        yield { type: "message_stop" };
+        yield { type: "stream_end", task_status: "completed" };
+      },
+      async history() {
+        // /history carries the agent_generated attachment that the stream omitted.
+        return {
+          items: [
+            {
+              id: "m1", task_id: "t1", seq: 0, role: "assistant",
+              created_at: "2026-06-13T00:00:00.000Z",
+              content: [{ type: "text", data: { text: "done" } }],
+              attachments: [
+                { id: "a1", name: "out.xlsx", mime_type: "application/vnd.ms-excel", size_bytes: 12, uri: "/v1/tasks/t1/attachments/a1", kind: "file", source: "agent_generated" },
+              ],
+            },
+          ],
+        };
+      },
+    });
+
+    renderHarness();
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("completed"));
+    // Post-run /history catch-up projects the agent_generated attachment into deliverables.
+    await waitFor(() => expect(screen.getByTestId("deliverables")).toHaveTextContent("a1"));
   });
 });
