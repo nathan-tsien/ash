@@ -9,8 +9,6 @@ import {
 } from "../runtime-event-reducer";
 
 const labels: ReducerLabels = {
-  deckFallbackTitle: "Presentation",
-  deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
   truncationNotice: "Response was truncated.",
   askFallbackText: "待回答",
@@ -22,7 +20,7 @@ const labels: ReducerLabels = {
  * fake -> reducer pipeline end to end without a browser.
  */
 describe("fake praxis run through reducer", () => {
-  it("produces a completed task with assistant text, tool traces, and a synthesized artifact", async () => {
+  it("produces a completed task with assistant text and tool traces", async () => {
     const summary = await fakePraxisClient.createTask({ user_input: "生成一个 PPT", title: "生成一个 PPT" });
     expect(summary.status).toBe("draft");
 
@@ -41,7 +39,7 @@ describe("fake praxis run through reducer", () => {
           createdAt: "2026-06-03T00:00:00.000Z",
         },
       ],
-      artifacts: [],
+      deliverables: [],
       toolTraces: [],
     };
 
@@ -75,8 +73,9 @@ describe("fake praxis run through reducer", () => {
     // Args assembled from input_json_delta chunks: {"slides":8}
     expect(JSON.parse(slidesTrace!.input ?? "{}")).toEqual({ slides: 8 });
 
-    expect(task.artifacts).toHaveLength(1);
-    expect(task.artifacts[0].title).toContain(".pptx");
+    // No synthesized artifact after stream_end: the retired placeholder deck is gone.
+    // Deliverables come from agent_generated attachments on messages.
+    expect(task.deliverables).toEqual([]);
   });
 });
 
@@ -94,7 +93,7 @@ describe("fake praxis interactive run", () => {
       createdAt: "2026-06-03T00:00:00.000Z",
       updatedAt: "2026-06-03T00:00:00.000Z",
       messages: [],
-      artifacts: [],
+      deliverables: [],
       toolTraces: [],
     };
     let state = initialTaskRunState(seeded);

@@ -155,7 +155,7 @@ export interface Task {
   completedAt?: string;
   projectId?: string; // undefined for independent tasks
   messages: Message[];
-  artifacts: Artifact[];
+  deliverables: Deliverable[];
   toolTraces: ToolTrace[];
   /** Present iff status === "awaiting_input". */
   pendingQuestion?: PendingQuestion;

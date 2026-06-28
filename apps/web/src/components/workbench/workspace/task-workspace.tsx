@@ -23,7 +23,7 @@ export function TaskWorkspace({ locale, task }: TaskWorkspaceProps) {
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
-          <ArtifactsCard locale={locale} artifacts={task.artifacts} />
+          <ArtifactsCard locale={locale} artifacts={[]} />
           <ToolsCard traces={task.toolTraces} />
         </div>
       </ScrollArea>

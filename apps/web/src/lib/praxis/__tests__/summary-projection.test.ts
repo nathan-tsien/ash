@@ -12,7 +12,7 @@ describe("summaryToTask", () => {
     expect(task.status).toBe("running");
     expect(task.projectId).toBeUndefined();
     expect(task.messages).toEqual([]);
-    expect(task.artifacts).toEqual([]);
+    expect(task.deliverables).toEqual([]);
     expect(task.toolTraces).toEqual([]);
   });
 

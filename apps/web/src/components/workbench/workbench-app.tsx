@@ -121,7 +121,7 @@ export function WorkbenchApp({
             messages: liveTask.messages,
             plan: [],
             toolTraces: liveTask.toolTraces,
-            artifacts: liveTask.artifacts,
+            artifacts: [],
           }}
           workspace={{ collapsed: workspaceCollapsed, onToggle }}
           pendingQuestion={liveTask.pendingQuestion}

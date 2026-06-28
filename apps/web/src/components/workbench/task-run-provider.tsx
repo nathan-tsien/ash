@@ -73,8 +73,6 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("Workbench");
   const labels = useMemo<ReducerLabels>(
     () => ({
-      deckFallbackTitle: t("runtimeDeckFallbackTitle"),
-      deckPreview: t("runtimeDeckPreview"),
       failureNotice: (reason: string) => t("runtimeFailureNotice", { reason }),
       truncationNotice: t("runtimeTruncationNotice"),
       askFallbackText: t("runtimeAskFallback"),
@@ -83,8 +81,6 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   );
   const historyLabels = useMemo<HistoryLabels>(
     () => ({
-      deckFallbackTitle: t("runtimeDeckFallbackTitle"),
-      deckPreview: t("runtimeDeckPreview"),
       askFallbackText: t("runtimeAskFallback"),
     }),
     [t],
@@ -178,7 +174,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
             clientId: `user-${summary.id}`,
           },
         ],
-        artifacts: [],
+        deliverables: [],
         toolTraces: [],
       };
       upsert(seeded);

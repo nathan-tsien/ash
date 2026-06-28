@@ -1,6 +1,8 @@
-import type { Artifact, AshContentBlock, Message, Task } from "@ash/shared";
+import type { AshContentBlock, Message, Task } from "@ash/shared";
+import { deliverablesFromMessages } from "@ash/shared";
 import type { StreamEvent } from "./runtime-events";
 import { applyDelta, finalizeToolArgs, pendingQuestionFromMessages, praxisBlockToAsh } from "./block-fold";
+import { attachmentsToAsh } from "./attachments";
 import { tracesFromBlocks } from "./tool-trace";
 
 /**
@@ -30,10 +32,6 @@ export interface TaskRunState {
 
 /** User-facing strings the reducer renders, resolved by the caller from i18n. */
 export interface ReducerLabels {
-  /** Fallback deck title when the task has none (artifact filename base). */
-  deckFallbackTitle: string;
-  /** Placeholder preview text for the synthesized deck artifact. */
-  deckPreview: string;
   /** Builds the user-facing failure notice from the praxis reason. */
   failureNotice: (reason: string) => string;
   /** Notice appended when a turn stopped with stop_reason "max_tokens". */
@@ -48,19 +46,6 @@ export function initialTaskRunState(task: Task): TaskRunState {
 
 const iso = (ms: number): string => new Date(ms).toISOString();
 
-// TODO(ash): replace the synthesized placeholder deck with praxis task_outputs
-// when that contract ships. praxis emits no artifact event, so ash synthesizes a
-// placeholder on terminal completion.
-function synthesizePptArtifact(task: Task, nowMs: number, labels: ReducerLabels): Artifact {
-  const base = (task.title || labels.deckFallbackTitle).replace(/\.pptx$/i, "");
-  return {
-    id: `artifact-${task.id}-deck`,
-    kind: "document",
-    title: `${base}.pptx`,
-    preview: labels.deckPreview,
-    updatedAt: iso(nowMs),
-  };
-}
 
 export function runtimeEventReducer(
   state: TaskRunState,
@@ -79,6 +64,7 @@ export function runtimeEventReducer(
         createdAt: pm.created_at,
         isStreaming: true,
         stopReason: pm.stop_reason,
+        ...(attachmentsToAsh(pm.attachments) ? { attachments: attachmentsToAsh(pm.attachments) } : {}),
       };
       // Upsert by id: praxis may re-emit in-flight state on (re)subscribe, so a
       // repeated message_start for the same id must replace, not append a
@@ -197,13 +183,7 @@ export function runtimeEventReducer(
         return {
           ...state,
           currentMessageId: null,
-          task: {
-            ...task,
-            artifacts: upsertArtifact(task.artifacts, synthesizePptArtifact(task, nowMs, labels)),
-            status: "completed",
-            completedAt: iso(nowMs),
-            updatedAt: iso(nowMs),
-          },
+          task: { ...task, status: "completed", completedAt: iso(nowMs), updatedAt: iso(nowMs) },
         };
       }
       if (event.task_status === "failed" || event.task_status === "cancelled") {
@@ -228,14 +208,19 @@ export function runtimeEventReducer(
   }
 }
 
-/** Rebuild the task with new messages + freshly derived tool traces. */
 /**
- * Set messages + bump updatedAt, AND re-derive tool traces. Use only on events
+ * Set messages + bump updatedAt, AND re-derive tool traces + deliverables. Use only on events
  * that can change the block set's tool_use/tool_result shape (block start/stop,
  * message_start whose seed content may carry tool blocks).
  */
 function withMessages(task: Task, messages: Message[], nowMs: number): Task {
-  return { ...task, messages, toolTraces: tracesFromBlocks(messages), updatedAt: iso(nowMs) };
+  return {
+    ...task,
+    messages,
+    toolTraces: tracesFromBlocks(messages),
+    deliverables: deliverablesFromMessages(messages),
+    updatedAt: iso(nowMs),
+  };
 }
 
 /**
@@ -286,11 +271,3 @@ function noticeMessage(taskId: string, suffix: string, text: string, nowMs: numb
   };
 }
 
-/** Replace an artifact with the same id, else append. Keeps deck ids unique. */
-function upsertArtifact(artifacts: Artifact[], next: Artifact): Artifact[] {
-  const i = artifacts.findIndex((a) => a.id === next.id);
-  if (i === -1) return [...artifacts, next];
-  const copy = [...artifacts];
-  copy[i] = next;
-  return copy;
-}

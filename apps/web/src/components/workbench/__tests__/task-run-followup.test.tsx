@@ -13,7 +13,7 @@ vi.mock("@/lib/praxis/client", () => ({
   }),
 }));
 
-const sample = { id: "f-1", title: "x", description: "", status: "completed" as const, createdAt: "t", updatedAt: "t", messages: [], artifacts: [], toolTraces: [] };
+const sample = { id: "f-1", title: "x", description: "", status: "completed" as const, createdAt: "t", updatedAt: "t", messages: [], deliverables: [], toolTraces: [] };
 
 describe("sendFollowUp", () => {
   it("posts the message and appends an optimistic user message", async () => {

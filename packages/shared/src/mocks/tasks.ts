@@ -23,13 +23,14 @@ export const mockTasks: Task[] = [
         createdAt: "2026-05-30T08:00:12Z",
       },
     ],
-    artifacts: [
+    deliverables: [
       {
         id: "art-task-1-1",
+        name: "product-clean.png",
+        mimeType: "image/png",
+        sizeBytes: 204800,
+        uri: "/v1/tasks/task-1/attachments/art-task-1-1",
         kind: "image",
-        title: "Processed image (no watermark)",
-        preview: "product-clean.png",
-        updatedAt: "2026-05-30T08:00:12Z",
       },
     ],
     toolTraces: [
@@ -64,7 +65,7 @@ export const mockTasks: Task[] = [
         createdAt: "2026-05-30T09:30:05Z",
       },
     ],
-    artifacts: [],
+    deliverables: [],
     toolTraces: [
       {
         id: "trace-task-2-1",
@@ -97,13 +98,14 @@ export const mockTasks: Task[] = [
         createdAt: "2026-05-29T14:02:30Z",
       },
     ],
-    artifacts: [
+    deliverables: [
       {
         id: "art-task-3-1",
-        kind: "document",
-        title: "Product Manual (English)",
-        preview: "manual-en.pdf",
-        updatedAt: "2026-05-29T14:02:30Z",
+        name: "manual-en.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 1048576,
+        uri: "/v1/tasks/task-3/attachments/art-task-3-1",
+        kind: "file",
       },
     ],
     toolTraces: [

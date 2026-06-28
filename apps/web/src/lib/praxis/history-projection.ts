@@ -1,7 +1,8 @@
-import type { Artifact, Message, Task } from "@ash/shared";
-import { textOf } from "@ash/shared";
+import type { Message, Task } from "@ash/shared";
+import { deliverablesFromMessages, textOf } from "@ash/shared";
 import type { MessagePage, PraxisMessage } from "./runtime-events";
 import { pendingQuestionFromMessages, praxisBlockToAsh } from "./block-fold";
+import { attachmentsToAsh } from "./attachments";
 import { tracesFromBlocks } from "./tool-trace";
 
 /**
@@ -16,10 +17,6 @@ import { tracesFromBlocks } from "./tool-trace";
  * live block deltas; the two do not overlap.
  */
 export interface HistoryLabels {
-  /** Fallback deck title when the task has none (artifact filename base). */
-  deckFallbackTitle: string;
-  /** Placeholder preview text for the synthesized deck artifact. */
-  deckPreview: string;
   /** Shown as the question text when a message_ask_user block carries none. */
   askFallbackText: string;
 }
@@ -29,21 +26,15 @@ export function historyToTask(seed: Task, items: PraxisMessage[], labels: Histor
   // prepends older pages, so `items` already arrives chronological — fold as-is
   // (oldest-first) to keep the optimistic-message reconcile order stable.
   let messages = [...seed.messages];
-  let latestTs = seed.updatedAt;
   for (const pm of items) {
     messages = reconcileOrAppend(messages, praxisMessageToView(pm));
-    if (pm.created_at) latestTs = pm.created_at;
   }
   const pending = pendingQuestionFromMessages(messages, labels.askFallbackText);
-  const artifacts =
-    seed.status === "completed"
-      ? upsertArtifact(seed.artifacts, synthesizeArtifact(seed, latestTs, labels))
-      : seed.artifacts;
   return {
     ...seed,
     messages,
     toolTraces: tracesFromBlocks(messages),
-    artifacts,
+    deliverables: deliverablesFromMessages(messages),
     ...(pending ? { status: "awaiting_input" as const, pendingQuestion: pending } : {}),
   };
 }
@@ -60,6 +51,7 @@ function praxisMessageToView(pm: PraxisMessage): Message {
     blocks: (pm.content ?? []).map(praxisBlockToAsh),
     createdAt: pm.created_at,
     stopReason: pm.stop_reason,
+    ...(attachmentsToAsh(pm.attachments) ? { attachments: attachmentsToAsh(pm.attachments) } : {}),
   };
 }
 
@@ -96,24 +88,3 @@ function reconcileOrAppend(messages: Message[], incoming: Message): Message[] {
   return [...messages, incoming];
 }
 
-/** Replace an artifact with the same id, else append. Keeps deck ids unique. */
-function upsertArtifact(artifacts: Artifact[], next: Artifact): Artifact[] {
-  const i = artifacts.findIndex((a) => a.id === next.id);
-  if (i === -1) return [...artifacts, next];
-  const copy = [...artifacts];
-  copy[i] = next;
-  return copy;
-}
-
-// TODO(ash): replace the synthesized placeholder deck with praxis task_outputs
-// when that contract ships (mirrors the note in runtime-event-reducer.ts).
-function synthesizeArtifact(task: Task, ts: string, labels: HistoryLabels): Artifact {
-  const base = (task.title || labels.deckFallbackTitle).replace(/\.pptx$/i, "");
-  return {
-    id: `artifact-${task.id}-deck`,
-    kind: "document",
-    title: `${base}.pptx`,
-    preview: labels.deckPreview,
-    updatedAt: ts,
-  };
-}

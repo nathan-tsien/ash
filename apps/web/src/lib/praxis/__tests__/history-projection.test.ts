@@ -5,8 +5,6 @@ import type { PraxisMessage } from "../runtime-events";
 import { historyToTask, type HistoryLabels } from "../history-projection";
 
 const labels: HistoryLabels = {
-  deckFallbackTitle: "Presentation",
-  deckPreview: "preview",
   askFallbackText: "待回答",
 };
 
@@ -19,7 +17,7 @@ function seed(): Task {
     createdAt: "2026-06-13T00:00:00.000Z",
     updatedAt: "2026-06-13T00:00:00.000Z",
     messages: [],
-    artifacts: [],
+    deliverables: [],
     toolTraces: [],
   };
 }
