@@ -44,7 +44,7 @@ export function DeliverableCanvas({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-3xl" closeAriaLabel={t("deliverableOpen")}>
+      <DialogContent className="max-w-3xl" closeAriaLabel={t("deliverableClose")}>
         {deliverable ? (
           <>
             <DialogHeader>

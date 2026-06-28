@@ -396,6 +396,7 @@
     "deliverablesEmpty": "暂无交付物",
     "deliverableDownload": "下载",
     "deliverableOpen": "打开",
+    "deliverableClose": "关闭",
     "processEmpty": "暂无活动",
     "tabProcess": "过程",
     "tabDeliverables": "交付物",
