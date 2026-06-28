@@ -3,14 +3,13 @@
 /*
  * Canonical design tokens + Tailwind theme bridge for ash.
  *
- * Identity: "Ash & Ember" (ADR-0014).
+ * Identity: "Ash & Ember" (ADR-0014), workbench neutral ramp retuned to
+ * "Neutral Stone" (2026-06): warmth pulled almost out for a more modern,
+ * premium read; ink deepened for crisper contrast. Status + ember unchanged.
  *
- * Ash — warm mineral neutrals:
- *   charcoal ink  #2A2825  primary ink + solid fills
- *   ash paper     #F7F6F4  canvas / subtle trays
+ *   ink           #1C1C1A  primary ink + solid fills
+ *   stone paper   #F5F5F4  canvas / subtle trays
  *   white sheets  #FFFFFF  elevated surfaces + text on fills
- * All other neutrals interpolate on the same warm axis; dark mode mirrors the
- * tonal relationships on a smoke series anchored at #191817.
  *
  * Ember — single brand accent #B8441F (COLOR-10): wordmark + marketing only,
  * never workbench chrome or status semantics.
@@ -100,40 +99,39 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #f7f6f4;
-  --foreground: #2a2825;
+  --background: #f5f5f4;
+  --foreground: #1c1c1a;
   --card: #ffffff;
-  --card-foreground: #2a2825;
+  --card-foreground: #1c1c1a;
   --popover: #ffffff;
-  --popover-foreground: #2a2825;
+  --popover-foreground: #1c1c1a;
 
-  /* Solid CTA inversion: ink fill on white canvas */
-  --primary: #2a2825;
+  --primary: #1c1c1a;
   --primary-foreground: #ffffff;
 
-  --secondary: #eceae6;
-  --secondary-foreground: #2a2825;
+  --secondary: #ececeb;
+  --secondary-foreground: #1c1c1a;
 
-  --muted: #f0eeea;
-  /* Dark enough on canvas (~5.9:1) — crisper zh-CN secondary text (COLOR-8) */
-  --muted-foreground: #5c5851;
+  --muted: #f0f0ee;
+  --muted-foreground: #6a6a66;
 
-  --accent: #eae7e2;
-  --accent-foreground: #2a2825;
+  --accent: #ececeb;
+  --accent-foreground: #1c1c1a;
 
   --destructive: #c53030;
-  --border: #e3e1dc;
-  --input: #e3e1dc;
-  --ring: rgba(42, 40, 37, 0.55);
+  --border: #e6e5e2;
+  --input: #e6e5e2;
+  --ring: rgba(28, 28, 26, 0.55);
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #2a2825;
-  --sidebar-border: #eae8e4;
-  --sidebar-accent: #f2f0ec;
-  /* Active-row / live-timeline accent rail (COLOR-1/6/7): ink, not ember */
+  --sidebar-foreground: #1c1c1a;
+  --sidebar-border: #eceae8;
+  --sidebar-accent: #f1f1ef;
   --sidebar-rail: var(--primary);
 
-  --workspace: #faf9f7;
+  --workspace: #fafafa;
+
+  --overlay: rgba(28, 28, 26, 0.45);
 
   /* Brand accent (COLOR-10): marketing + wordmark only */
   --ember: #b8441f;
@@ -149,50 +147,47 @@
   --status-warning: #f59e0b;
   --status-warning-soft: #fffbeb;
   --status-warning-foreground: #b45309;
-
-  /* Modal/backdrop scrim (COLOR-2) */
-  --overlay: rgba(42, 40, 37, 0.45);
 }
 
 /*
- * Dark palette — smoke series anchored at #191817, mirrored tonal relationships.
+ * Dark palette — smoke series anchored at #1a1a19, mirrored tonal relationships.
  * Applied via .dark class on <html>, toggled by ThemeProvider.
  * See: docs/adr/0010-dark-mode-theme-toggle.md
  */
 :root.dark {
-  --background: #191817;
-  --foreground: #efedea;
-  --card: #232220;
-  --card-foreground: #efedea;
-  --popover: #232220;
-  --popover-foreground: #efedea;
+  --background: #1a1a19;
+  --foreground: #ededeb;
+  --card: #232322;
+  --card-foreground: #ededeb;
+  --popover: #232322;
+  --popover-foreground: #ededeb;
 
-  --primary: #efedea;
-  --primary-foreground: #191817;
+  --primary: #ededeb;
+  --primary-foreground: #1a1a19;
 
-  --secondary: #2b2a27;
-  --secondary-foreground: #efedea;
+  --secondary: #2b2b29;
+  --secondary-foreground: #ededeb;
 
-  --muted: #232220;
-  /* Brighter secondary text on smoke canvas, WCAG AA (COLOR-8) */
-  --muted-foreground: #b3afa8;
+  --muted: #232322;
+  --muted-foreground: #b1b1ab;
 
-  --accent: #2b2a27;
-  --accent-foreground: #efedea;
+  --accent: #2b2b29;
+  --accent-foreground: #ededeb;
 
   --destructive: #e55050;
-  --border: #343230;
-  --input: #343230;
-  --ring: rgba(239, 237, 234, 0.55);
+  --border: #343432;
+  --input: #343432;
+  --ring: rgba(237, 237, 235, 0.55);
 
-  --sidebar: #1d1c1b;
-  --sidebar-foreground: #efedea;
-  --sidebar-border: #2b2a27;
-  --sidebar-accent: #2b2a27;
-  /* Active-row / live-timeline accent rail (COLOR-1/6/7): ink, not ember */
+  --sidebar: #1c1c1b;
+  --sidebar-foreground: #ededeb;
+  --sidebar-border: #2b2b29;
+  --sidebar-accent: #2b2b29;
   --sidebar-rail: var(--primary);
 
-  --workspace: #1f1e1c;
+  --workspace: #1f1f1e;
+
+  --overlay: rgba(11, 11, 10, 0.6);
 
   /* Brand accent (COLOR-10): marketing + wordmark only */
   --ember: #e07b52;
@@ -207,9 +202,6 @@
   --status-warning: #fbbf24;
   --status-warning-soft: #2e2510;
   --status-warning-foreground: #fcd34d;
-
-  /* Modal/backdrop scrim (COLOR-2) */
-  --overlay: rgba(12, 11, 10, 0.6);
 }
 
 @layer base {

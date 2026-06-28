@@ -17,6 +17,11 @@ Switching to `project` mode replaces the dual-section layout entirely with `Proj
 
 ## Dual-section layout (home / task mode)
 
+The **New Task** button at the top of the expanded sidebar uses `variant="default"` — an ink
+pill (`bg-primary text-primary-foreground`, full-width, `rounded-full`) consistent with the
+"Ink monochrome CTA" signature (PRIN-6, ADR-0014). No colored or ember primary button here;
+all other sidebar controls use `variant="ghost"`.
+
 ```
 +------------------------------+
 |  Logo            [collapse]  |

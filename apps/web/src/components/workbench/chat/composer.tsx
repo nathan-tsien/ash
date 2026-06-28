@@ -73,7 +73,7 @@ export function Composer({ draft, onDraftChange, onSend }: ComposerProps) {
           <Button
             ref={sendButtonRef}
             type="button"
-            variant="pill"
+            variant="default"
             size="sm"
             onClick={() => {
               handleSendPress();

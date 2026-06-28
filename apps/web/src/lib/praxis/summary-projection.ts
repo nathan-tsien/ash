@@ -35,7 +35,7 @@ export function summaryToTask(summary: TaskSummary, labels: SummaryLabels): Task
     updatedAt: labels.ts,
     projectId: summary.project_id ?? undefined,
     messages: [],
-    artifacts: [],
+    deliverables: [],
     toolTraces: [],
   };
 }

@@ -87,7 +87,7 @@ const seededTask: Task = {
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
   messages: [],
-  artifacts: [],
+  deliverables: [],
   toolTraces: [],
 };
 
@@ -387,7 +387,7 @@ function LiveChatHarness({ initialTask }: { initialTask: Task }) {
     messages: liveTask.messages,
     plan: [],
     toolTraces: liveTask.toolTraces,
-    artifacts: liveTask.artifacts,
+    artifacts: [],
   };
 
   return (

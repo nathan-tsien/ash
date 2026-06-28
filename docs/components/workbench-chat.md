@@ -10,13 +10,23 @@ Ascending sort by ISO `createdAt`. Roles:
 
 | `role` | Layout |
 |--------|--------|
-| `user` | Right-aligned filled chip (`bg-secondary`, `max-w-[80%]`) — plain text with `whitespace-pre-wrap` |
-| `assistant` | Left-aligned **borderless prose on the canvas** (`w-full`, no card/border) — **markdown rendered** via `react-markdown` + `rehype-highlight` + `remark-gfm` |
+| `user` | Right-aligned **ink chip** (`bg-primary text-primary-foreground`, `max-w-[80%]`, asymmetric radius `rounded-2xl rounded-br-sm` — anchors the bubble to the right edge) — plain text with `whitespace-pre-wrap` |
+| `assistant` | Left-aligned **borderless prose on the canvas** (`w-full`, no card/border) — **markdown rendered** via `react-markdown` + `rehype-highlight` + `remark-gfm`; a small **role label** (`text-caption font-medium uppercase tracking-wide text-muted-foreground`) appears above the turn content |
 | `system` | Not shown as bubbly transcript (debug overlays future-gated — default hidden) |
 
 Role hierarchy comes from structure, not a near-identical bubble pair (PRIN-4): the
 assistant turn is the primary content (full reading measure, no chrome) while the user
-turn is a bounded interjection chip. Only the user role carries a filled surface.
+turn is a bounded interjection chip. Only the user role carries a filled surface — ink
+(`--primary`) rather than the former ghost fill (`--secondary`), making the user's
+contribution visually distinct from assistant prose at a glance.
+
+**Turn dividers.** Each message after the first is separated by a hairline
+`border-t border-border/60` with `mt-4 pt-4` rhythm, giving the timeline a deliberate
+page-like cadence without full `<Separator>` cost (SPACE-5, PRIN-2).
+
+**Send button.** The composer send control uses `variant="default"` — an ink-filled pill
+(`bg-primary text-primary-foreground`) — consistent with the "Ink monochrome CTA"
+signature (PRIN-6, ADR-0014). Ember never touches workbench buttons (COLOR-10).
 
 ### Markdown rendering (assistant messages)
 

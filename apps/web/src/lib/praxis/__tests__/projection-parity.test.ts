@@ -15,8 +15,8 @@
  *  - `task.status` / `task.completedAt`: stream_end drives those transitions for
  *    the live path; in history the seed task carries the terminal status already.
  *    Not relevant to the per-message / per-trace parity we are testing.
- *  - `task.artifacts`: same reasoning — synthesized on stream_end (live) vs from
- *    seed.status === "completed" (history).
+ *  - `task.deliverables`: derived from messages on both paths; covered by a separate
+ *    assertion below (they must agree when messages carry agent_generated attachments).
  */
 import { describe, expect, it } from "vitest";
 import type { Task } from "@ash/shared";
@@ -29,15 +29,11 @@ import { historyToTask, type HistoryLabels } from "../history-projection";
 // any divergence).
 // ---------------------------------------------------------------------------
 const reducerLabels: ReducerLabels = {
-  deckFallbackTitle: "Presentation",
-  deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
   truncationNotice: "（输出因长度限制被截断）",
   askFallbackText: "请补充信息",
 };
 const historyLabels: HistoryLabels = {
-  deckFallbackTitle: "Presentation",
-  deckPreview: "preview",
   askFallbackText: "请补充信息",
 };
 
@@ -56,7 +52,7 @@ function seedTask(): Task {
     createdAt: "2026-06-20T10:00:00.000Z",
     updatedAt: "2026-06-20T10:00:00.000Z",
     messages: [],
-    artifacts: [],
+    deliverables: [],
     toolTraces: [],
   };
 }
@@ -260,5 +256,92 @@ describe("projection-parity (A7): live reducer vs history produce equivalent set
     for (const m of hist.messages) {
       expect(m.isStreaming).toBeUndefined();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Deliverables parity: live and history agree on deliverables when a message
+// carries an agent_generated attachment.
+// ---------------------------------------------------------------------------
+
+describe("projection-parity — deliverables from agent_generated attachment", () => {
+  const ATTACHMENT = {
+    id: "att-1",
+    name: "slides.pptx",
+    mime_type: "application/vnd.ms-powerpoint",
+    size_bytes: 1024,
+    uri: "/v1/tasks/t1/attachments/att-1",
+    kind: "file" as const,
+    source: "agent_generated" as const,
+  };
+
+  function buildLiveWithAttachment(): Task {
+    // message_start carries the attachment on the message envelope.
+    const s = run(
+      initialTaskRunState(seedTask()),
+      {
+        type: "message_start",
+        message: {
+          id: "m1",
+          task_id: "t1",
+          seq: 1,
+          role: "assistant",
+          created_at: MSG_CREATED_AT,
+          attachments: [ATTACHMENT],
+        },
+      } as StreamEvent,
+      { type: "content_block_start", index: 0, content_block: { type: "text", data: { text: "" } } } as StreamEvent,
+      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Done." } } as StreamEvent,
+      { type: "content_block_stop", index: 0 } as StreamEvent,
+      { type: "message_delta", stop_reason: "end_turn" } as StreamEvent,
+      { type: "message_stop" } as StreamEvent,
+    );
+    return s.task;
+  }
+
+  function buildHistoryWithAttachment(): Task {
+    const items: PraxisMessage[] = [
+      {
+        id: "m1",
+        task_id: "t1",
+        seq: 1,
+        role: "assistant",
+        created_at: MSG_CREATED_AT,
+        stop_reason: "end_turn",
+        content: [{ type: "text", data: { text: "Done." } }],
+        attachments: [ATTACHMENT],
+      },
+    ];
+    return historyToTask(seedTask(), items, historyLabels);
+  }
+
+  it("deliverables are deep-equal across live and history paths when message has an agent_generated attachment", () => {
+    const live = buildLiveWithAttachment();
+    const hist = buildHistoryWithAttachment();
+    expect(live.deliverables).toEqual(hist.deliverables);
+    expect(live.deliverables).toHaveLength(1);
+    expect(live.deliverables[0]).toMatchObject({
+      id: "att-1",
+      name: "slides.pptx",
+      mimeType: "application/vnd.ms-powerpoint",
+      sizeBytes: 1024,
+      uri: "/v1/tasks/t1/attachments/att-1",
+      kind: "file",
+    });
+  });
+
+  it("message with agent_generated attachment has attachments field on both paths", () => {
+    const live = buildLiveWithAttachment();
+    const hist = buildHistoryWithAttachment();
+    const lm1 = live.messages.find((m) => m.id === "m1")!;
+    const hm1 = hist.messages.find((m) => m.id === "m1")!;
+    expect(lm1.attachments).toEqual(hm1.attachments);
+    expect(lm1.attachments).toHaveLength(1);
+    expect(lm1.attachments![0]).toMatchObject({
+      id: "att-1",
+      name: "slides.pptx",
+      mimeType: "application/vnd.ms-powerpoint",
+      source: "agent_generated",
+    });
   });
 });

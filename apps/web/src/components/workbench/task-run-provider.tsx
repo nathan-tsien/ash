@@ -23,6 +23,30 @@ import {
 } from "@/lib/praxis/runtime-event-reducer";
 import { historyToTask, type HistoryLabels } from "@/lib/praxis/history-projection";
 
+/**
+ * Fetch a task's full `/history` (all pages, oldest-first) and project it into a
+ * Task via `historyToTask`. praxis carries `agent_generated` attachments (→
+ * deliverables) and the complete message set ONLY on `/history`, not the live
+ * stream, so this is how deliverables surface during and after a run.
+ */
+async function fetchHistoryTask(
+  client: ReturnType<typeof getPraxisClient>,
+  taskId: string,
+  base: Task,
+  historyLabels: HistoryLabels,
+): Promise<Task> {
+  const items: Awaited<ReturnType<typeof client.history>>["items"] = [];
+  let cursor: number | undefined;
+  do {
+    const page = await client.history(taskId, cursor);
+    // praxis 0.4.0: pages are ascending within, walked newest -> older across
+    // calls. Prepend each older page so `items` stays chronological overall.
+    items.unshift(...page.items);
+    cursor = page.next_before_seq ?? undefined;
+  } while (cursor);
+  return historyToTask(base, items, historyLabels);
+}
+
 interface TaskRunContextValue {
   /** Session runs, newest first. */
   runs: Task[];
@@ -73,8 +97,6 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("Workbench");
   const labels = useMemo<ReducerLabels>(
     () => ({
-      deckFallbackTitle: t("runtimeDeckFallbackTitle"),
-      deckPreview: t("runtimeDeckPreview"),
       failureNotice: (reason: string) => t("runtimeFailureNotice", { reason }),
       truncationNotice: t("runtimeTruncationNotice"),
       askFallbackText: t("runtimeAskFallback"),
@@ -83,8 +105,6 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
   );
   const historyLabels = useMemo<HistoryLabels>(
     () => ({
-      deckFallbackTitle: t("runtimeDeckFallbackTitle"),
-      deckPreview: t("runtimeDeckPreview"),
       askFallbackText: t("runtimeAskFallback"),
     }),
     [t],
@@ -130,6 +150,20 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
           } catch {
             // already terminal; ignore
           }
+          // Pull persisted attachments (deliverables) + the authoritative message
+          // set, which praxis carries only on /history, not the live stream. The
+          // streamed terminal status is authoritative: keep it rather than let
+          // historyToTask re-infer awaiting_input from an ask block that was
+          // resolved out-of-band (the answer endpoint, not a tool_result).
+          if (!controller.signal.aborted) {
+            try {
+              const rebuilt = await fetchHistoryTask(client, taskId, state.task, historyLabels);
+              const { pendingQuestion: _pq, ...rest } = rebuilt;
+              upsert({ ...rest, status });
+            } catch {
+              // history catch-up is best-effort; keep the streamed terminal state.
+            }
+          }
         } else if (status !== "awaiting_input") {
           // Abnormal close (no stream_end, not waiting on the user): fail it.
           upsert({ ...state.task, status: "failed" });
@@ -148,7 +182,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
         activeStreamsRef.current.delete(taskId);
       }
     },
-    [labels, upsert],
+    [labels, upsert, historyLabels],
   );
 
   const startTask = useCallback(
@@ -178,7 +212,7 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
             clientId: `user-${summary.id}`,
           },
         ],
-        artifacts: [],
+        deliverables: [],
         toolTraces: [],
       };
       upsert(seeded);
@@ -242,22 +276,28 @@ export function TaskRunProvider({ children }: { children: ReactNode }) {
       const client = clientRef.current;
       const existing = runsRef.current[taskId];
       if (!existing) return; // not a live session run
-      if (existing.status === "completed" || existing.status === "failed") return; // terminal
+      if (existing.status === "completed" || existing.status === "failed") {
+        // Terminal cold-load (deep link): the seeded task has no messages yet, so
+        // fetch /history ONCE to surface its messages + deliverables. No live
+        // stream is opened, and the seeded terminal status is preserved. A
+        // terminal task that already has messages no-ops (avoids a refetch loop).
+        if (existing.messages.length === 0) {
+          try {
+            const rebuilt = await fetchHistoryTask(client, taskId, existing, historyLabels);
+            const { pendingQuestion: _pq, ...rest } = rebuilt;
+            upsert({ ...rest, status: existing.status });
+          } catch {
+            // best-effort; leave the seeded task as-is
+          }
+        }
+        return;
+      }
       if (activeStreamsRef.current.has(taskId)) return; // a stream is already running
       activeStreamsRef.current.add(taskId);
       const controller = new AbortController();
       controllersRef.current.set(taskId, controller);
       try {
-        const items: Awaited<ReturnType<typeof client.history>>["items"] = [];
-        let cursor: number | undefined;
-        do {
-          const page = await client.history(taskId, cursor);
-          // praxis 0.4.0: pages are ascending within, walked newest -> older across
-          // calls. Prepend each older page so `items` stays chronological overall.
-          items.unshift(...page.items);
-          cursor = page.next_before_seq ?? undefined;
-        } while (cursor);
-        const rebuilt = historyToTask(existing, items, historyLabels);
+        const rebuilt = await fetchHistoryTask(client, taskId, existing, historyLabels);
         upsert(rebuilt);
         await runStream(taskId, rebuilt, controller); // its finally clears active + controller
       } catch {

@@ -44,3 +44,31 @@ Adopt the "Ash & Ember" identity per `docs/superpowers/specs/2026-06-13-ash-iden
 - **Supersession:** PRIN-3's Manus anchoring retired (provenance noted in guidelines);
   ADR-0005/ADR-0013 remain accurate history. ADR-0010's dark-mode decision carries over
   onto the smoke series.
+
+## Amendment (2026-06): Neutral Stone ramp
+
+**Context.** The original "Ash & Ember" launch derived the workbench neutral ramp on a
+warm-beige axis (ink `#2A2825`, canvas `#F7F6F4`). A design review pass identified that
+the warm undertone, while ownable, read slightly soft against the 2026 landscape of
+competing agent products — which have moved toward colder, higher-contrast neutrals.
+
+**Decision.** Retune the workbench neutral ramp from warm-beige to near-neutral stone,
+deepening the ink and pulling most of the warmth out of the canvas:
+
+- ink: `#2A2825` → `#1C1C1A` (deeper; nearly achromatic with a hair of warmth)
+- canvas: `#F7F6F4` → `#F5F5F4` (stone; one step toward neutral)
+- All 16 derived light/dark token pairs regenerated on the new axis; all contrast pairs
+  pass WCAG AA (verified before merge).
+
+This is a **ramp retune, not a brand-posture change**: no new saturated hue is introduced,
+the ember accent (`--ember` / `--ember-soft`) and all status hues are unchanged, the
+"Ash & Ember" name and identity posture remain in force. PRIN-3's trigger clause ("any
+further saturated hue") is not activated.
+
+**Rationale.** A near-neutral stone reads more modern and premium without abandoning the
+mineral warmth that differentiates ash from cold-gray competitors. Ink deepened to
+`#1C1C1A` raises foreground contrast and makes the workbench feel crisper at small type
+sizes (TYPE-2 body/body-sm at 14–15px).
+
+**Unchanged:** ember + status hues, motion system, type scale, three-pane IA. Guidelines
+bumped to **v2.0.0** (MAJOR: foundation token values moved).

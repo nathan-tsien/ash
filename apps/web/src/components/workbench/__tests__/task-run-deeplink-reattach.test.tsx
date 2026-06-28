@@ -22,7 +22,7 @@ const sample: Task = {
   createdAt: "t",
   updatedAt: "t",
   messages: [],
-  artifacts: [],
+  deliverables: [],
   toolTraces: [],
 };
 

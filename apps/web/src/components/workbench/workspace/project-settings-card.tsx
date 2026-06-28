@@ -12,7 +12,7 @@ export function ProjectSettingsCard({ project }: ProjectSettingsCardProps) {
   const t = useTranslations("Workbench");
 
   return (
-    <div>
+    <div className="rounded-lg border border-border bg-card p-3">
       <div className="mb-3 flex items-center gap-2">
         <Settings className="size-4 text-muted-foreground" aria-hidden />
         <h3 className="text-sm font-medium">{t("projectSettings")}</h3>

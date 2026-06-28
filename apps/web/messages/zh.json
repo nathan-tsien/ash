@@ -345,6 +345,7 @@
     "reasoningDone": "已思考 {n} 秒",
     "messageToolCall": "调用了 {tool}",
     "messageImage": "[图片]",
+    "roleAssistant": "助手",
     "scrollToBottom": "回到底部",
     "tasksSection": "任务",
     "projectsSection": "项目",
@@ -381,8 +382,6 @@
     "connectors": "连接器",
     "projectSpaceTitle": "项目空间",
     "sidebarItemsAria": "任务与项目列表",
-    "runtimeDeckFallbackTitle": "演示文稿",
-    "runtimeDeckPreview": "由智能体生成的演示文稿（占位）。",
     "runtimeFailureNotice": "任务执行失败：{reason}",
     "runtimeTruncationNotice": "回复因达到长度上限被截断。",
     "runtimeAskFallback": "助手需要更多信息才能继续。",
@@ -393,7 +392,15 @@
     "loadMore": "加载更多",
     "tasksEmpty": "还没有任务",
     "tasksError": "加载失败，点击重试",
-    "cancelTask": "取消任务"
+    "cancelTask": "取消任务",
+    "deliverablesEmpty": "暂无交付物",
+    "deliverableDownload": "下载",
+    "deliverableOpen": "打开",
+    "processEmpty": "暂无活动",
+    "tabProcess": "过程",
+    "tabDeliverables": "交付物",
+    "processDone": "已完成",
+    "processFailed": "失败"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",

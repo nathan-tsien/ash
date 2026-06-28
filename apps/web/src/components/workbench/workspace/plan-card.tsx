@@ -1,33 +1,40 @@
 import type { PlanStep } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
+import { StatusChip } from "@ash/ui/status-chip";
 import { AlertCircle, CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export async function PlanCard({ steps }: { steps: PlanStep[] }) {
   const t = await getTranslations("Workbench");
+  const done = steps.filter((s) => s.status === "done").length;
+  const hasRunning = steps.some((s) => s.status === "running");
 
   return (
-    <div className="space-y-2">
-      <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
-        {t("planHeading")}
-      </h2>
+    <section className="rounded-lg border border-border bg-card p-3">
+      <div className="mb-2.5 flex items-center justify-between">
+        <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
+          {t("planHeading")}
+        </h2>
+        {steps.length > 0 ? (
+          <StatusChip variant={hasRunning ? "running" : done === steps.length ? "success" : "neutral"}>
+            {done}/{steps.length}
+          </StatusChip>
+        ) : null}
+      </div>
       {steps.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t("emptyPlanSteps")}</p>
       ) : (
-        <ol className="space-y-1 rounded-lg bg-muted/30 p-2">
-          {steps.map((step, i) => (
+        <ol className="space-y-1">
+          {steps.map((step) => (
             <li
               key={step.id}
-              className={cn(
-                "flex gap-2 rounded-md px-2 py-1.5 text-sm leading-snug",
-                i % 2 === 0 && "bg-muted/40",
-              )}
+              className="flex gap-2 rounded-md px-1 py-1.5 text-sm leading-snug"
             >
               <PlanStatusIcon status={step.status} />
               <span
                 className={cn(
                   "flex-1",
-                  // -2px optical alignment against the border-l-2 timeline rail (SPACE-1 documented)
+                  // -ml-[2px]: optical alignment against the border-l-2 rail (SPACE-1 documented).
                   step.status === "running" && "border-l-2 border-primary pl-3 -ml-[2px]",
                 )}
               >
@@ -37,7 +44,7 @@ export async function PlanCard({ steps }: { steps: PlanStep[] }) {
           ))}
         </ol>
       )}
-    </div>
+    </section>
   );
 }
 

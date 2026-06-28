@@ -11,8 +11,6 @@ import {
 const NOW = Date.parse("2026-06-20T00:00:00.000Z");
 
 const labels: ReducerLabels = {
-  deckFallbackTitle: "Presentation",
-  deckPreview: "preview",
   failureNotice: (reason) => `Task failed: ${reason}`,
   truncationNotice: "（输出因长度限制被截断）",
   askFallbackText: "请补充信息",
@@ -27,7 +25,7 @@ function seedTask(): Task {
     createdAt: "2026-06-20T00:00:00.000Z",
     updatedAt: "2026-06-20T00:00:00.000Z",
     messages: [],
-    artifacts: [],
+    deliverables: [],
     toolTraces: [],
   };
 }
@@ -134,10 +132,10 @@ describe("runtimeEventReducer — 0.3.0 block stream", () => {
     expect(s.task.pendingQuestion).toBeUndefined();
   });
 
-  it("stream_end completed marks the task complete and synthesizes one artifact", () => {
+  it("stream_end completed marks the task complete (no synthesized artifact)", () => {
     const s = run(initialTaskRunState(seedTask()), praxisMsg("m1", "assistant"), { type: "stream_end", task_status: "completed" } as StreamEvent);
     expect(s.task.status).toBe("completed");
-    expect(s.task.artifacts).toHaveLength(1);
+    expect(s.task.deliverables).toEqual([]);
     expect(s.task.completedAt).toBeDefined();
   });
 

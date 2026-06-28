@@ -18,7 +18,7 @@ const seed: Task[] = [
     createdAt: "t",
     updatedAt: "t",
     messages: [],
-    artifacts: [],
+    deliverables: [],
     toolTraces: [],
   },
 ];

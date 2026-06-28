@@ -31,8 +31,8 @@ vi.mock("@/lib/praxis/client", () => ({
   }),
 }));
 
-const sample = { id: "c-1", title: "x", description: "", status: "running" as const, createdAt: "t", updatedAt: "t", messages: [], artifacts: [], toolTraces: [] };
-const running = (id: string) => ({ id, title: id, description: "", status: "running" as const, createdAt: "t", updatedAt: "t", messages: [], artifacts: [], toolTraces: [] });
+const sample = { id: "c-1", title: "x", description: "", status: "running" as const, createdAt: "t", updatedAt: "t", messages: [], deliverables: [], toolTraces: [] };
+const running = (id: string) => ({ id, title: id, description: "", status: "running" as const, createdAt: "t", updatedAt: "t", messages: [], deliverables: [], toolTraces: [] });
 
 describe("cancelTask", () => {
   it("calls client.cancel and flips status to failed", async () => {

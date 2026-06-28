@@ -14,9 +14,13 @@ Forbidden: pretending mock objects equal persisted Rust event logs -- label mock
 
 Both workspace variants share the same outer chrome: `w-[380px]`, `border-l border-border`, `bg-workspace`, with a header bar displaying a panel icon + title.
 
+**Shared card shell.** Every section card inside both workspace variants uses a single shared surface: `rounded-lg border border-border bg-card p-3`. Section cards do not use `<Separator>` between them; vertical rhythm comes from `space-y-4 p-4` in the scroll container (SPACE-5, PRIN-2). Card headers use a `StatusChip` (from `packages/ui`) to surface compact progress or count summaries (IMPL-7).
+
 ## TaskWorkspace
 
-Displays artifacts and execution details for a single Task. Reuses existing `ArtifactsCard` and `ToolsCard` components.
+Displays the task's process timeline and deliverables for a single Task via a `Process | Deliverables` tab switcher. Component: `apps/web/src/components/workbench/workspace/task-workspace.tsx`.
+
+**Plan strip: deferred.** Praxis emits no plan/todo/step data today. A pinned plan strip would require a synthetic or empty state, which violates the no-fake discipline. The strip returns when praxis exposes a real plan data source (see ADR-0020 Amendment 2026-06).
 
 ### Layout
 
@@ -24,27 +28,33 @@ Displays artifacts and execution details for a single Task. Reuses existing `Art
 +-----------------------------------+
 | [icon] Workspace                  |
 |-----------------------------------|
-|  Artifacts                        |
-|  [artifact card] [artifact card]  |
-|  --------------------------------|
-|  Tool Traces                      |
-|  | (o) tool_1        1200 ms     |
-|  |     summary line              |
-|  | (o) tool_2                    |
-|  |     summary line              |
+|  [Process]  Deliverables (n)      |
+|-----------------------------------|
+|  (o) tool_use_1                   |  <- Process tab (default)
+|  (o) tool_use_2                   |
+|  (o) ask_user                     |
+|  (o) done                         |
 +-----------------------------------+
 ```
 
-The `(o)` glyph is a `StatusDot` hung on a vertical timeline rail (`border-l`).
+```
++-----------------------------------+
+| [icon] Workspace                  |
+|-----------------------------------|
+|   Process  [Deliverables (2)]     |
+|-----------------------------------|
+|  [image preview]                  |  <- Deliverables tab
+|  filename.png          12 KB      |
+|  +------+ [Download]              |
+|  report.pdf           340 KB      |
++-----------------------------------+
+```
 
-### Data blobs
+The active tab is highlighted with `bg-accent`; count badge on the Deliverables tab renders only when `deliverables.length > 0`.
 
-| Collection | Source | Responsibility |
-|-----------|--------|----------------|
-| `artifacts[]` | `Task.artifacts` | Cards summarizing textual/code/image/link payloads |
-| `toolTraces[]` | `Task.toolTraces` | Chronological tool summaries + durations |
+### Default tab
 
-Structural fields live in **`packages/shared/src/types.ts`** -- parity required.
+The workspace mounts with `tab = "process"` (no auto-switch). Tab state is local to the component; there is no persisted or URL-driven tab.
 
 ### Props
 
@@ -52,55 +62,70 @@ Structural fields live in **`packages/shared/src/types.ts`** -- parity required.
 interface TaskWorkspaceProps {
   locale: AshLocale;
   task: Task;
+  onSelectMessage?: (messageId: string) => void;
 }
 ```
 
-### ArtifactsCard
+`onSelectMessage` is called when the user clicks a timeline event that carries a `messageId`, scrolling the chat pane to that turn.
 
-Renders `Artifact[]` from the active Task. Each artifact displays `title`, `preview`, `kind`, and `updatedAt`. Interactions per `kind`:
+### Process tab (`ProcessTab`)
 
-| `kind` | Behavior |
-|--------|----------|
-| `document` | Stub open action toast |
-| `code` | Read-only monospace preview expansion |
-| `image` | Placeholder chrome |
-| `link` | `https?` navigates `_blank`; else copy fallback |
+Component: `apps/web/src/components/workbench/workspace/process-tab.tsx`.
 
-### ToolsCard
+Renders a **vertical timeline rail** (`border-l border-border`) derived from real runtime events via `processEvents(task.messages, { askToolName, done })` (`@ash/shared`). Each entry is a `ProcessEvent`:
 
-Renders `ToolTrace[]` from the active Task as a **vertical timeline rail**: a
-single `border-l border-border` hairline runs through the dot column, and each
-row hangs a `StatusDot` node on the rail (`-2px` optical alignment, matching
-`plan-card.tsx`). Orientation: **oldest top, newest bottom** (mirrors
-conversational reading). Changing orientation requires documenting rationale +
-migrating fixtures.
+| `ProcessEvent.kind` | Source | `StatusDot` variant |
+|---------------------|--------|---------------------|
+| `tool` | `tool_use`/`tool_result` content blocks | `success` / `running` / `error` |
+| `ask` | `ask_user` tool invocation | `idle` |
+| `done` | terminal `stream_end` (completed / failed) | `success` / `error` |
 
-One status language only — the rail dot — replacing the prior dot + badge +
-spinner trio. The dot maps domain status to the `StatusDot` visual variant:
+Each row renders a mono chip (`<code>`) showing `ev.label`. Rows with a `messageId` are clickable buttons that call `onSelectMessage(messageId)`, scrolling the chat to the corresponding turn (`data-message-id` attribute). Rows without a `messageId` (e.g. an in-flight running event) render as non-interactive (`disabled`, `cursor-default`).
 
-| `ToolTrace.status` | `StatusDot` variant | Token |
-|--------------------|---------------------|-------|
-| `success` | `success` | `bg-status-success` |
-| `running` | `running` | `bg-status-running` + `animate-pulse` |
-| `error` | `error` | `bg-destructive` |
+When `events.length === 0`, an empty-state paragraph is shown (`t("processEmpty")`).
 
-Each row is two lines:
+Orientation: **oldest top, newest bottom** (matches chat reading order). Changing orientation requires documenting rationale + migrating fixtures.
 
-- Line 1: mono tool chip (`<code>` `text-caption font-mono`) + right-aligned
-  `durationMs` (`text-caption tabular-nums text-muted-foreground`), shown only
-  when `durationMs` is defined.
-- Line 2: `summary` (`text-body-sm text-muted-foreground`).
+### Deliverables tab (`DeliverablesTab`)
 
-**Expandable detail.** When a trace carries optional `input` and/or `result`
-fields (added to the shared `ToolTrace` contract by the chat/SSE seam), the row
-renders a disclosure toggle. Expanding reveals the present field(s) in a mono
-`<pre>` block under `输入` / `结果` (Input / Result) labels. The toggle and
-labels are localized (`toolExpand` / `toolCollapse` / `toolInput` /
-`toolResult`). Rows without detail render no toggle.
+Component: `apps/web/src/components/workbench/workspace/deliverables-tab.tsx`.
+
+Renders real `source: agent_generated` `Attachment`s projected into `Deliverable[]` on `task.deliverables`. The synthesized `.pptx` placeholder artifact (`synthesizePptArtifact`) is **retired** — no fake deliverables.
+
+Each `Deliverable` renders via `DeliverableRow` (`deliverable-row.tsx`):
+
+| `Deliverable.kind` | Rendering |
+|--------------------|-----------|
+| `image` | Inline `<img>` preview (`max-h-48 object-cover`) inside a linked card; clicking opens the image in a new tab |
+| `file` (and other) | Icon + name + size + `<a download>` button |
+
+All URLs are resolved through `deliverableHref(uri)` (`apps/web/src/lib/praxis/deliverable-href.ts`), which routes praxis-relative paths through the `/api/praxis` BFF proxy so the session access token is attached. Non-praxis `https://` URLs pass through unchanged; absolute praxis URLs (whose pathname starts with `/v1/tasks/`) are reduced to the `/api/praxis` path and routed through the same BFF proxy.
+
+**Rich in-app preview (tables/charts/slides/docs) is sub-project B**, gated on a richer `task_outputs` contract (sub-project D).
+
+When `deliverables.length === 0`, an empty-state paragraph is shown (`t("deliverablesEmpty")`).
+
+**Data timing — `/history` catch-up.** Praxis carries `agent_generated` attachments only on `/history` `Message`s, not on the live SSE stream (`message_start` opens an empty envelope). So the provider (`task-run-provider.tsx`) pulls `/history` once at the points where attachments become available: (1) immediately after a run reaches a terminal status (`runStream`), and (2) on a terminal-task cold-load with no messages yet (`attach`). Both **preserve the streamed terminal status** — they strip any re-inferred `pendingQuestion` and keep `completed`/`failed`, rather than letting `historyToTask` re-infer `awaiting_input` from an ask block that was resolved out-of-band (the answer endpoint, not a `tool_result`). The shared `fetchHistoryTask` helper is reused by both paths and by the non-terminal re-subscribe. The deliverable projection is parity-correct given identical message input (`deliverablesFromMessages`), covered by `projection-parity.test.ts` and the `task-run-provider` "surfaces deliverables from /history after a run completes" test.
+
+### Count badge
+
+The Deliverables tab button renders a `StatusChip` (variant `success`) showing `deliverables.length` when at least one deliverable is present. It is absent when the list is empty.
+
+### PlanCard (shared — used by ConversationWorkspace only)
+
+`PlanCard` (`apps/web/src/components/workbench/workspace/plan-card.tsx`) renders `PlanStep[]` as an ordered checklist with a progress `StatusChip` and a 2px left accent rail on the running step. It is **not used in TaskWorkspace** (plan data is deferred). It is retained as a shared component used by `ConversationWorkspace` (see below).
+
+### ToolsCard (shared — used by ConversationWorkspace only)
+
+`ToolsCard` renders `ToolTrace[]` as a vertical timeline rail with expandable `input`/`result` detail. It is **not used in TaskWorkspace**; tool events surface through `ProcessTab` instead. Retained as a shared component for `ConversationWorkspace`.
+
+### ConversationWorkspace (legacy `/c` route consolidation)
+
+The former `workbench-workspace.tsx` container for `/c/[conversationId]` is **consolidated** into a thin `ConversationWorkspace` component co-located in `workbench-shell.tsx`. It renders `PlanCard` + `ToolsCard` only (no tab switcher, no deliverables, no synthesized artifacts). It is not maintained as an independent feature path; it exists solely to preserve the legacy `/c` route while TaskWorkspace is the primary surface.
 
 ## ProjectWorkspace
 
-Displays project-level context: materials, tasks, artifacts, and settings. Reuses `ArtifactsCard` from TaskWorkspace, plus project-specific cards.
+Displays project-level context: materials, tasks, artifacts, and settings. Uses `ArtifactsCard` (a shared workspace component) plus project-specific cards.
 
 ### Layout
 
@@ -152,10 +177,12 @@ interface ProjectWorkspaceProps {
 |------|-----------|---------|
 | **Materials** | `MaterialsCard` | `ProjectMaterial[]` -- file name, kind (`file` / `connector`), size, addedAt. Upload/delete actions. |
 | **Tasks** | `ProjectTasksCard` | `Task[]` -- title, status dot (same indicators as Sidebar), navigates to `/app/task/[taskId]`. New Task action. |
-| **Artifacts** | `ArtifactsCard` | `Artifact[]` -- same rendering as TaskWorkspace ArtifactsCard. Consolidated from all project tasks. |
+| **Artifacts** | `ArtifactsCard` | `Artifact[]` -- shared workspace component; consolidated outputs from all project tasks. |
 | **Project Settings** | `ProjectSettingsCard` | Name, description, connector configuration. Editable fields. |
 
-Sections are separated by `<Separator />` components and wrapped in a `ScrollArea` with `space-y-4 p-4` padding.
+Sections are wrapped in a `ScrollArea` with `space-y-4 p-4` padding. `<Separator />` dividers between cards are removed; the card shell border (`border border-border`) provides sufficient surface separation without a redundant rule (SPACE-5, PRIN-2). All four project cards (`MaterialsCard`, `ProjectTasksCard`, `ArtifactsCard`, `ProjectSettingsCard`) share the `rounded-lg border border-border bg-card p-3` shell; note that `ProjectSettingsCard` additionally contains an inner `space-y-2` container which is internal to the card and not part of the shared shell.
+
+**Deferred to sub-project A:** real deliverable preview/download (replacing the placeholder stub action), and connector-fetched material preview.
 
 ## Shared conventions
 
@@ -165,7 +192,7 @@ Collapsing the Workspace entirely yields a floating re-open control (FAB) so the
 
 ### Vertical card stacking
 
-Both workspace variants use vertical stacked cards within a scrollable area. Optional tabs (`plan|tools|artifacts`) are permissible -- if adopted, annotate actual tab ids here to avoid ambiguity.
+Both workspace variants use vertical stacked cards within a scrollable area. `TaskWorkspace` uses tabs; the active tab ids are `process` and `deliverables` (panel ids `panel-process` / `panel-deliverables`). `ProjectWorkspace` uses vertical stacked cards with no tab switcher.
 
 ### Status pigments (badges)
 
@@ -193,10 +220,10 @@ In Phase 1, data flows from `@ash/shared` mocks via server-side fetchers. Future
 
 ### Live task runs (ADR-0011)
 
-For a Task started in-session, `TaskWorkspace` renders the **live** `Task` from `TaskRunProvider`, not a server mock. The `Task` is produced by folding the praxis **0.3.0 `StreamEvent`** block stream through `runtimeEventReducer` (ADR-0018):
+For a Task started in-session, `TaskWorkspace` renders the **live** `Task` from `TaskRunProvider`, not a server mock. The `Task` is produced by folding the praxis **0.4.0 `StreamEvent`** block stream through `runtimeEventReducer` (ADR-0018):
 
-- `toolTraces[]` are **derived from the message blocks** (`tracesFromBlocks`): a `tool_use` block opens a running trace keyed by `callId`, and the matching `tool_result` block (correlated by `callId`, possibly in a later message) resolves it to `success`/`error` with result detail. Scanning blocks makes the result's message-framing irrelevant and dedupes by `callId`, so a `/history` re-attach cannot duplicate a row. (`durationMs` is not computed in this slice — praxis carries no per-call timing yet.)
-- `artifacts[]` -- praxis emits no artifact event today (its `task_outputs` is deferred), so the reducer **synthesizes a placeholder `.pptx` `document` artifact** on terminal `stream_end{task_status: "completed"}`. This is a provisional seam (`TODO(ash)`), replaced by a real mapping when praxis ships outputs. Label it as a mock-equivalent per the Forbidden rule above.
+- `messages[]` accumulate in chronological order; `processEvents()` derives `ProcessEvent[]` from them at render time — no separate `toolTraces[]` field is consumed by `TaskWorkspace` directly.
+- `deliverables[]` are projected from `source: agent_generated` `Attachment`s on history messages. Praxis carries no `task_outputs` event today; the former synthesized `.pptx` placeholder (`synthesizePptArtifact`) is **retired**. `deliverables[]` is empty for tasks with no `agent_generated` attachments. Because attachments arrive only via `/history` (not the live stream), the provider runs a status-preserving `/history` catch-up after a run completes and on terminal cold-load — see the Deliverables-tab section.
 
 ## Future extensions
 

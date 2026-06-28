@@ -28,6 +28,8 @@ export interface Message {
    * appending a duplicate when the persisted turn is folded back in.
    */
   clientId?: string;
+  /** Agent/user file attachments on this message envelope (praxis Attachment). */
+  attachments?: AshAttachment[];
 }
 
 /** Concatenate the text of a message's text blocks (ignores thinking/tool/image). */
@@ -36,6 +38,45 @@ export function textOf(message: Message): string {
     .filter((b): b is Extract<AshContentBlock, { kind: "text" }> => b.kind === "text")
     .map((b) => b.text)
     .join("");
+}
+
+export type AttachmentKind = "file" | "image";
+export type AttachmentSource = "user_upload" | "agent_generated";
+
+/** A file/image attached to a message (mirrors praxis Attachment, decoupled from wire types). */
+export interface AshAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  uri: string;
+  kind: AttachmentKind;
+  source: AttachmentSource;
+  extractedText?: string;
+}
+
+/** An agent-produced task output, projected from an agent_generated AshAttachment. */
+export interface Deliverable {
+  id: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  uri: string;
+  kind: AttachmentKind;
+}
+
+export type ProcessEventKind = "tool" | "ask" | "done";
+export type ProcessEventStatus = "running" | "success" | "error" | "info";
+
+/** A normalized, navigable timeline entry derived from message blocks (no new contract). */
+export interface ProcessEvent {
+  id: string;
+  kind: ProcessEventKind;
+  label: string;
+  status: ProcessEventStatus;
+  at: string;
+  /** Originating message id, for jump-to-turn. */
+  messageId?: string;
 }
 
 export type ConversationStatus = "idle" | "pending" | "running" | "awaiting_input" | "completed" | "failed";
@@ -114,7 +155,7 @@ export interface Task {
   completedAt?: string;
   projectId?: string; // undefined for independent tasks
   messages: Message[];
-  artifacts: Artifact[];
+  deliverables: Deliverable[];
   toolTraces: ToolTrace[];
   /** Present iff status === "awaiting_input". */
   pendingQuestion?: PendingQuestion;

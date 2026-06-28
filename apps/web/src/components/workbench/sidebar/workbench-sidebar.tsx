@@ -179,7 +179,7 @@ export function WorkbenchSidebar({
       <div ref={expandedContentRef} className="flex flex-1 flex-col">
 
         <div className="space-y-2 px-3 py-3">
-          <Button variant="pill" size="sm" className="w-full justify-center gap-2" asChild>
+          <Button variant="default" size="sm" className="w-full justify-center gap-2" asChild>
             <Link href="/app">
               <Plus className="size-4" aria-hidden />
               {t("newTask")}

@@ -30,3 +30,6 @@ next-env.d.ts
 
 # worktrees
 .worktrees
+
+# Visual brainstorming companion (superpowers)
+.superpowers/
