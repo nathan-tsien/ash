@@ -1,6 +1,5 @@
 import type { AshLocale, Conversation } from "@ash/shared";
 import { ScrollArea } from "@ash/ui/scroll-area";
-import { Separator } from "@ash/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { ArtifactsCard } from "./artifacts-card";
@@ -24,9 +23,7 @@ export async function WorkbenchWorkspace({ locale, active }: WorkbenchWorkspaceP
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
           <PlanCard steps={active.plan} />
-          <Separator />
           <ToolsCard traces={active.toolTraces} />
-          <Separator />
           <ArtifactsCard locale={locale} artifacts={active.artifacts} />
         </div>
       </ScrollArea>

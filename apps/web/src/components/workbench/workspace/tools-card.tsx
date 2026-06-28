@@ -11,22 +11,20 @@ export function ToolsCard({ traces }: { traces: ToolTrace[] }) {
   const t = useTranslations("Workbench");
 
   return (
-    <div className="space-y-2">
-      <h2 className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
+    <section className="rounded-lg border border-border bg-card p-3">
+      <h2 className="mb-2.5 text-label font-semibold uppercase tracking-wide text-muted-foreground">
         {t("toolsHeading")}
       </h2>
       {traces.length === 0 ? (
         <p className="text-body-sm text-muted-foreground">{t("emptyTools")}</p>
       ) : (
-        // Timeline rail: a single vertical hairline runs through the dot column.
-        // Oldest top, newest bottom (mirrors conversational reading).
-        <ol className="rounded-lg bg-muted/30 p-3">
+        <ol className="ml-1">
           {traces.map((trace, i) => (
             <ToolRow key={trace.id} trace={trace} last={i === traces.length - 1} />
           ))}
         </ol>
       )}
-    </div>
+    </section>
   );
 }
 
