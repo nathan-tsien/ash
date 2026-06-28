@@ -12,7 +12,8 @@
     "sync:praxis": "bash scripts/sync-praxis-contract.sh",
     "sync:praxis:check": "bash scripts/sync-praxis-contract.sh --check",
     "gen:praxis": "openapi-typescript src/lib/praxis/contract/praxis.yaml -o src/lib/praxis/generated.ts",
-    "gen:praxis:check": "pnpm gen:praxis && git diff --exit-code -- src/lib/praxis/generated.ts"
+    "gen:praxis:check": "pnpm gen:praxis && git diff --exit-code -- src/lib/praxis/generated.ts",
+    "contrast": "node scripts/check-contrast.mjs"
   },
   "dependencies": {
     "@ash/iam-client": "workspace:*",
