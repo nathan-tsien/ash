@@ -97,17 +97,16 @@ Unchanged: all `--status-*` triplets, `--destructive*`, `--ember*`, radius scale
 - **User turn:** right-aligned **ink bubble** — `bg-primary text-primary-foreground`, radius `12px 12px 4px 12px`, max-width ~72%. (Replaces today's light `secondary` bubble.)
 - **Assistant turn:** full-width prose with a subtle **left hairline accent** (`border-l` in `--border`) and a small uppercase **role label** ("Assistant"). Prose keeps react-markdown + remark-gfm + rehype-highlight.
 - **Turn rhythm:** hairline **divider** between turns instead of relying on bubble gaps alone; consistent vertical spacing on the existing spacing scale.
-- **Structured data inset:** when the assistant emits a compact metric/figure line, render it in a `--muted`/`--workspace` mono inset card (read-affordance for the data/BI/report use cases) rather than inline prose. (Heuristic/markup-driven; no new data contract.)
-- **Composer:** rounded (`--radius-lg`/`xl`), subtle 1px elevation, a tool-affordance row (attach, etc. — placeholders honoring UX-9 icon scale) above the send control; ink send button. Keeps `Enter` send / `Shift+Enter` newline (IA-5) and IME safety.
+- **Composer:** keep the rounded container + focus-within ring; promote the send control to the **ink** treatment (`variant="default"`) for clearer primary emphasis. Keeps `Enter` send / `Shift+Enter` newline (IA-5) and IME safety.
+- **Deferred (needs data/wiring, → sub-project A):** the structured-data inset (needs a render hint the model/contract does not emit today) and the composer tool/attach affordance row (needs attachment upload wiring). Markdown tables/code — the existing data-bearing constructs — are styled cleanly in this pass; a bespoke inset waits for A.
 - Entrances stay on the existing `messageEntrance` preset / MOTION scale.
 
 ### Sidebar (`apps/web/src/components/workbench/sidebar/`)
 
-- **Search** input (existing) restyled to the new border/radius rhythm.
-- **Primary CTA:** ink **"新建任务"** pill (`bg-primary`, `rounded-full`).
-- **Section labels:** small uppercase muted labels grouping rows (e.g. 进行中 / 最近) — structure-from-typography per PRIN-4.
-- **Rows:** status **dot** (status tokens) + title; hover `--sidebar-accent`; **active** = `--sidebar-rail` ink left rail (2px) + `--sidebar-accent` bg + weight 600. Density on `body-sm`.
-- Status dot color mapping reuses the status tokens (running/success/warning) + a neutral idle (`--muted-foreground`/`border`).
+Planning note: most of this vocabulary **already exists** — search row + cmd-K, section labels, `StatusDot` rows with settled chips, and the `--sidebar-rail` ink active rail are all implemented in `workbench-sidebar.tsx` / `task-section.tsx` / `sidebar-row.tsx`. The sidebar therefore largely inherits the change for free via the palette retune. The one real delta:
+
+- **Primary CTA emphasis:** the "新建任务" button is currently `variant="pill"` (card-surface). Promote it to the **ink** treatment (`variant="default"` → `bg-primary text-primary-foreground`) so the primary action reads as primary (PRIN-4). Applies to the expanded CTA in `workbench-sidebar.tsx`.
+- Everything else (rows, dots, active rail, section labels) is verified visually under the new palette; no structural change.
 
 ### Workspace (`apps/web/src/components/workbench/workspace/`) — visual language only
 
@@ -117,7 +116,7 @@ Unchanged: all `--status-*` triplets, `--destructive*`, `--ember*`, radius scale
 - **Status chip:** small pill using a status `*-soft` bg + `*-foreground` text (e.g. "进行中 3/5", "2"). Replaces ad-hoc badges; AA-checked.
 - **Plan card:** checklist with checkbox markers — done (filled success), in-progress (running outline), pending (muted outline); done labels muted + strikethrough.
 - **Tool timeline (tools card):** vertical rail with **status nodes** (running = running token ring, success/error accordingly), tool name + duration on `caption`/`label`, existing expandable input/result disclosure restyled.
-- **Deliverable card (artifacts card):** file-style rows — kind icon tile, name, meta (size · time / "生成中…"), trailing **download** affordance for ready items. Renders against the existing artifact model; forward-compatible with A's attachment binding.
+- **Deliverable card (artifacts card):** restyle the existing artifact rows into the shared card shell (icon tile, title, preview, time) and add a **count chip** in the header (derivable from the existing array — real data). Existing click behavior is preserved (link opens; other kinds keep their current stub). A real **download** affordance + previews are deferred to sub-project A (no real artifact URI exists yet — adding one now would be a fake control).
 
 ### Cross-cutting
 
