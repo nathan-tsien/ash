@@ -26,7 +26,7 @@ export function DeliverableRow({
       <button
         type="button"
         onClick={() => onOpen?.(deliverable)}
-        aria-label={t("deliverableOpen")}
+        aria-label={`${t("deliverableOpen")}: ${deliverable.name}`}
         className="block w-full overflow-hidden rounded-lg border border-border bg-card text-left"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -47,7 +47,7 @@ export function DeliverableRow({
         type="button"
         onClick={() => onOpen?.(deliverable)}
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
-        aria-label={t("deliverableOpen")}
+        aria-label={`${t("deliverableOpen")}: ${deliverable.name}`}
       >
         <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
           <FileText className="size-4 text-muted-foreground" aria-hidden />

@@ -16,7 +16,14 @@ export function CodeViewer({ deliverable }: { deliverable: Deliverable }) {
   const { text, loading, error } = useDeliverableText(deliverable.uri);
   if (loading) return <p className="py-12 text-center text-body-sm text-muted-foreground">{t("viewerLoading")}</p>;
   if (error) return <p className="py-12 text-center text-body-sm text-muted-foreground">{t(error === "too-large" ? "viewerTooLarge" : "viewerError")}</p>;
-  const fence = "```" + lang(deliverable.name) + "\n" + (text ?? "") + "\n```";
+  const body = text ?? "";
+  // Use an opening fence longer than the longest backtick run in the content so
+  // a ``` inside the file can never close the fence early and spill the tail into
+  // markdown rendering (rendering-integrity, e.g. agent-authored snippets).
+  const runs = body.match(/`+/g);
+  const fenceLen = Math.max(3, (runs ? Math.max(...runs.map((r) => r.length)) : 0) + 1);
+  const f = "`".repeat(fenceLen);
+  const fence = `${f}${lang(deliverable.name)}\n${body}\n${f}`;
   return (
     <div className="prose-chat max-h-[70vh] overflow-auto text-caption">
       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{fence}</ReactMarkdown>
