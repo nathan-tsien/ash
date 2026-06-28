@@ -395,7 +395,8 @@
     "cancelTask": "Cancel task",
     "deliverablesEmpty": "No deliverables yet",
     "deliverableDownload": "Download",
-    "deliverableOpen": "Open"
+    "deliverableOpen": "Open",
+    "processEmpty": "No activity yet"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

@@ -395,7 +395,8 @@
     "cancelTask": "取消任务",
     "deliverablesEmpty": "暂无交付物",
     "deliverableDownload": "下载",
-    "deliverableOpen": "打开"
+    "deliverableOpen": "打开",
+    "processEmpty": "暂无活动"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
