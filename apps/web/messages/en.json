@@ -392,7 +392,10 @@
     "loadMore": "Load more",
     "tasksEmpty": "No tasks yet",
     "tasksError": "Failed to load, click to retry",
-    "cancelTask": "Cancel task"
+    "cancelTask": "Cancel task",
+    "deliverablesEmpty": "No deliverables yet",
+    "deliverableDownload": "Download",
+    "deliverableOpen": "Open"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

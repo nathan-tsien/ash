@@ -392,7 +392,10 @@
     "loadMore": "加载更多",
     "tasksEmpty": "还没有任务",
     "tasksError": "加载失败，点击重试",
-    "cancelTask": "取消任务"
+    "cancelTask": "取消任务",
+    "deliverablesEmpty": "暂无交付物",
+    "deliverableDownload": "下载",
+    "deliverableOpen": "打开"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
