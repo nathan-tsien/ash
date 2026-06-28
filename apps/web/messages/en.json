@@ -396,11 +396,17 @@
     "deliverablesEmpty": "No deliverables yet",
     "deliverableDownload": "Download",
     "deliverableOpen": "Open",
+    "deliverableClose": "Close",
     "processEmpty": "No activity yet",
     "tabProcess": "Process",
     "tabDeliverables": "Deliverables",
     "processDone": "Completed",
-    "processFailed": "Failed"
+    "processFailed": "Failed",
+    "viewerLoading": "Loading…",
+    "viewerError": "Couldn't load preview",
+    "viewerTooLarge": "File too large to preview",
+    "viewerNoPreview": "No in-app preview for this file",
+    "viewerOpenInNewTab": "Open in new tab"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

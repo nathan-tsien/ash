@@ -111,6 +111,28 @@ When `deliverables.length === 0`, an empty-state paragraph is shown (`t("deliver
 
 The Deliverables tab button renders a `StatusChip` (variant `success`) showing `deliverables.length` when at least one deliverable is present. It is absent when the list is empty.
 
+### Deliverable canvas (`DeliverableCanvas`) — sub-project B
+
+Clicking a deliverable row opens an in-app **canvas** (`@ash/ui` `Dialog`, controlled by the
+Deliverables tab's `selected` state) that renders the deliverable by MIME type — no new browser
+tab for previewable types. Component: `apps/web/src/components/workbench/workspace/deliverable-canvas.tsx`;
+viewers under `deliverable-viewers/`.
+
+- **Viewer registry** `pickDeliverableViewer(mimeType, name)` → `image | pdf | markdown | code | text | none`
+  (MIME first, file-extension fallback).
+- **Viewers:** image (`<img>`), pdf (`<iframe>`), markdown (react-markdown + remark-gfm +
+  rehype-highlight, `prose-chat` styles), code (fenced + highlight, language from extension),
+  text (`<pre>`), and `NoPreview` (message + download) for unsupported types.
+- **Text fetch:** `useDeliverableText(uri)` fetches text-family content through the `/api/praxis`
+  BFF proxy (cookie auth), capped at 512 KB (over-cap → "too large, download instead"); aborts on
+  unmount/uri change. Image/PDF stream directly from the proxied URL (no fetch hook).
+- **Actions:** every canvas offers **download** and **open-in-new-tab**; the row keeps its own
+  download action (with `stopPropagation` so it does not also open the canvas). All URLs resolve
+  through `deliverableHref` (never raw `uri`).
+- **Scope:** B1 covers file/MIME deliverables. Structured previews (data tables, charts, slide
+  decks) are **B2**, gated on sub-project D (typed `task_outputs`) — see
+  `docs/superpowers/specs/2026-06-28-deliverable-canvas-B2-stub.md`.
+
 ### PlanCard (shared — used by ConversationWorkspace only)
 
 `PlanCard` (`apps/web/src/components/workbench/workspace/plan-card.tsx`) renders `PlanStep[]` as an ordered checklist with a progress `StatusChip` and a 2px left accent rail on the running step. It is **not used in TaskWorkspace** (plan data is deferred). It is retained as a shared component used by `ConversationWorkspace` (see below).
