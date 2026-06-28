@@ -14,7 +14,7 @@ Forbidden: pretending mock objects equal persisted Rust event logs -- label mock
 
 Both workspace variants share the same outer chrome: `w-[380px]`, `border-l border-border`, `bg-workspace`, with a header bar displaying a panel icon + title.
 
-**Shared card shell.** Every section card inside both workspace variants uses a single shared surface: `rounded-lg border border-border bg-card p-3`. Section cards do not use `<Separator>` between them; vertical rhythm comes from `space-y-3` / `gap-3` in the scroll container (SPACE-5, PRIN-2). Card headers use a `StatusChip` (from `packages/ui`) to surface compact progress or count summaries (IMPL-7).
+**Shared card shell.** Every section card inside both workspace variants uses a single shared surface: `rounded-lg border border-border bg-card p-3`. Section cards do not use `<Separator>` between them; vertical rhythm comes from `space-y-4 p-4` in the scroll container (SPACE-5, PRIN-2). Card headers use a `StatusChip` (from `packages/ui`) to surface compact progress or count summaries (IMPL-7).
 
 ## TaskWorkspace
 
@@ -169,7 +169,7 @@ interface ProjectWorkspaceProps {
 | **Artifacts** | `ArtifactsCard` | `Artifact[]` -- same rendering as TaskWorkspace ArtifactsCard. Consolidated from all project tasks. |
 | **Project Settings** | `ProjectSettingsCard` | Name, description, connector configuration. Editable fields. |
 
-Sections are wrapped in a `ScrollArea` with `space-y-3 p-3` padding. `<Separator />` dividers between cards are removed; the card shell border (`border border-border`) provides sufficient surface separation without a redundant rule (SPACE-5, PRIN-2).
+Sections are wrapped in a `ScrollArea` with `space-y-4 p-4` padding. `<Separator />` dividers between cards are removed; the card shell border (`border border-border`) provides sufficient surface separation without a redundant rule (SPACE-5, PRIN-2). All four project cards (`MaterialsCard`, `ProjectTasksCard`, `ArtifactsCard`, `ProjectSettingsCard`) share the `rounded-lg border border-border bg-card p-3` shell; note that `ProjectSettingsCard` additionally contains an inner `space-y-2` container which is internal to the card and not part of the shared shell.
 
 **Deferred to sub-project A:** real deliverable preview/download (replacing the placeholder stub action), and connector-fetched material preview.
 

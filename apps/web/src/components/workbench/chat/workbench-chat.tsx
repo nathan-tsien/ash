@@ -260,12 +260,12 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
               ))
             )}
             {pendingQuestion && onAnswer && (
-              <div className="message-bubble">
+              <div className={cn("message-bubble", "mt-4")}>
                 <AnswerPrompt question={pendingQuestion} onAnswer={onAnswer} />
               </div>
             )}
             {showThinkingIndicator && (
-              <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-label font-normal text-muted-foreground">
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-label font-normal text-muted-foreground">
                 <Loader2
                   ref={(el) => {
                     if (el) {

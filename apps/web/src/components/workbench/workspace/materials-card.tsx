@@ -13,7 +13,7 @@ export function MaterialsCard({ materials }: MaterialsCardProps) {
   const t = useTranslations("Workbench");
 
   return (
-    <div>
+    <div className="rounded-lg border border-border bg-card p-3">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-medium">{t("materialsTitle")}</h3>
         <Button variant="ghost" size="sm" className="gap-1.5 text-xs">

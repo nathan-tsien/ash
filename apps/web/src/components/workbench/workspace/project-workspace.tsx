@@ -2,7 +2,6 @@
 
 import type { AshLocale, Project } from "@ash/shared";
 import { ScrollArea } from "@ash/ui/scroll-area";
-import { Separator } from "@ash/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ArtifactsCard } from "./artifacts-card";
@@ -27,11 +26,8 @@ export function ProjectWorkspace({ locale, project }: ProjectWorkspaceProps) {
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
           <MaterialsCard materials={project.materials} />
-          <Separator />
           <ProjectTasksCard tasks={project.tasks} />
-          <Separator />
           <ArtifactsCard locale={locale} artifacts={project.artifacts} />
-          <Separator />
           <ProjectSettingsCard project={project} />
         </div>
       </ScrollArea>

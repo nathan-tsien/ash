@@ -2,7 +2,6 @@
 
 import type { AshLocale, Task } from "@ash/shared";
 import { ScrollArea } from "@ash/ui/scroll-area";
-import { Separator } from "@ash/ui/separator";
 import { ArrowLeftRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ArtifactsCard } from "./artifacts-card";
@@ -25,7 +24,6 @@ export function TaskWorkspace({ locale, task }: TaskWorkspaceProps) {
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
           <ArtifactsCard locale={locale} artifacts={task.artifacts} />
-          <Separator />
           <ToolsCard traces={task.toolTraces} />
         </div>
       </ScrollArea>
