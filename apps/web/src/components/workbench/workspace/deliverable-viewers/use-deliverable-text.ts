@@ -13,10 +13,13 @@ export function useDeliverableText(uri: string): { text: string | null; loading:
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setText(null);
-    setError(null);
+    // Reset + fetch inside the async callback so no setState runs synchronously in
+    // the effect body (react-hooks: avoid cascading renders). Behavior is the same
+    // — the reset still applies on mount and whenever `uri` changes.
     (async () => {
+      setLoading(true);
+      setText(null);
+      setError(null);
       try {
         const res = await fetch(deliverableHref(uri), { signal: controller.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
