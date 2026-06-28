@@ -396,7 +396,10 @@
     "deliverablesEmpty": "No deliverables yet",
     "deliverableDownload": "Download",
     "deliverableOpen": "Open",
-    "processEmpty": "No activity yet"
+    "processEmpty": "No activity yet",
+    "tabProcess": "Process",
+    "tabDeliverables": "Deliverables",
+    "processDone": "Completed"
   },
   "CommandPalette": {
     "placeholder": "Type a command…",

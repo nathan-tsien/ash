@@ -396,7 +396,10 @@
     "deliverablesEmpty": "暂无交付物",
     "deliverableDownload": "下载",
     "deliverableOpen": "打开",
-    "processEmpty": "暂无活动"
+    "processEmpty": "暂无活动",
+    "tabProcess": "过程",
+    "tabDeliverables": "交付物",
+    "processDone": "已完成"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
