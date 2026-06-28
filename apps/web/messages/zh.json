@@ -400,7 +400,12 @@
     "tabProcess": "过程",
     "tabDeliverables": "交付物",
     "processDone": "已完成",
-    "processFailed": "失败"
+    "processFailed": "失败",
+    "viewerLoading": "加载中…",
+    "viewerError": "无法加载预览",
+    "viewerTooLarge": "文件过大，无法预览",
+    "viewerNoPreview": "此文件暂不支持应用内预览",
+    "viewerOpenInNewTab": "在新标签页打开"
   },
   "CommandPalette": {
     "placeholder": "输入命令…",
