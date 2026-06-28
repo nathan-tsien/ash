@@ -77,7 +77,8 @@ Topology is unchanged: still three panes; the plan stays in the workspace; the t
   (`ProcessEvent`, `Deliverable`); attachment `uri` access through the BFF proxy must be
   verified (a download/stream route may be needed) — called out as a risk in the A spec.
 - **Given up:** the always-everything-visible stacked layout (Process and Deliverables are now
-  behind a tab each); mitigated by the always-visible pinned plan.
+  behind a tab each); mitigated by defaulting to the Process tab on mount (see Amendment
+  2026-06: the pinned plan strip is deferred until praxis exposes real plan data).
 - **Deferred:** rich in-app deliverable previews (sub-project B) and the typed `task_outputs`
   contract (sub-project D). This ADR is implemented by **sub-project A**
   (`docs/superpowers/specs/2026-06-28-workspace-reconception-A-spec.md`).

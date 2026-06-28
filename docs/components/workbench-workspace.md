@@ -99,7 +99,7 @@ Each `Deliverable` renders via `DeliverableRow` (`deliverable-row.tsx`):
 | `image` | Inline `<img>` preview (`max-h-48 object-cover`) inside a linked card; clicking opens the image in a new tab |
 | `file` (and other) | Icon + name + size + `<a download>` button |
 
-All URLs are resolved through `deliverableHref(uri)` (`apps/web/src/lib/praxis/deliverable-href.ts`), which routes praxis-relative paths through the `/api/praxis` BFF proxy so the session access token is attached. Genuinely external URLs (`https://`) are passed through unchanged.
+All URLs are resolved through `deliverableHref(uri)` (`apps/web/src/lib/praxis/deliverable-href.ts`), which routes praxis-relative paths through the `/api/praxis` BFF proxy so the session access token is attached. Non-praxis `https://` URLs pass through unchanged; absolute praxis URLs (whose pathname starts with `/v1/tasks/`) are reduced to the `/api/praxis` path and routed through the same BFF proxy.
 
 **Rich in-app preview (tables/charts/slides/docs) is sub-project B**, gated on a richer `task_outputs` contract (sub-project D).
 
@@ -123,7 +123,7 @@ The former `workbench-workspace.tsx` container for `/c/[conversationId]` is **co
 
 ## ProjectWorkspace
 
-Displays project-level context: materials, tasks, artifacts, and settings. Reuses `ArtifactsCard` from TaskWorkspace, plus project-specific cards.
+Displays project-level context: materials, tasks, artifacts, and settings. Uses `ArtifactsCard` (a shared workspace component) plus project-specific cards.
 
 ### Layout
 
@@ -175,7 +175,7 @@ interface ProjectWorkspaceProps {
 |------|-----------|---------|
 | **Materials** | `MaterialsCard` | `ProjectMaterial[]` -- file name, kind (`file` / `connector`), size, addedAt. Upload/delete actions. |
 | **Tasks** | `ProjectTasksCard` | `Task[]` -- title, status dot (same indicators as Sidebar), navigates to `/app/task/[taskId]`. New Task action. |
-| **Artifacts** | `ArtifactsCard` | `Artifact[]` -- same rendering as TaskWorkspace ArtifactsCard. Consolidated from all project tasks. |
+| **Artifacts** | `ArtifactsCard` | `Artifact[]` -- shared workspace component; consolidated outputs from all project tasks. |
 | **Project Settings** | `ProjectSettingsCard` | Name, description, connector configuration. Editable fields. |
 
 Sections are wrapped in a `ScrollArea` with `space-y-4 p-4` padding. `<Separator />` dividers between cards are removed; the card shell border (`border border-border`) provides sufficient surface separation without a redundant rule (SPACE-5, PRIN-2). All four project cards (`MaterialsCard`, `ProjectTasksCard`, `ArtifactsCard`, `ProjectSettingsCard`) share the `rounded-lg border border-border bg-card p-3` shell; note that `ProjectSettingsCard` additionally contains an inner `space-y-2` container which is internal to the card and not part of the shared shell.
