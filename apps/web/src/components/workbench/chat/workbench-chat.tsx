@@ -2,6 +2,7 @@
 
 import type { AshLocale, Conversation, Message, PendingQuestion } from "@ash/shared";
 import { Button } from "@ash/ui/button";
+import { cn } from "@ash/ui/lib/utils";
 import { ScrollArea } from "@ash/ui/scroll-area";
 import {
   Tooltip,
@@ -231,7 +232,7 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
         <ScrollArea className="min-h-0 flex-1">
           <div
             ref={containerRef}
-            className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6"
+            className="mx-auto flex w-full max-w-3xl flex-col gap-0 px-4 py-6"
             role="log"
             aria-live="polite"
             aria-relevant="additions"
@@ -245,8 +246,15 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
                 <p className="max-w-sm text-body-sm font-normal leading-relaxed text-muted-foreground">{t("emptyChatBody")}</p>
               </div>
             ) : (
-              messages.map((m) => (
-                <div key={m.id} data-message-id={m.id} className="message-bubble">
+              messages.map((m, i) => (
+                <div
+                  key={m.id}
+                  data-message-id={m.id}
+                  className={cn(
+                    "message-bubble",
+                    i > 0 && "mt-4 border-t border-border/60 pt-4",
+                  )}
+                >
                   <MessageBubble locale={locale} message={m} />
                 </div>
               ))

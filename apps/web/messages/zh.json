@@ -345,6 +345,7 @@
     "reasoningDone": "已思考 {n} 秒",
     "messageToolCall": "调用了 {tool}",
     "messageImage": "[图片]",
+    "roleAssistant": "助手",
     "scrollToBottom": "回到底部",
     "tasksSection": "任务",
     "projectsSection": "项目",

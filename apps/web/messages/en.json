@@ -345,6 +345,7 @@
     "reasoningDone": "Thought for {n}s",
     "messageToolCall": "Called {tool}",
     "messageImage": "[image]",
+    "roleAssistant": "Assistant",
     "scrollToBottom": "Scroll to bottom",
     "tasksSection": "Tasks",
     "projectsSection": "Projects",

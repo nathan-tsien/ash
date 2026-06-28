@@ -129,13 +129,18 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
             isUser ? "max-w-[80%] text-right" : "w-full",
           )}
         >
+          {!isUser && (
+            <p className="mb-1 text-caption font-medium uppercase tracking-wide text-muted-foreground">
+              {t("roleAssistant")}
+            </p>
+          )}
           <div
             className={cn(
               "text-sm leading-relaxed",
               isUser
-                // User: filled chip, distinct from the canvas.
-                ? "rounded-xl bg-secondary px-3.5 py-2.5 text-secondary-foreground"
-                // Assistant: borderless prose directly on the canvas, no card chrome.
+                // User: ink chip, asymmetric corner anchors it to the right edge.
+                ? "rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-primary-foreground"
+                // Assistant: borderless prose directly on the canvas.
                 : "text-foreground",
             )}
           >
