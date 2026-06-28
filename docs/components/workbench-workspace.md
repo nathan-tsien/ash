@@ -105,6 +105,8 @@ All URLs are resolved through `deliverableHref(uri)` (`apps/web/src/lib/praxis/d
 
 When `deliverables.length === 0`, an empty-state paragraph is shown (`t("deliverablesEmpty")`).
 
+**Known data-timing limitation (follow-up).** Praxis carries `agent_generated` attachments only on `/history` `Message`s, not on the live SSE stream (`message_start` opens an empty envelope). The reducer reads attachments at `message_start`, and the only `/history` projection (`attach`) re-subscribes for non-terminal tasks. Net: deliverables currently surface for a re-attached non-terminal task whose earlier turns persisted attachments, but a freshly-completed in-session run and a terminal-task cold-load do **not** auto-fetch `/history`, so their deliverables stay empty until a post-run / terminal-cold-load `/history` catch-up is added. That catch-up is a deferred follow-up (it must preserve the streamed terminal status rather than let `historyToTask` re-infer `awaiting_input`). The deliverable projection itself is parity-correct given identical message input (`deliverablesFromMessages`, covered by `projection-parity.test.ts`).
+
 ### Count badge
 
 The Deliverables tab button renders a `StatusChip` (variant `success`) showing `deliverables.length` when at least one deliverable is present. It is absent when the list is empty.
@@ -221,7 +223,7 @@ In Phase 1, data flows from `@ash/shared` mocks via server-side fetchers. Future
 For a Task started in-session, `TaskWorkspace` renders the **live** `Task` from `TaskRunProvider`, not a server mock. The `Task` is produced by folding the praxis **0.4.0 `StreamEvent`** block stream through `runtimeEventReducer` (ADR-0018):
 
 - `messages[]` accumulate in chronological order; `processEvents()` derives `ProcessEvent[]` from them at render time — no separate `toolTraces[]` field is consumed by `TaskWorkspace` directly.
-- `deliverables[]` are projected from `source: agent_generated` `Attachment`s on history messages. Praxis carries no `task_outputs` event today; the former synthesized `.pptx` placeholder (`synthesizePptArtifact`) is **retired**. Until praxis ships an outputs contract, `deliverables[]` is empty for tasks with no `agent_generated` attachments — this is the correct empty state, not a bug.
+- `deliverables[]` are projected from `source: agent_generated` `Attachment`s on history messages. Praxis carries no `task_outputs` event today; the former synthesized `.pptx` placeholder (`synthesizePptArtifact`) is **retired**. `deliverables[]` is empty for tasks with no `agent_generated` attachments. Note also the data-timing limitation in the Deliverables-tab section: because attachments arrive only via `/history`, a freshly-completed in-session run / terminal cold-load does not yet auto-fetch them (deferred `/history` catch-up).
 
 ## Future extensions
 
