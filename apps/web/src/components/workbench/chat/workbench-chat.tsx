@@ -63,14 +63,22 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
     [active.messages, extraMessages],
   );
 
+  const assistantHasStreamingMessage = useMemo(
+    () =>
+      messages.some(
+        (m) =>
+          m.role === "assistant" &&
+          m.isStreaming === true,
+      ),
+    [messages],
+  );
+
   /**
-   * True when an assistant message is actively streaming visible content —
-   * i.e. it has `isStreaming=true` and at least one block with non-empty text
-   * (or a non-redacted thinking block). Once real content is flowing the
-   * running indicator should yield; it only needs to show during the initial
-   * pre-content "thinking" phase.
+   * True when the live assistant message already renders something visible.
+   * The liveness row is only a pre-content affordance; once any visible block
+   * reaches the chat stream, that message is the source of truth for progress.
    */
-  const assistantIsStreamingContent = useMemo(
+  const assistantHasVisibleStreamingContent = useMemo(
     () =>
       messages.some(
         (m) =>
@@ -79,21 +87,23 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
           m.blocks.some(
             (b) =>
               (b.kind === "text" && b.text.length > 0) ||
-              (b.kind === "thinking" && !b.redacted && b.text.length > 0),
+              (b.kind === "thinking" && !b.redacted && b.text.length > 0) ||
+              b.kind === "tool_use" ||
+              b.kind === "image",
           ),
       ),
     [messages],
   );
 
   /**
-   * Show the thinking indicator during the whole non-terminal pre-content window:
-   * - "pending": task has been started but the agent hasn't yet begun streaming
-   * - "running": agent is active but no visible content has arrived yet
-   * Once real content is streaming the indicator yields (A4 behaviour preserved).
+   * Show the thinking indicator only from the message stream itself: a live
+   * assistant message exists, but it has not produced visible content yet.
+   * Task/project status is intentionally ignored because `running` is ambiguous
+   * outside the assistant message lifecycle.
    */
   const showThinkingIndicator =
-    (active.status === "pending" || active.status === "running") &&
-    !assistantIsStreamingContent;
+    assistantHasStreamingMessage &&
+    !assistantHasVisibleStreamingContent;
 
   const sendDraft = useCallback(() => {
     const text = draft.trim();

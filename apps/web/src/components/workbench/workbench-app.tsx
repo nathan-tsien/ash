@@ -143,7 +143,7 @@ export function WorkbenchApp({
             title: activeProject.name,
             preview: activeProject.description,
             updatedAt: activeProject.updatedAt,
-            status: activeProject.status === "active" ? "running" : "idle",
+            status: "idle",
             messages: [],
             plan: activeProject.tasks.map((task) => ({
               id: task.id,
