@@ -3,7 +3,6 @@
 import type { Task } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
-import { StatusDot } from "@ash/ui/status-dot";
 import {
   Tooltip,
   TooltipContent,
@@ -12,13 +11,7 @@ import {
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import {
-  taskStatusChipClass,
-  taskStatusDotVariant,
-  taskStatusIsLive,
-  taskStatusLabelKey,
-  taskStatusSortRank,
-} from "@/lib/task-status";
+import { taskStatusSortRank } from "@/lib/task-status";
 import { taskHref } from "@/lib/workbench-href";
 
 export interface TaskSectionProps {
@@ -65,15 +58,13 @@ export function TaskSection({
       <ul role="list" className="flex flex-col gap-0.5 px-1">
         {displayTasks.map((task) => {
           const isActive = task.id === activeTaskId;
-          const statusLabel = t(taskStatusLabelKey(task.status));
-          const live = taskStatusIsLive(task.status);
           return (
             <li key={task.id}>
               <Link
                 href={taskHref(task.id)}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "block min-h-12 rounded-xl px-3 py-2.5 transition-colors",
+                  "block rounded-xl px-3 py-2 transition-colors",
                   // Selected state is weight + a 2px accent rail, not a louder
                   // color, so it clearly outranks hover (PRIN-4).
                   isActive
@@ -83,34 +74,12 @@ export function TaskSection({
               >
                 <p
                   className={cn(
-                    "truncate text-body-sm",
+                    "truncate text-body",
                     isActive ? "font-semibold" : "font-medium",
                   )}
                 >
                   {task.title}
                 </p>
-                <div className="mt-1.5 flex items-center gap-2">
-                  {live ? (
-                    <>
-                      <StatusDot
-                        status={taskStatusDotVariant(task.status)}
-                        label={statusLabel}
-                      />
-                      <span className="text-label text-status-running-foreground">
-                        {statusLabel}
-                      </span>
-                    </>
-                  ) : (
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-md px-1.5 py-0.5 text-label font-medium",
-                        taskStatusChipClass(task.status),
-                      )}
-                    >
-                      {statusLabel}
-                    </span>
-                  )}
-                </div>
               </Link>
             </li>
           );

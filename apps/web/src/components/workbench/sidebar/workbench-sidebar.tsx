@@ -31,7 +31,6 @@ import { PANE_WIDTH } from "@/lib/layout-constants";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkbenchViewMode } from "../workbench-types";
 import { FooterAccount } from "./footer-account";
-import { AppLocaleSwitcher } from "../app-locale-switcher";
 import { TaskSection } from "./task-section";
 import { ProjectSection } from "./project-section";
 import { ProjectNav } from "./project-nav";
@@ -179,7 +178,12 @@ export function WorkbenchSidebar({
       <div ref={expandedContentRef} className="flex flex-1 flex-col">
 
         <div className="space-y-2 px-3 py-3">
-          <Button variant="default" size="sm" className="w-full justify-center gap-2" asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full justify-center gap-2"
+            asChild
+          >
             <Link href="/app">
               <Plus className="size-4" aria-hidden />
               {t("newTask")}
@@ -258,9 +262,6 @@ export function WorkbenchSidebar({
           )}
         </nav>
         <div className="mt-auto">
-          <div className="flex justify-end border-t border-sidebar-border px-3 py-2">
-            <AppLocaleSwitcher />
-          </div>
           <FooterAccount />
         </div>
       </div>
@@ -287,7 +288,7 @@ export function WorkbenchSidebar({
               variant="ghost"
               size="icon"
               className="size-10 rounded-xl active:bg-sidebar-accent"
-              onClick={() => openSettings("account")}
+              onClick={() => openSettings("general")}
               aria-label={t("settingsAria")}
             >
               <Settings className="size-[18px]" />

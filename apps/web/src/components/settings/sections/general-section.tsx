@@ -4,7 +4,7 @@ import { Badge } from "@ash/ui/badge";
 import { Input } from "@ash/ui/input";
 import { Switch } from "@ash/ui/switch";
 import { useTranslations } from "next-intl";
-import { LocaleSwitcher } from "@/components/marketing/locale-switcher";
+import { AppLocaleSwitcher } from "@/components/workbench/app-locale-switcher";
 import { SectionHeader } from "../section-header";
 
 export function GeneralSection() {
@@ -20,7 +20,7 @@ export function GeneralSection() {
       <div className="space-y-6">
         <div className="space-y-2">
           <p className="text-sm font-medium">{t("general.languageLabel")}</p>
-          <LocaleSwitcher />
+          <AppLocaleSwitcher />
         </div>
 
         <div className="space-y-2">

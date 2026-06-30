@@ -3,7 +3,6 @@
 import type { AshLocale, Project } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
-import { StatusDot } from "@ash/ui/status-dot";
 import {
   Tooltip,
   TooltipContent,
@@ -12,11 +11,7 @@ import {
 import { ArrowLeft, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import {
-  taskStatusDotVariant,
-  taskStatusLabelKey,
-  taskStatusSortRank,
-} from "@/lib/task-status";
+import { taskStatusSortRank } from "@/lib/task-status";
 
 export interface ProjectNavProps {
   locale: AshLocale;
@@ -24,7 +19,7 @@ export interface ProjectNavProps {
   activeTaskId?: string;
 }
 
-export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
+export function ProjectNav({ project, activeTaskId }: ProjectNavProps) {
   const t = useTranslations("Workbench");
   // Same deterministic ordering as TaskSection so project-internal tasks read
   // consistently with the dual-section list (PRIN-1). Copy before sorting.
@@ -85,20 +80,14 @@ export function ProjectNav({ locale, project, activeTaskId }: ProjectNavProps) {
                     : "hover:bg-sidebar-accent/60",
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <StatusDot
-                    status={taskStatusDotVariant(task.status)}
-                    label={t(taskStatusLabelKey(task.status))}
-                  />
-                  <p
-                    className={cn(
-                      "truncate text-body-sm",
-                      isActive ? "font-semibold" : "font-medium",
-                    )}
-                  >
-                    {task.title}
-                  </p>
-                </div>
+                <p
+                  className={cn(
+                    "truncate text-body",
+                    isActive ? "font-semibold" : "font-medium",
+                  )}
+                >
+                  {task.title}
+                </p>
               </Link>
             </li>
           );

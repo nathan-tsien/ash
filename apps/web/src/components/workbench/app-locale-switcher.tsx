@@ -57,7 +57,7 @@ export function AppLocaleSwitcher() {
           <ChevronDown className="size-3" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[8rem]">
+      <DropdownMenuContent align="end" className="z-[60] min-w-[8rem]">
         <DropdownMenuRadioGroup value={locale} onValueChange={handleChange}>
           {routing.locales.map((lc) => (
             <DropdownMenuRadioItem key={lc} value={lc}>
