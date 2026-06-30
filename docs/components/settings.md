@@ -4,7 +4,7 @@ Purpose: document the Settings modal IA, section contracts, and mock data depend
 
 ## Context
 
-Settings is a **global Dialog modal** — not a dedicated Next.js route. It is triggered from the Sidebar **`FooterAccount`** control and rendered via a provider mounted inside **`WorkbenchChrome`**.
+Settings is a **global Dialog modal** — not a dedicated Next.js route. It is triggered from the Sidebar **`FooterAccount`** control and collapsed-rail settings icon, and rendered via a provider mounted inside **`WorkbenchChrome`**.
 
 Phase 1 does **not** support URL deep-linking to a specific settings section. Section selection is client state only.
 
@@ -25,7 +25,7 @@ Nav items map 1:1 to section IDs below. Active item uses accent background per t
 | Section ID | i18n key prefix | Phase 1 fidelity | Phase 2 follow-up |
 |-----------|----------------|------------------|-------------------|
 | `account` | `Settings.Account` | Display-only profile (name, email, avatar from mocks) | SSO profile sync, org switcher |
-| `general` | `Settings.General` | Real locale + theme toggles (client state) | Server-persisted preferences |
+| `general` | `Settings.General` | Real app-zone locale switcher + preference controls (client state) | Server-persisted preferences |
 | `billing` | `Settings.Billing` | Display-only plan summary | Stripe / quota integration |
 | `personalization` | `Settings.Personalization` | Real toggles (local persistence TBD) | Cross-device sync |
 | `scheduled-tasks` | `Settings.ScheduledTasks` | Mock list from `@ash/shared`; pause/resume UI stubs | ash-server CRUD + cron engine |
@@ -47,8 +47,8 @@ These types are **scaffolding only** — not authoritative API contracts. They w
 ## Trigger + provider wiring
 
 ```
-FooterAccount (Sidebar)
-  └─ onClick → SettingsProvider.open()
+FooterAccount / collapsed settings icon (Sidebar)
+  └─ onClick → SettingsProvider.open("general")
        └─ SettingsModal (Dialog)
             ├─ SettingsNav (left rail)
             └─ SettingsSection* (right panel)

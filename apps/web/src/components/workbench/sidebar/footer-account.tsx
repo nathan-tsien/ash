@@ -67,7 +67,7 @@ export function FooterAccount() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => openSettings("account")}>
+          <DropdownMenuItem onSelect={() => openSettings("general")}>
             <Settings className="size-4" aria-hidden />
             {t("accountSettings")}
           </DropdownMenuItem>

@@ -17,10 +17,9 @@ Switching to `project` mode replaces the dual-section layout entirely with `Proj
 
 ## Dual-section layout (home / task mode)
 
-The **New Task** button at the top of the expanded sidebar uses `variant="default"` — an ink
-pill (`bg-primary text-primary-foreground`, full-width, `rounded-full`) consistent with the
-"Ink monochrome CTA" signature (PRIN-6, ADR-0014). No colored or ember primary button here;
-all other sidebar controls use `variant="ghost"`.
+The **New Task** button at the top of the expanded sidebar uses `variant="secondary"` (full-width,
+`rounded-full`) so it stays neutral and theme-aware instead of rendering as a black ink CTA in light
+theme. No colored or ember primary button here; all other sidebar controls use `variant="ghost"`.
 
 ```
 +------------------------------+
@@ -29,8 +28,8 @@ all other sidebar controls use `variant="ghost"`.
 |  [Search input        ⌘K]   |
 |------------------------------|
 |  -- TASKS ----------- [+] -- |
-|  task 1   (dot)  relative   |
-|  task 2   (dot)  time       |
+|  task 1                      |
+|  task 2                      |
 |  ...                         |
 |------------------------------|
 |  -- PROJECTS -------- [+] -- |
@@ -51,19 +50,18 @@ Display fields from `Task` in `@ash/shared/src/types.ts` -- update both code and
 
 | Field | Visual treatment |
 |-------|------------------|
-| `title` | Primary line, `text-body-sm`, truncated. `font-medium` by default, `font-semibold` when the row is active |
-| `status` | Status indicator on line 2 (see Status indicators below) |
+| `title` | Single line, `text-body`, truncated. `font-medium` by default, `font-semibold` when the row is active |
 
-Line 2 carries **status only** — there is no relative-time string. `Task.updatedAt` from a
+Task rows are single-line for density. There is no relative-time string: `Task.updatedAt` from a
 `summaryToTask` projection is a synthetic per-fetch stamp (identical on every card; see
 `lib/praxis/summary-projection.ts`), so rendering it as relative time was uniform and misleading.
-Status is the meaningful secondary signal until praxis adds `updated_at` to the `TaskSummary`
-contract (contract-first: extend the OpenAPI schema + regenerate, never hand-edit `generated.ts`).
+The sidebar does not render a visible status dot or status label in task rows; the row title carries
+the scan target.
 
 Selecting a task row navigates to `/app/task/[taskId]`. The **active row** is marked by a 2px
 left accent rail `border-l-2 border-sidebar-rail` plus `bg-sidebar-accent`, a `font-semibold`
 title, and `aria-current="page"`. Hover (`hover:bg-sidebar-accent/60`) is deliberately weaker so
-the selected row clearly outranks it (PRIN-4). Rows have a consistent `min-h-12`.
+the selected row clearly outranks it (PRIN-4).
 
 ### Project list item (`Project`)
 
@@ -92,24 +90,11 @@ priority (lower sorts first):
 The sort is **stable** and runs on a copied array, so the server's LIFO (most-recent-first) order is
 preserved within each bucket. The `.slice(0, 10)` cap is applied **after** sorting.
 
-## Status indicators
+## Status handling
 
-Status is carried by COLOR-3 token triplets only — no raw palette literals (COLOR-2). Live work
-(`running`) pulses via the shared `StatusDot` primitive (`size-2`, `animate-pulse`); every settled
-status reads as a calm soft chip (`text-label font-medium`, `rounded-md px-1.5 py-0.5`):
-
-| Status | Visual |
-|--------|--------|
-| `running` | `StatusDot status="running"` (`bg-status-running`, `animate-pulse`) + label in `text-status-running-foreground` |
-| `awaiting_input` | Chip `bg-status-warning-soft text-status-warning-foreground` (attention, not error) |
-| `completed` | Chip `bg-status-success-soft text-status-success-foreground` |
-| `failed` | Chip `bg-destructive/10 text-destructive` |
-| `pending` / idle | Chip `bg-muted text-muted-foreground` |
-
-The live dot + label sit in a flex row (`gap-2`). Status helpers (`taskStatusIsLive`,
-`taskStatusChipClass`, `taskStatusDotVariant`, `taskStatusLabelKey`) live in `lib/task-status.ts`
-app-side so `packages/ui` never imports domain types. `ProjectNav` rows keep the inline
-`StatusDot` + title layout (the dot is the sole status carrier there).
+Task status still participates in deterministic ordering through `taskStatusSortRank`, but the
+sidebar no longer renders status dots or labels inside task rows. If status visibility becomes useful
+again, restore it deliberately rather than adding ad-hoc color marks.
 
 ## List limits
 
@@ -138,8 +123,8 @@ When `viewMode === "project"` and an `activeProject` is resolved, the sidebar re
 |  [<- Back]  Project Name     |
 |------------------------------|
 |  -- PROJECT TASKS ---- [+] --|
-|  (dot) task 1                |
-|  (dot) task 2                |
+|  task 1                      |
+|  task 2                      |
 |  ...                         |
 +------------------------------+
 ```
@@ -148,7 +133,7 @@ When `viewMode === "project"` and an `activeProject` is resolved, the sidebar re
 |---------|----------|
 | Back arrow | `<Link href="/app">`, returns to dual-section layout |
 | Project name | Truncated `text-body-sm font-semibold` |
-| Task list | Inline status dot + title layout, deterministic `taskStatusSortRank` order, active accent-rail treatment; navigates to `/app/task/[taskId]` |
+| Task list | Title-only `text-body` rows, deterministic `taskStatusSortRank` order, active accent-rail treatment; navigates to `/app/task/[taskId]` |
 | `[+]` button | Creates a new Task within the project |
 
 ## Search
@@ -182,7 +167,9 @@ All icon buttons use `variant="ghost" size="icon" className="size-10 rounded-xl"
 
 ## Bottom bar (FooterAccount)
 
-Displays user avatar fallback + display name from `UserProfile`. Settings icon opens the settings modal. Rendered below the `ScrollArea` in expanded mode.
+Displays user avatar fallback + display name from `UserProfile`. Settings icon opens the Settings
+modal directly on **General**, where language and other app preferences live. The sidebar does not
+render a standalone locale-switch row. Rendered below the `ScrollArea` in expanded mode.
 
 ## GSAP animations
 
