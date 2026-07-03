@@ -136,18 +136,27 @@ For a Task started in-session, the Chat renders the **live** message list from `
 - `message_start` opens a streaming assistant `Message` (`isStreaming: true`); `content_block_start/delta/stop` build its `blocks: AshContentBlock[]` (text/thinking deltas append; tool_use args assemble from `input_json_delta`, finalized on `content_block_stop`); `message_stop` clears the flag.
 - A `Message` renders block-by-block: text → markdown, thinking → a collapsed muted disclosure, tool_use → a compact chip (full args/result live in the workspace tool trace), tool_result → not echoed in chat, image → an alt stub (rich image/citation rendering deferred per ADR-0018).
 - `stream_end{task_status}` is the authoritative terminal; `ping` / `skill_activation_requested` are not surfaced this slice.
+- The `thinkingPlaceholder` liveness row renders during active pre-content windows: while a
+  task conversation is `pending` / `running` before the next assistant message starts, or while
+  an assistant `Message` has `isStreaming: true` and has not produced any visible chat block yet.
+  Once visible text, thinking, tool, or image content reaches the stream, that content becomes the
+  progress affordance and the liveness row yields.
 
-This slice ships **no real transport** — a local fake drives the stream (see ADR-0011). The "remote streaming updates" stickiness rule above still applies to the simulated stream.
+Live workbench runs use the real praxis HTTP/BFF client path. The fake praxis client is unit-test
+only and may be imported directly by tests or injected through a mocked `getPraxisClient`; it must
+not be selected by dev/prod runtime flags. The "remote streaming updates" stickiness rule above
+applies to the real stream as well as test simulations.
 
 ### Pending question (ask_user)
 
 When the live task is `awaiting_input`, the chat renders an `AnswerPrompt` card showing the
 `pendingQuestion` payload (`askId`, `text`, `attachments`). The sidecar props `pendingQuestion`
 and `onAnswer(text: string)` are passed to `WorkbenchChat` directly from `workbench-app.tsx` —
-they are **not** carried by the adapted `Conversation`. The adapter's `mapTaskStatus` maps
-`awaiting_input` → `idle` (not `running`): while the agent waits on the user it is not "thinking",
-so the chat shows the prompt rather than the thinking indicator. (The sidebar dot uses a separate
-mapping in `lib/task-status.ts`, where `awaiting_input` → `running` to read as active.) Submitting
+they are **not** carried by the adapted `Conversation`. `WorkbenchChat` deliberately does not use
+task status to decide liveness: while the agent waits on the user it is not producing a streaming
+assistant message, so the chat shows the prompt rather than the thinking indicator. (The sidebar dot
+uses a separate mapping in `lib/task-status.ts`, where `awaiting_input` reads as active for
+ordering/chip purposes.) Submitting
 the prompt calls `onAnswer(text)`, which routes to `provider.answer(taskId, text)` →
 `POST /v1/tasks/{id}/answers {ask_id, answer}` (202). The input clears and disables optimistically
 while the answer is in flight; normal composition restores on the `turn_resumed` event delivered on
@@ -192,4 +201,3 @@ decision records.
 ## Animations (GSAP)
 
 Message entrance, thinking-state pulse, and composer micro-interactions are powered by GSAP (not CSS transitions). All animations respect `prefers-reduced-motion` via `gsap.matchMedia()` — when the user has reduced motion enabled, elements appear in their final state without animation. Animation foundation lives in `apps/web/src/lib/animations/`.
-

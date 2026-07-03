@@ -88,7 +88,7 @@ priority (lower sorts first):
 | 4 | `completed` | Finished |
 
 The sort is **stable** and runs on a copied array, so the server's LIFO (most-recent-first) order is
-preserved within each bucket. The `.slice(0, 10)` cap is applied **after** sorting.
+preserved within each bucket. No item cap is applied in the sidebar lists.
 
 ## Status handling
 
@@ -98,10 +98,9 @@ again, restore it deliberately rather than adding ad-hoc color marks.
 
 ## List limits
 
-Each section displays at most **10 items** (`.slice(0, 10)`) — the most recent slice of the
-server-backed list. The Tasks section also renders a **"view all" link** (`viewAllTasks` i18n key)
-to `/app/tasks`, the full paginated task list (cursor-based "load more"; empty/error/loading states).
-For ad-hoc lookup users can still use the search box or Command Palette (`Cmd+K`).
+The dual-section layout renders the full filtered task and project arrays inside bounded scroll
+regions, so items remain reachable without a silent cap. For ad-hoc lookup users can still use the
+search box or Command Palette (`Cmd+K`).
 
 ## Section headers
 
@@ -159,8 +158,8 @@ When collapsed (56px width), the sidebar shows icon-only buttons vertically:
 
 | Icon | Action |
 |------|--------|
-| `Plus` | New task (`<Link href="/">`) |
-| `Settings` | Opens settings modal via `useSettingsModal().openSettings("account")` |
+| `Plus` | New task (`<Link href="/app">`) |
+| `Settings` | Opens settings modal via `useSettingsModal().openSettings("general")` |
 | `ChevronRight` | Expands sidebar back to 260px |
 
 All icon buttons use `variant="ghost" size="icon" className="size-10 rounded-xl"` with `Tooltip` wrappers (zh-CN copy).
