@@ -136,12 +136,16 @@ For a Task started in-session, the Chat renders the **live** message list from `
 - `message_start` opens a streaming assistant `Message` (`isStreaming: true`); `content_block_start/delta/stop` build its `blocks: AshContentBlock[]` (text/thinking deltas append; tool_use args assemble from `input_json_delta`, finalized on `content_block_stop`); `message_stop` clears the flag.
 - A `Message` renders block-by-block: text → markdown, thinking → a collapsed muted disclosure, tool_use → a compact chip (full args/result live in the workspace tool trace), tool_result → not echoed in chat, image → an alt stub (rich image/citation rendering deferred per ADR-0018).
 - `stream_end{task_status}` is the authoritative terminal; `ping` / `skill_activation_requested` are not surfaced this slice.
-- The `thinkingPlaceholder` liveness row is message-stream-only: it renders only when an
-  assistant `Message` has `isStreaming: true` and that message has not produced any visible
-  chat block yet. It does not read `Conversation.status`; `running` can describe task/project
-  lifecycle outside the assistant message lifecycle and is therefore too ambiguous for this UI.
+- The `thinkingPlaceholder` liveness row renders during active pre-content windows: while a
+  task conversation is `pending` / `running` before the next assistant message starts, or while
+  an assistant `Message` has `isStreaming: true` and has not produced any visible chat block yet.
+  Once visible text, thinking, tool, or image content reaches the stream, that content becomes the
+  progress affordance and the liveness row yields.
 
-This slice ships **no real transport** — a local fake drives the stream (see ADR-0011). The "remote streaming updates" stickiness rule above still applies to the simulated stream.
+Live workbench runs use the real praxis HTTP/BFF client path. The fake praxis client is unit-test
+only and may be imported directly by tests or injected through a mocked `getPraxisClient`; it must
+not be selected by dev/prod runtime flags. The "remote streaming updates" stickiness rule above
+applies to the real stream as well as test simulations.
 
 ### Pending question (ask_user)
 
@@ -197,4 +201,3 @@ decision records.
 ## Animations (GSAP)
 
 Message entrance, thinking-state pulse, and composer micro-interactions are powered by GSAP (not CSS transitions). All animations respect `prefers-reduced-motion` via `gsap.matchMedia()` — when the user has reduced motion enabled, elements appear in their final state without animation. Animation foundation lives in `apps/web/src/lib/animations/`.
-

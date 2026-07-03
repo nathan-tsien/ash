@@ -96,13 +96,17 @@ export function WorkbenchChat({ locale, active, workspace, banner, pendingQuesti
   );
 
   /**
-   * Show the thinking indicator only from the message stream itself: a live
-   * assistant message exists, but it has not produced visible content yet.
-   * Task/project status is intentionally ignored because `running` is ambiguous
-   * outside the assistant message lifecycle.
+   * Show the thinking indicator during active pre-content windows:
+   * - the task is pending/running before the next assistant message starts
+   * - a live assistant message exists but has not produced visible content yet
+   *
+   * Once visible assistant content reaches the chat stream, that content becomes
+   * the progress affordance and this row yields.
    */
+  const taskIsAwaitingAssistantContent =
+    active.status === "pending" || active.status === "running";
   const showThinkingIndicator =
-    assistantHasStreamingMessage &&
+    (taskIsAwaitingAssistantContent || assistantHasStreamingMessage) &&
     !assistantHasVisibleStreamingContent;
 
   const sendDraft = useCallback(() => {
