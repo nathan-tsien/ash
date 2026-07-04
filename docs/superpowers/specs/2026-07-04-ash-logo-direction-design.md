@@ -1,6 +1,6 @@
 # Ash Logo Direction Design
 
-- Status: Draft for stakeholder review
+- Status: Approved for implementation
 - Date: 2026-07-04
 - Scope: Ash product icon and logo-mark direction
 - Relates: ADR-0014, `docs/design-guidelines.md`, `packages/ui/src/components/wordmark.tsx`
@@ -52,6 +52,8 @@ In plain terms:
 
 This direction is chosen as the design basis even though no generated image is final. The final
 asset must be hand-built as vector geometry.
+
+Implementation landed as `LogoMark` in `packages/ui/src/components/logo-mark.tsx`; static favicon/app-icon export is deferred to a token-safe asset pipeline.
 
 ## Mark Anatomy
 

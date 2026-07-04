@@ -72,3 +72,24 @@ sizes (TYPE-2 body/body-sm at 14–15px).
 
 **Unchanged:** ember + status hues, motion system, type scale, three-pane IA. Guidelines
 bumped to **v2.0.0** (MAJOR: foundation token values moved).
+
+## Amendment (2026-07): Companion Shadow LogoMark
+
+**Context.** The original Ash & Ember identity deliberately shipped only a styled-text
+`ash.` wordmark. That kept the Phase 1 surface disciplined, but it left Ash without a
+memorable icon for collapsed rails, loading states, future app icons, and social recall.
+Stakeholder review clarified the three-layer product story: Cogito thinks, Praxis
+operationalizes, and Ash is the human-facing personal secretary for work and life.
+
+**Decision.** Add a vector `LogoMark` based on the **Companion Shadow + Task Core**
+direction from `docs/superpowers/specs/2026-07-04-ash-logo-direction-design.md`. The mark
+combines a charcoal companion silhouette, a white task-core negative space, and one small
+ember point. It is additive to the `ash.` wordmark, not a replacement. Static favicon and
+app icon export remain deferred until a token-safe asset pipeline is chosen.
+
+**Constraints.** The mark remains vector-only, token-colored, and brand-scoped. It must not
+use a hand, face, mascot, eye, shield, house, generic AI sparkle, or letter-A dependency.
+Ember remains limited to brand expression per COLOR-10.
+
+**Unchanged:** Ash & Ember palette, Neutral Stone ramp, workbench chrome discipline,
+three-pane IA, display-type scope, and existing wordmark semantics.
