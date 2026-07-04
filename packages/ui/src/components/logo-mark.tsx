@@ -11,18 +11,15 @@ export interface LogoMarkProps extends React.ComponentProps<"svg"> {
 }
 
 function LogoMark({ className, title, ...props }: LogoMarkProps) {
-  const accessibilityProps = title
-    ? ({ role: "img" as const } satisfies React.SVGProps<SVGSVGElement>)
-    : ({ "aria-hidden": true } satisfies React.SVGProps<SVGSVGElement>);
-
   return (
     <svg
-      data-slot="logo-mark"
+      {...props}
       viewBox="0 0 32 32"
       className={cn("size-6 shrink-0 text-foreground", className)}
       xmlns="http://www.w3.org/2000/svg"
-      {...accessibilityProps}
-      {...props}
+      data-slot="logo-mark"
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
     >
       {title ? <title>{title}</title> : null}
       <path
