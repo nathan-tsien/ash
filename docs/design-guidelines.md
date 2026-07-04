@@ -124,7 +124,7 @@ canvas in both themes — see D-8.
 `--accent` for row hover washes.
 
 **COLOR-10 (MUST)** Ember (`--ember` / `--ember-soft`) is the only brand accent and is
-scoped to brand expression: marketing surfaces (hero kickers, section accents, docs covers)
+scoped to brand expression: marketing surfaces (hero kickers, section accents, docs covers),
 the `LogoMark` ember point, and the wordmark "ash." period when the brand mark appears. The
 `LogoMark` ember point is permitted only as brand expression, not as interactive or semantic
 chrome. Ember NEVER appears in workbench functional chrome (buttons, links, focus, selection),
