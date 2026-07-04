@@ -1,6 +1,6 @@
 # Ash Logo Direction Design
 
-- Status: Approved for implementation
+- Status: Implemented: LogoMark landed; favicon/app icon export deferred
 - Date: 2026-07-04
 - Scope: Ash product icon and logo-mark direction
 - Relates: ADR-0014, `docs/design-guidelines.md`, `packages/ui/src/components/wordmark.tsx`
@@ -50,8 +50,8 @@ In plain terms:
 - **Task Core** keeps the mark tied to practical work and private secretary behavior.
 - **Ember Point** links the icon back to the existing Ash & Ember identity.
 
-This direction is chosen as the design basis even though no generated image is final. The final
-asset must be hand-built as vector geometry.
+This direction is implemented as controlled vector geometry in the `LogoMark` component. Raster
+exports and app-icon packaging remain deferred follow-up work.
 
 Implementation landed as `LogoMark` in `packages/ui/src/components/logo-mark.tsx`; static favicon/app-icon export is deferred to a token-safe asset pipeline.
 
@@ -109,25 +109,24 @@ must avoid visual double-accent noise by sizing the icon ember smaller than the 
 
 ## Implementation Shape
 
-This spec does not ship the logo asset. It defines the direction for the next implementation plan.
+`LogoMark` has landed as the production vector primitive for the Companion Shadow + Task Core
+direction. It is the source for current in-app brand placement and the basis for future static
+assets.
 
-Expected implementation stages:
+Deferred implementation work:
 
-1. Produce 2-3 hand-drawn SVG geometry candidates from the Companion Shadow + Task Core direction.
-2. Test each candidate at 16px, 24px, 32px, 64px, and 128px in light and dark themes.
-3. Choose one candidate and create a `LogoMark` component in `packages/ui`.
-4. Add a composed `BrandMark` or `LogoLockup` only if existing consumers need icon + wordmark.
-5. Replace favicon / app icon assets from the chosen vector source.
-6. Update component docs and design guidelines if the signature registry changes.
+1. Export token-safe favicon and app icon assets from the `LogoMark` vector source.
+2. Add optional `BrandMark` or `LogoLockup` exports only when consumers need an icon + wordmark
+   primitive.
+3. Refine sizing, optical balance, or placement rules when new brand surfaces expose real layout
+   needs.
 
 ## Files Likely To Change Later
 
-- `packages/ui/src/components/logo-mark.tsx` - new icon primitive.
 - `packages/ui/src/components/wordmark.tsx` - possible lockup export or documentation update.
-- `apps/web/src/app/favicon.ico` - generated from final vector source.
+- `apps/web/src/app/favicon.ico` - generated from the `LogoMark` vector source.
 - `apps/web/public/*` - app icon / social image assets if required.
-- `docs/design-guidelines.md` - PRIN-6 signature registry update.
-- `docs/adr/0014-ash-native-identity.md` - amendment noting icon addition.
+- `docs/adr/0014-ash-native-identity.md` - amendment noting icon addition if architecture intent changes.
 - `docs/components/*` - affected brand placement docs.
 
 ## Acceptance Criteria
@@ -139,7 +138,7 @@ Expected implementation stages:
 - It respects COLOR-1, COLOR-2, COLOR-10, TYPE-6, and PRIN-6.
 - It is delivered as controlled vector geometry, not as a raster trace from image generation.
 
-## Open Question For Review
+## Deferred Review Question
 
-Does the stakeholder accept **Companion Shadow + Task Core** as the official logo direction, even
-though the exact vector geometry still needs to be designed in the implementation phase?
+Should favicon and app icon export happen in the next brand polish pass, or wait until the static
+asset pipeline is ready to preserve token discipline?

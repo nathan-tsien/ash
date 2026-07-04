@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v2.0.0 |
+| Version | v2.1.0 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -125,10 +125,11 @@ canvas in both themes — see D-8.
 
 **COLOR-10 (MUST)** Ember (`--ember` / `--ember-soft`) is the only brand accent and is
 scoped to brand expression: marketing surfaces (hero kickers, section accents, docs covers)
-and the wordmark "ash." period wherever the brand mark appears. Ember NEVER appears in
-workbench functional chrome (buttons, links, focus, selection), never carries status
-meaning (COLOR-3 owns status), never signals destruction (COLOR-4). `--ember` on white and
-on `--ember-soft` meets WCAG AA for text in both themes.
+the `LogoMark` ember point, and the wordmark "ash." period when the brand mark appears. The
+`LogoMark` ember point is permitted only as brand expression, not as interactive or semantic
+chrome. Ember NEVER appears in workbench functional chrome (buttons, links, focus, selection),
+never carries status meaning (COLOR-3 owns status), never signals destruction (COLOR-4).
+`--ember` on white and on `--ember-soft` meets WCAG AA for text in both themes.
 
 Canonical palette values: see Appendix C and `packages/ui/src/globals.css`.
 
