@@ -25,7 +25,7 @@ Nav items map 1:1 to section IDs below. Active item uses accent background per t
 | Section ID | i18n key prefix | Phase 1 fidelity | Phase 2 follow-up |
 |-----------|----------------|------------------|-------------------|
 | `account` | `Settings.Account` | Display-only profile (name, email, avatar from mocks) | SSO profile sync, org switcher |
-| `general` | `Settings.General` | Real app-zone locale switcher + preference controls (client state) | Server-persisted preferences |
+| `general` | `Settings.General` | Real shared locale switcher (`ash_locale` cookie) + preference controls (client state) | Server-persisted preferences |
 | `billing` | `Settings.Billing` | Display-only plan summary | Stripe / quota integration |
 | `personalization` | `Settings.Personalization` | Real toggles (local persistence TBD) | Cross-device sync |
 | `scheduled-tasks` | `Settings.ScheduledTasks` | Mock list from `@ash/shared`; pause/resume UI stubs | ash-server CRUD + cron engine |
@@ -55,6 +55,10 @@ FooterAccount / collapsed settings icon (Sidebar)
 ```
 
 Provider mounts inside `WorkbenchChrome` so the modal is available on `/`, `/c/[id]`, and any future workbench routes.
+
+## Locale persistence
+
+The General section language control writes the shared `ash_locale` cookie and refreshes the non-prefixed app zone. Marketing pages remain path-localized (`/[locale]`), but their `LocaleSwitcher` also writes `ash_locale`, and the proxy uses that cookie for non-prefixed public paths such as `/` and `/pricing`. This keeps the logged-in workbench preference and public-site language switcher aligned without adding a dedicated settings route.
 
 ## Dependencies
 

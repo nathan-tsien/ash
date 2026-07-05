@@ -182,6 +182,9 @@ vi.mock("lucide-react", () => ({
   ChevronRight: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="chevron-right" {...props} />
   ),
+  Circle: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="circle" {...props} />
+  ),
   Plus: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="plus" {...props} />
   ),

@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { isAshLocale } from "@ash/shared";
-import { LOCALE_COOKIE } from "@/i18n/request";
+import { LOCALE_COOKIE } from "@/i18n/locale-cookie";
 
 /**
  * Persist the app-zone locale.
