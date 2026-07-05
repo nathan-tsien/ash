@@ -148,7 +148,7 @@ Search filters are applied via `useMemo` on `sidebarQuery` state:
 
 ## Header chrome
 
-- **Logo link**: `LogoMark` from `@ash/ui/logo-mark` in a `size-10` rounded button, navigates to `/` (marketing). The icon is decorative because the link's aria label names the destination. Visible in both expanded and collapsed states.
+- **Logo link**: `LogoMark` from `@ash/ui/logo-mark` at `size-7` inside a `size-10` rounded button, navigates to `/` (marketing). The icon is decorative because the link's aria label names the destination. Visible in both expanded and collapsed states.
 - **Brand label**: `text-body-sm font-semibold`, renders the `Wordmark` component from `@ash/ui` — the "ash." brand mark with ember-tinted period. Intentionally untranslated brand mark, not i18n copy (COLOR-10).
 - **Collapse button**: `ChevronLeft` icon, collapses sidebar to 56px rail. `aria-expanded={true}`, `aria-controls` targets the sidebar list container.
 

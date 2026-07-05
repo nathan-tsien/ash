@@ -68,7 +68,7 @@ dilution of signatures.
 | Ink monochrome CTA | `--primary` ink-on-white pill buttons | Protect; no colored primary buttons — ember does not touch buttons |
 | Near-neutral stone palette | `#1c1c1a`-family near-neutral stone grays throughout | Protect; no cold-gray drift, no warm-beige regression |
 | Ember mark | Wordmark "ash." ember period, LogoMark ember point, marketing accents | Cultivate within COLOR-10 scope |
-| Companion Shadow LogoMark | `LogoMark` icon in `@ash/ui`, sidebar home mark, future favicon/app icon source | Cultivate; vector-only, no hand/face/generic AI icon |
+| Companion Shadow LogoMark | `LogoMark` icon in `@ash/ui`, sidebar home mark, create-task home composer, assistant identity row, marketing/auth brand lockups, future favicon/app icon source | Cultivate; vector-only, no hand/face/generic AI icon |
 | Display voice | Bricolage Grotesque marketing headlines (TYPE-6) | Cultivate; never inside workbench panes |
 
 Adding or removing a signature is a MINOR revision; contradicting one in product code is
@@ -450,6 +450,7 @@ Changelog:
 | v1.2.0 | 2026-06-16 | MINOR — visual-language weight/density upgrade: TYPE-2 ladder bumped one rung (label 13/18, body-sm 14/20, body 15/22, body-lg 16/24; caption held at 11/16 floor) with weight-500 token defaults on `body-sm`/`body` so running copy stops being DM Sans 400; `--muted-foreground` darkened for crisper secondary text (light `#6e6a63`→`#5c5851`, dark `#a39f99`→`#b3afa8`, WCAG AA held); new `--sidebar-rail` chrome token (ink, COLOR-7, both themes) for the active-row / live-timeline accent rail. D-14 registered (ladder move by design) |
 | v2.0.0 | 2026-06-28 | MAJOR — Neutral Stone ramp retune (ADR-0014 amendment): workbench neutral ramp moved from warm-beige (`#2A2825`/`#F7F6F4`) to near-neutral stone (`#1C1C1A`/`#F5F5F4`) for a modern, premium posture; full light+dark palette regenerated (Appendix C); PRIN-3 rewritten on new foundation trio; PRIN-6 signature updated; ember + status hues unchanged (PRIN-3 not re-triggered by new saturated hue — ramp retune only). Workbench visual/UX pass: chat ink user bubble (asymmetric radius, `bg-primary`), assistant role label, hairline turn dividers, ink send button; sidebar ink primary CTA; workspace shared card shell + `StatusChip` headers. IMPL-7: `StatusChip` registered as status presentation primitive alongside `StatusDot`. |
 | v2.1.0 | 2026-07-04 | MINOR — Ash LogoMark signature added: Companion Shadow + Task Core vector mark introduced in `@ash/ui`, sidebar brand chrome updated, PRIN-6 registry extended; styled `ash.` wordmark remains valid. |
+| v2.1.1 | 2026-07-05 | PATCH — LogoMark placement broadened across the create-task home composer, assistant message identity, marketing/auth brand lockups, and a larger workbench sidebar home mark so brand memory is consistent across product surfaces. |
 
 ## Appendix C. Token reference snapshot
 

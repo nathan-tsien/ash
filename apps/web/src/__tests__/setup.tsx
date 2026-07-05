@@ -155,6 +155,9 @@ vi.mock("lucide-react", () => ({
   MessageSquare: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="message-square" {...props} />
   ),
+  Menu: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="menu" {...props} />
+  ),
   PanelRightClose: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="panel-right-close" {...props} />
   ),

@@ -29,6 +29,15 @@ import { WorkbenchHome } from "../workbench-home";
 afterEach(() => vi.clearAllMocks());
 
 describe("WorkbenchHome skill selection", () => {
+  it("uses the Ash logo mark in the create task hero", () => {
+    const { container } = render(<WorkbenchHome locale="zh" tasks={[]} projects={[]} />);
+
+    const logo = container.querySelector('[data-slot="logo-mark"]');
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveClass("size-8");
+    expect(logo?.parentElement?.querySelector('[data-testid="sparkles"]')).not.toBeInTheDocument();
+  });
+
   it("passes selected skill ids to startTask", async () => {
     render(<WorkbenchHome locale="zh" tasks={[]} projects={[]} />);
     const user = userEvent.setup({ pointerEventsCheck: 0 });

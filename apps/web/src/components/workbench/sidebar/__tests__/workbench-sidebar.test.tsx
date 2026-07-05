@@ -134,7 +134,9 @@ describe("brand chrome", () => {
       .find((el) => el.getAttribute("aria-label")?.includes("sidebarHomeAria"));
 
     expect(homeLink).toBeDefined();
-    expect(homeLink?.querySelector('[data-testid="ash-logo-mark"]')).toBeInTheDocument();
+    const logo = homeLink?.querySelector('[data-testid="ash-logo-mark"]');
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveClass("size-7");
     expect(homeLink?.querySelector('[data-testid="sparkles"]')).not.toBeInTheDocument();
   });
 });

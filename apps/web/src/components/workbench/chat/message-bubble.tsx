@@ -4,6 +4,7 @@ import { formatRelativeTime, textOf } from "@ash/shared";
 import { cn } from "@ash/ui/lib/utils";
 import { Button } from "@ash/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
+import { LogoMark } from "@ash/ui/logo-mark";
 import { Check, Copy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { forwardRef, useCallback, useRef, useState } from "react";
@@ -130,8 +131,9 @@ export const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
           )}
         >
           {!isUser && (
-            <p className="mb-1 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-              {t("roleAssistant")}
+            <p className="mb-1 inline-flex items-center gap-1.5 text-caption font-medium uppercase tracking-wide text-muted-foreground">
+              <LogoMark className="size-3.5" />
+              <span>{t("roleAssistant")}</span>
             </p>
           )}
           <div

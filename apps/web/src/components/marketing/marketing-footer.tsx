@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { LogoMark } from "@ash/ui/logo-mark";
 import { Wordmark } from "@ash/ui/wordmark";
 import { isAshLocale } from "@ash/shared";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -18,7 +18,7 @@ export async function MarketingFooter() {
           <div className="lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3 text-body-lg font-semibold text-foreground">
               <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-background">
-                <Sparkles className="size-4" aria-hidden />
+                <LogoMark className="size-5" />
               </span>
               <Wordmark className="font-display" />
             </Link>
