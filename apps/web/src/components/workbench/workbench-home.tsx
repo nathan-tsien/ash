@@ -8,7 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@ash/ui/tooltip";
-import { Sparkles, ArrowRight, X } from "lucide-react";
+import { LogoMark } from "@ash/ui/logo-mark";
+import { ArrowRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState, useCallback, useSyncExternalStore } from "react";
@@ -134,7 +135,7 @@ export function WorkbenchHome({ locale, tasks, projects }: WorkbenchHomeProps) {
           {/* Central input area */}
           <div className="flex w-full flex-col items-center gap-4">
             <div className="flex size-14 items-center justify-center rounded-2xl border border-border bg-card">
-              <Sparkles className="size-7 text-muted-foreground" aria-hidden />
+              <LogoMark className="size-8" />
             </div>
             <h1 className="text-xl font-semibold">{t("homeTitle")}</h1>
             <p className="text-body text-muted-foreground">{t("homeSubtitle")}</p>

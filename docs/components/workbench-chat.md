@@ -110,7 +110,8 @@ Ensure composer remains keyboard navigable (`aria-multiline`, proper label assoc
 
 ### Task-start skill picker (ADR-0017)
 
-The home composer carries a `SkillPicker` (i18n `Workbench.skillPickerButton` / `skillPickerHint` /
+The create-task home composer opens with the Ash `LogoMark` in the centered brand tile, then
+carries a `SkillPicker` (i18n `Workbench.skillPickerButton` / `skillPickerHint` /
 `removeSkillAria`). It lists the registered skill catalog from `GET /v1/skills` via the
 session-cached `useSkillCatalog` hook (browser -> BFF -> praxis), showing each skill's
 `display_name` and `description`. Selection is **multi-select**: the picker tracks a set of skill
