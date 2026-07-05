@@ -1,0 +1,153 @@
+{
+  "generatedAt": "2026-07-05T02:02:37.606Z",
+  "baseUrl": "http://127.0.0.1:42429",
+  "viewport": {
+    "width": 1440,
+    "height": 960,
+    "deviceScaleFactor": 1
+  },
+  "screenshots": [
+    {
+      "id": "marketing-light",
+      "surface": "marketing",
+      "theme": "light",
+      "path": "/zh",
+      "expectedText": "把复杂任务",
+      "url": "http://127.0.0.1:42429/zh",
+      "screenshot": "docs/visual-qa/artifacts/2026-07-05/marketing-light.png",
+      "bytes": 195055,
+      "page": {
+        "title": "首页 · Ash",
+        "url": "http://127.0.0.1:42429/zh",
+        "dark": false,
+        "bodyText": "ash.\n功能\n解决方案\n资源\n价格\n中文\n开始体验\n\nAGENT 工作台 · 计划 · 工件\n\n把复杂任务，\n装进一块清晰的工作台\n\n左侧管理任务与项目，中间与 Ash 对话，右侧查看计划、工具运行与工件产出。\n\n开始体验\n\n免费体验，无需信用卡\n\n产品界面\n\n三栏工作台，一目了然\n任务列表\n对话编排\n计划与工件\n\n场景\n\n看看 Ash 适合的典型场景\n\n以下为示例叙事，用来展示工作台流程，而非真实客户案例。\n\n查看全部案例\nRESEARCH\n产品与战略调研\n\n结构化大纲、竞品对比与引用链路，适配「先想清楚再动笔」的流程。\n\n查看场景\nGROWTH\n自媒体选题与脚本\n\n周报式任务列表 + 草稿工件卡片，为多平台内容流水线预留扩展位。\n\n查看场景\nSOON\n办公自动化（路线图）\n\n表格、文档与日程类工具接入后，将在同一工作台内完成审批与回溯。\n\n查看场景\n今天就在浏览器里试一下三栏工作台\n\n打开演示工作台，看看对话、计划、工具链路与工件如何保持连贯。\n\n进入工作台\nash.\n\n通用 Agent 工作台：对话、计划、工具与工件同屏，可扩展办公与内容等垂直能力。由 cogito 运行时驱动",
+        "width": 1440,
+        "height": 960
+      }
+    },
+    {
+      "id": "marketing-dark",
+      "surface": "marketing",
+      "theme": "dark",
+      "path": "/zh",
+      "expectedText": "把复杂任务",
+      "url": "http://127.0.0.1:42429/zh",
+      "screenshot": "docs/visual-qa/artifacts/2026-07-05/marketing-dark.png",
+      "bytes": 203344,
+      "page": {
+        "title": "首页 · Ash",
+        "url": "http://127.0.0.1:42429/zh",
+        "dark": true,
+        "bodyText": "ash.\n功能\n解决方案\n资源\n价格\n中文\n开始体验\n\nAGENT 工作台 · 计划 · 工件\n\n把复杂任务，\n装进一块清晰的工作台\n\n左侧管理任务与项目，中间与 Ash 对话，右侧查看计划、工具运行与工件产出。\n\n开始体验\n\n免费体验，无需信用卡\n\n产品界面\n\n三栏工作台，一目了然\n任务列表\n对话编排\n计划与工件\n\n场景\n\n看看 Ash 适合的典型场景\n\n以下为示例叙事，用来展示工作台流程，而非真实客户案例。\n\n查看全部案例\nRESEARCH\n产品与战略调研\n\n结构化大纲、竞品对比与引用链路，适配「先想清楚再动笔」的流程。\n\n查看场景\nGROWTH\n自媒体选题与脚本\n\n周报式任务列表 + 草稿工件卡片，为多平台内容流水线预留扩展位。\n\n查看场景\nSOON\n办公自动化（路线图）\n\n表格、文档与日程类工具接入后，将在同一工作台内完成审批与回溯。\n\n查看场景\n今天就在浏览器里试一下三栏工作台\n\n打开演示工作台，看看对话、计划、工具链路与工件如何保持连贯。\n\n进入工作台\nash.\n\n通用 Agent 工作台：对话、计划、工具与工件同屏，可扩展办公与内容等垂直能力。由 cogito 运行时驱动",
+        "width": 1440,
+        "height": 960
+      }
+    },
+    {
+      "id": "auth-light",
+      "surface": "auth",
+      "theme": "light",
+      "path": "/login",
+      "expectedText": "登录",
+      "url": "http://127.0.0.1:42429/login",
+      "screenshot": "docs/visual-qa/artifacts/2026-07-05/auth-light.png",
+      "bytes": 35783,
+      "page": {
+        "title": "登录 · Ash",
+        "url": "http://127.0.0.1:42429/login",
+        "dark": false,
+        "bodyText": "ash.\n登录\n\n使用邮箱和密码登录 Ash 工作台\n\n邮箱\n密码\n登录\n忘记密码？\n还没有账号？ 立即注册",
+        "width": 1440,
+        "height": 960
+      }
+    },
+    {
+      "id": "auth-dark",
+      "surface": "auth",
+      "theme": "dark",
+      "path": "/login",
+      "expectedText": "登录",
+      "url": "http://127.0.0.1:42429/login",
+      "screenshot": "docs/visual-qa/artifacts/2026-07-05/auth-dark.png",
+      "bytes": 34767,
+      "page": {
+        "title": "登录 · Ash",
+        "url": "http://127.0.0.1:42429/login",
+        "dark": true,
+        "bodyText": "ash.\n登录\n\n使用邮箱和密码登录 Ash 工作台\n\n邮箱\n密码\n登录\n忘记密码？\n还没有账号？ 立即注册",
+        "width": 1440,
+        "height": 960
+      }
+    },
+    {
+      "id": "workbench-light",
+      "surface": "workbench",
+      "theme": "light",
+      "path": "/app",
+      "expectedText": "开始工作",
+      "url": "http://127.0.0.1:42429/app",
+      "screenshot": "docs/visual-qa/artifacts/2026-07-05/workbench-light.png",
+      "bytes": 58079,
+      "page": {
+        "title": "Ash - Agent 工作台",
+        "url": "http://127.0.0.1:42429/app",
+        "dark": false,
+        "bodyText": "ash.\n\n新建任务\n⌘K\n任务\n暂无任务\n项目\n暂无项目\n\n未找到匹配的会话\n\nVQ\n\nVisual QA\n\nvisual@example.com\n\n开始工作\n\n描述一个任务或选择一个项目开始\n\n发送\n\n还没有任务或项目\n\n在上方输入框描述一个任务，开始你的第一个工作流。",
+        "width": 1440,
+        "height": 960
+      }
+    },
+    {
+      "id": "workbench-dark",
+      "surface": "workbench",
+      "theme": "dark",
+      "path": "/app",
+      "expectedText": "开始工作",
+      "url": "http://127.0.0.1:42429/app",
+      "screenshot": "docs/visual-qa/artifacts/2026-07-05/workbench-dark.png",
+      "bytes": 57100,
+      "page": {
+        "title": "Ash - Agent 工作台",
+        "url": "http://127.0.0.1:42429/app",
+        "dark": true,
+        "bodyText": "ash.\n\n新建任务\n⌘K\n任务\n暂无任务\n项目\n暂无项目\n\n未找到匹配的会话\n\nVQ\n\nVisual QA\n\nvisual@example.com\n\n开始工作\n\n描述一个任务或选择一个项目开始\n\n发送\n\n还没有任务或项目\n\n在上方输入框描述一个任务，开始你的第一个工作流。",
+        "width": 1440,
+        "height": 960
+      }
+    }
+  ],
+  "assets": [
+    {
+      "label": "browser icon",
+      "path": "/icon.svg",
+      "contentType": "image/svg+xml",
+      "status": 200,
+      "ok": true,
+      "bytes": 935
+    },
+    {
+      "label": "web manifest",
+      "path": "/manifest.webmanifest",
+      "contentType": "application/manifest+json",
+      "status": 200,
+      "ok": true,
+      "bytes": 219
+    },
+    {
+      "label": "app icon",
+      "path": "/ash-icon.svg",
+      "contentType": "image/svg+xml",
+      "status": 200,
+      "ok": true,
+      "bytes": 1048
+    },
+    {
+      "label": "maskable app icon",
+      "path": "/ash-maskable-icon.svg",
+      "contentType": "image/svg+xml",
+      "status": 200,
+      "ok": true,
+      "bytes": 1052
+    }
+  ]
+}
