@@ -86,6 +86,9 @@ direction from `docs/superpowers/specs/2026-07-04-ash-logo-direction-design.md`.
 combines a charcoal companion silhouette, a white task-core negative space, and one small
 ember point. It is additive to the `ash.` wordmark, not a replacement. Static favicon and
 app icon export remain deferred until a token-safe asset pipeline is chosen.
+Initial product placements include the workbench sidebar home mark, assistant message
+identity row, and marketing/auth brand lockups so the icon is not isolated to one shell
+surface.
 
 **Constraints.** The mark remains vector-only, token-colored, and brand-scoped. It must not
 use a hand, face, mascot, eye, shield, house, generic AI sparkle, or letter-A dependency.

@@ -12,6 +12,7 @@ const messages = {
     reasoningDone: "已思考 {n} 秒",
     messageToolCall: "Tool: {tool}",
     messageImage: "[image]",
+    roleAssistant: "ASH",
     copyMessage: "Copy",
     copiedMessage: "Copied",
   },
@@ -166,5 +167,21 @@ describe("MessageBubble — thinking isStreaming only for last block", () => {
 
     // Thinking is the last (and only) block — must show the streaming header.
     expect(screen.getByText("Ash 思考中…")).toBeInTheDocument();
+  });
+
+  it("renders the Ash logo mark in assistant message identity", () => {
+    const message = makeMessage(
+      [{ kind: "text", text: "Hello user" }],
+      false,
+    );
+
+    const { container } = render(
+      <NextIntlClientProvider locale="zh" messages={messages}>
+        <MessageBubble message={message} locale="zh" />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText("ASH")).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="logo-mark"]')).toBeInTheDocument();
   });
 });

@@ -143,7 +143,7 @@ export function WorkbenchSidebar({
               className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-accent"
               aria-label={t("sidebarHomeAria")}
             >
-              <LogoMark className="size-[22px]" />
+              <LogoMark className="size-7" />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom">{t("tooltipHomeChrome")}</TooltipContent>

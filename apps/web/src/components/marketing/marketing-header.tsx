@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Sparkles, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import { Button } from "@ash/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@ash/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@ash/ui/tooltip";
+import { LogoMark } from "@ash/ui/logo-mark";
 import { Wordmark } from "@ash/ui/wordmark";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -31,7 +32,7 @@ export function MarketingHeader() {
           aria-label={t("logoAria")}
         >
           <span className="flex size-8 items-center justify-center rounded-lg border border-border bg-card">
-            <Sparkles className="size-4 text-foreground" aria-hidden />
+            <LogoMark className="size-5" />
           </span>
           <Wordmark className="font-display" />
         </Link>

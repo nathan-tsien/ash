@@ -11,7 +11,7 @@ Ascending sort by ISO `createdAt`. Roles:
 | `role` | Layout |
 |--------|--------|
 | `user` | Right-aligned **ink chip** (`bg-primary text-primary-foreground`, `max-w-[80%]`, asymmetric radius `rounded-2xl rounded-br-sm` — anchors the bubble to the right edge) — plain text with `whitespace-pre-wrap` |
-| `assistant` | Left-aligned **borderless prose on the canvas** (`w-full`, no card/border) — **markdown rendered** via `react-markdown` + `rehype-highlight` + `remark-gfm`; a small **role label** (`text-caption font-medium uppercase tracking-wide text-muted-foreground`) appears above the turn content |
+| `assistant` | Left-aligned **borderless prose on the canvas** (`w-full`, no card/border) — **markdown rendered** via `react-markdown` + `rehype-highlight` + `remark-gfm`; a small **identity row** (`LogoMark` + role label, `text-caption font-medium uppercase tracking-wide text-muted-foreground`) appears above the turn content |
 | `system` | Not shown as bubbly transcript (debug overlays future-gated — default hidden) |
 
 Role hierarchy comes from structure, not a near-identical bubble pair (PRIN-4): the
