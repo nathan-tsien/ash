@@ -65,6 +65,13 @@ describe("proxy auth guard", () => {
     expect(redirectsToLogin(proxy(request("/zh/pricing")))).toBe(false);
   });
 
+  it("uses the shared locale cookie for non-prefixed public marketing paths", () => {
+    const res = proxy(request("/pricing", "ash_locale=en"));
+    const loc = res.headers.get("location");
+    expect(loc).not.toBeNull();
+    expect(new URL(loc!).pathname).toBe("/en/pricing");
+  });
+
   it("treats the bare auth paths as non-prefixed public (no redirect, no intl)", () => {
     // Auth lives in the cookie zone now: /login etc. are public and must NOT be
     // locale-redirected (a /zh/login rewrite would 404 — no such route exists).

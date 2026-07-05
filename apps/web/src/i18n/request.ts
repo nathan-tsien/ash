@@ -2,9 +2,7 @@ import { cookies } from "next/headers";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
-
-/** Cookie the app zone uses to persist the user's locale (no `/[locale]/` prefix). */
-export const LOCALE_COOKIE = "ash_locale";
+import { LOCALE_COOKIE } from "./locale-cookie";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // 1. Prefer the path-resolved locale (the localized `/[locale]/` site zone).

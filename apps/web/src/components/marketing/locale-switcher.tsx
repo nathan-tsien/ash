@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@ash/ui/button";
 import {
@@ -12,13 +13,20 @@ import {
 import { Globe, ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { setLocaleCookie } from "@/app/(workbench)/locale-actions";
 
-/** Compact locale picker using a dropdown menu so new languages do not break the layout. */
+/**
+ * Compact site-zone locale picker.
+ *
+ * Marketing pages render from their `/[locale]` path, but the workbench reads
+ * the same preference from `ash_locale`, so this updates both surfaces.
+ */
 export function LocaleSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("LocaleSwitcher");
+  const [isPending, startTransition] = useTransition();
 
   const labels: Record<string, string> = {
     zh: t("zh"),
@@ -26,8 +34,12 @@ export function LocaleSwitcher() {
   };
 
   function handleChange(value: string) {
-    router.push(pathname && pathname !== "" ? pathname : "/", {
-      locale: value,
+    if (value === locale) return;
+    startTransition(async () => {
+      await setLocaleCookie(value);
+      router.push(pathname && pathname !== "" ? pathname : "/", {
+        locale: value,
+      });
     });
   }
 
@@ -39,6 +51,7 @@ export function LocaleSwitcher() {
           size="sm"
           className="h-8 gap-1.5 px-2 text-label"
           aria-label={t("ariaLabel")}
+          disabled={isPending}
         >
           <Globe className="size-3.5" aria-hidden />
           <span>{labels[locale] ?? locale}</span>

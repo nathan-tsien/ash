@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "@/i18n/routing";
+import { LOCALE_COOKIE } from "@/i18n/locale-cookie";
 
 const intlProxy = createMiddleware(routing);
 
@@ -51,23 +52,33 @@ const PUBLIC_PATHS = [
 ];
 
 function isPublicPath(pathname: string): boolean {
-  // Strip locale prefix to get the path
-  const segments = pathname.split("/").filter(Boolean);
-  let pathWithoutLocale: string;
-
-  if (segments.length === 0) {
-    pathWithoutLocale = "/";
-  } else if (LOCALES.includes(segments[0] as (typeof LOCALES)[number])) {
-    // First segment is a locale prefix — use the rest as the path
-    pathWithoutLocale =
-      segments.length > 1 ? `/${segments.slice(1).join("/")}` : "/";
-  } else {
-    pathWithoutLocale = `/${segments.join("/")}`;
-  }
-
+  const pathWithoutLocale = publicPathWithoutLocale(pathname);
   return PUBLIC_PATHS.some(
     (p) => pathWithoutLocale === p || pathWithoutLocale.startsWith(`${p}/`),
   );
+}
+
+function publicPathWithoutLocale(pathname: string): string {
+  // Strip locale prefix to get the path
+  const segments = pathname.split("/").filter(Boolean);
+
+  if (segments.length === 0) {
+    return "/";
+  }
+
+  if (LOCALES.includes(segments[0] as (typeof LOCALES)[number])) {
+    // First segment is a locale prefix — use the rest as the path
+    return segments.length > 1 ? `/${segments.slice(1).join("/")}` : "/";
+  }
+
+  return `/${segments.join("/")}`;
+}
+
+function localePrefix(pathname: string): (typeof LOCALES)[number] | undefined {
+  const first = pathname.split("/").filter(Boolean)[0];
+  return LOCALES.includes(first as (typeof LOCALES)[number])
+    ? (first as (typeof LOCALES)[number])
+    : undefined;
 }
 
 export function proxy(request: NextRequest) {
@@ -118,6 +129,23 @@ export function proxy(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Public marketing pages are path-localized, but the app settings modal and
+  // auth/workbench zones store the user's preference in `ash_locale`. Honor it
+  // for non-prefixed public URLs so `/pricing` and `/` stay in sync with the
+  // workbench language picker.
+  if (isPublicPath(pathname) && !localePrefix(pathname)) {
+    const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+    if (LOCALES.includes(cookieLocale as (typeof LOCALES)[number])) {
+      const localizedUrl = request.nextUrl.clone();
+      const pathWithoutLocale = publicPathWithoutLocale(pathname);
+      localizedUrl.pathname =
+        pathWithoutLocale === "/"
+          ? `/${cookieLocale}`
+          : `/${cookieLocale}${pathWithoutLocale}`;
+      return NextResponse.redirect(localizedUrl);
+    }
   }
 
   return intlProxy(request);
