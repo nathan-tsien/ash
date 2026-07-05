@@ -8,7 +8,7 @@ Decision record: `docs/adr/0013-consolidated-design-guidelines.md`.
 
 | Field | Value |
 |-------|-------|
-| Version | v2.1.0 |
+| Version | v2.1.2 |
 | Status | Active |
 | Changelog | Appendix B |
 
@@ -451,6 +451,7 @@ Changelog:
 | v2.0.0 | 2026-06-28 | MAJOR — Neutral Stone ramp retune (ADR-0014 amendment): workbench neutral ramp moved from warm-beige (`#2A2825`/`#F7F6F4`) to near-neutral stone (`#1C1C1A`/`#F5F5F4`) for a modern, premium posture; full light+dark palette regenerated (Appendix C); PRIN-3 rewritten on new foundation trio; PRIN-6 signature updated; ember + status hues unchanged (PRIN-3 not re-triggered by new saturated hue — ramp retune only). Workbench visual/UX pass: chat ink user bubble (asymmetric radius, `bg-primary`), assistant role label, hairline turn dividers, ink send button; sidebar ink primary CTA; workspace shared card shell + `StatusChip` headers. IMPL-7: `StatusChip` registered as status presentation primitive alongside `StatusDot`. |
 | v2.1.0 | 2026-07-04 | MINOR — Ash LogoMark signature added: Companion Shadow + Task Core vector mark introduced in `@ash/ui`, sidebar brand chrome updated, PRIN-6 registry extended; styled `ash.` wordmark remains valid. |
 | v2.1.1 | 2026-07-05 | PATCH — LogoMark placement broadened across the create-task home composer, assistant message identity, marketing/auth brand lockups, and a larger workbench sidebar home mark so brand memory is consistent across product surfaces. |
+| v2.1.2 | 2026-07-05 | PATCH — LogoMark static asset export landed: browser icon plus app/maskable SVG assets generated from LogoMark geometry and canonical light tokens; manifest advertises generated app icons. |
 
 ## Appendix C. Token reference snapshot
 

@@ -1,6 +1,6 @@
 # Ash Logo Direction Design
 
-- Status: Implemented: LogoMark landed; favicon/app icon export deferred
+- Status: Implemented: LogoMark landed; favicon/app icon export pipeline landed
 - Date: 2026-07-04
 - Scope: Ash product icon and logo-mark direction
 - Relates: ADR-0014, `docs/design-guidelines.md`, `packages/ui/src/components/wordmark.tsx`
@@ -50,10 +50,14 @@ In plain terms:
 - **Task Core** keeps the mark tied to practical work and private secretary behavior.
 - **Ember Point** links the icon back to the existing Ash & Ember identity.
 
-This direction is implemented as controlled vector geometry in the `LogoMark` component. Raster
-exports and app-icon packaging remain deferred follow-up work.
+This direction is implemented as controlled vector geometry in the `LogoMark` component. Static
+SVG favicon and app-icon exports are generated from the same geometry and the canonical light
+tokens in `packages/ui/src/globals.css`.
 
-Implementation landed as `LogoMark` in `packages/ui/src/components/logo-mark.tsx`; static favicon/app-icon export is deferred to a token-safe asset pipeline.
+Implementation landed as `LogoMark` in `packages/ui/src/components/logo-mark.tsx`; static
+favicon/app-icon export landed through `apps/web/scripts/brand-assets.mjs`, which writes
+`apps/web/src/app/icon.svg`, `apps/web/public/ash-icon.svg`, and
+`apps/web/public/ash-maskable-icon.svg`.
 
 ## Mark Anatomy
 
@@ -113,19 +117,24 @@ must avoid visual double-accent noise by sizing the icon ember smaller than the 
 direction. It is the source for current in-app brand placement and the basis for future static
 assets.
 
+Implemented asset work:
+
+1. Export token-safe SVG favicon and app icon assets from the `LogoMark` vector source.
+2. Wire `apps/web/src/app/manifest.ts` to advertise the generated app icons.
+
 Deferred implementation work:
 
-1. Export token-safe favicon and app icon assets from the `LogoMark` vector source.
-2. Add optional `BrandMark` or `LogoLockup` exports only when consumers need an icon + wordmark
+1. Add optional `BrandMark` or `LogoLockup` exports only when consumers need an icon + wordmark
    primitive.
-3. Refine sizing, optical balance, or placement rules when new brand surfaces expose real layout
+2. Refine sizing, optical balance, or placement rules when new brand surfaces expose real layout
    needs.
 
 ## Files Likely To Change Later
 
 - `packages/ui/src/components/wordmark.tsx` - possible lockup export or documentation update.
-- `apps/web/src/app/favicon.ico` - generated from the `LogoMark` vector source.
-- `apps/web/public/*` - app icon / social image assets if required.
+- `apps/web/src/app/icon.svg` - generated browser icon from the `LogoMark` vector source.
+- `apps/web/public/ash-icon.svg` and `ash-maskable-icon.svg` - generated app icon assets.
+- `apps/web/public/*` - social image assets if required.
 - `docs/adr/0014-ash-native-identity.md` - amendment noting icon addition if architecture intent changes.
 - `docs/components/*` - affected brand placement docs.
 
@@ -140,5 +149,5 @@ Deferred implementation work:
 
 ## Deferred Review Question
 
-Should favicon and app icon export happen in the next brand polish pass, or wait until the static
-asset pipeline is ready to preserve token discipline?
+Should social preview imagery use the same generated vector pipeline, or should it wait for a
+separate composition pass with marketing page imagery?

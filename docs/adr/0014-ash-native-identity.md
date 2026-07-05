@@ -85,7 +85,8 @@ operationalizes, and Ash is the human-facing personal secretary for work and lif
 direction from `docs/superpowers/specs/2026-07-04-ash-logo-direction-design.md`. The mark
 combines a charcoal companion silhouette, a white task-core negative space, and one small
 ember point. It is additive to the `ash.` wordmark, not a replacement. Static favicon and
-app icon export remain deferred until a token-safe asset pipeline is chosen.
+app icon exports are generated from the mark geometry and canonical light tokens, keeping
+asset color literals traceable to `packages/ui/src/globals.css`.
 Initial product placements include the workbench sidebar home mark, create-task home
 composer, assistant message identity row, and marketing/auth brand lockups so the icon is
 not isolated to one shell surface.
