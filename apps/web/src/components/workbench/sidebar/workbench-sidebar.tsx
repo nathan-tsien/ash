@@ -10,6 +10,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@ash/ui/tooltip";
+import { LogoMark } from "@ash/ui/logo-mark";
 import { Wordmark } from "@ash/ui/wordmark";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -21,7 +22,6 @@ import {
   Plus,
   Search,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSettingsModal } from "@/components/settings/settings-modal-provider";
@@ -143,7 +143,7 @@ export function WorkbenchSidebar({
               className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-accent"
               aria-label={t("sidebarHomeAria")}
             >
-              <Sparkles className="size-[18px]" aria-hidden />
+              <LogoMark className="size-[22px]" />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom">{t("tooltipHomeChrome")}</TooltipContent>

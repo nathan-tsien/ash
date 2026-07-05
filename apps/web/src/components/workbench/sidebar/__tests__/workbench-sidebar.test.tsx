@@ -43,6 +43,12 @@ vi.mock("../app-locale-switcher", () => ({ AppLocaleSwitcher: () => <div data-te
 // Wordmark is a brand mark package; stub to avoid bundling issues
 vi.mock("@ash/ui/wordmark", () => ({ Wordmark: () => <span>Ash</span> }));
 
+vi.mock("@ash/ui/logo-mark", () => ({
+  LogoMark: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="ash-logo-mark" {...props} />
+  ),
+}));
+
 // Stub lucide icons referenced in the sidebar not covered by setup.tsx
 // (setup.tsx already mocks lucide-react; extend it here with sidebar-specific icons.)
 vi.mock("lucide-react", () => ({
@@ -118,6 +124,20 @@ const BASE_PROPS = {
   projects: [],
   viewMode: "home" as const,
 };
+
+describe("brand chrome", () => {
+  it("uses the Ash logo mark for the sidebar home link", () => {
+    render(<WorkbenchSidebar {...BASE_PROPS} />);
+
+    const homeLink = screen
+      .getAllByRole("link")
+      .find((el) => el.getAttribute("aria-label")?.includes("sidebarHomeAria"));
+
+    expect(homeLink).toBeDefined();
+    expect(homeLink?.querySelector('[data-testid="ash-logo-mark"]')).toBeInTheDocument();
+    expect(homeLink?.querySelector('[data-testid="sparkles"]')).not.toBeInTheDocument();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // A1 — New-task link href
